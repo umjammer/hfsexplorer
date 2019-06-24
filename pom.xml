@@ -30,8 +30,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>catacombae</groupId>
-      <artifactId>csframework</artifactId>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>catacombaeframework</artifactId>
       <version>0.0.1</version>
     </dependency>
     <dependency>
@@ -45,9 +45,9 @@
       <version>RELEASE731</version>
     </dependency>
     <dependency>
-      <groupId>catacombae</groupId>
-      <artifactId>hfsx_dmglib</artifactId>
-      <version>0.70.1-SNAPSHOT</version>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>dmgextractor</artifactId>
+      <version>0.70.0</version>
     </dependency>
 
     <dependency>
