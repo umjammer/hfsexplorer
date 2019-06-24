@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>catacombae</groupId>
+  <artifactId>hfsexplorer</artifactId>
+  <version>0.23.2-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+    <repository>
+      <id>NetBeans Repository</id>
+      <url> http://bits.netbeans.org/maven2/</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>catacombae</groupId>
+      <artifactId>csframework</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.iharder</groupId>
+      <artifactId>base64</artifactId>
+      <version>2.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.netbeans.external</groupId>
+      <artifactId>swing-layout-1.0.4</artifactId>
+      <version>RELEASE731</version>
+    </dependency>
+    <dependency>
+      <groupId>catacombae</groupId>
+      <artifactId>hfsx_dmglib</artifactId>
+      <version>0.70.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.3.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.3.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
