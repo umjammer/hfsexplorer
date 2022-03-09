@@ -3,7 +3,7 @@
 
   <groupId>catacombae</groupId>
   <artifactId>hfsexplorer</artifactId>
-  <version>0.23.2-SNAPSHOT</version>
+  <version>0.23.2</version>
 
   <build>
     <plugins>
@@ -17,10 +17,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.2</version>
+        <version>3.0.0-M5</version>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <argLine>
+            -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
             -Djava.awt.headless=true
           </argLine>
         </configuration>
@@ -33,44 +34,42 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
-    <repository>
-      <id>NetBeans Repository</id>
-      <url> http://bits.netbeans.org/maven2/</url>
-    </repository>
   </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.8.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
+      <!-- catacombae:csframework -->
       <groupId>com.github.umjammer</groupId>
       <artifactId>catacombaeframework</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2</version>
     </dependency>
     <dependency>
-      <groupId>net.iharder</groupId>
-      <artifactId>base64</artifactId>
-      <version>2.3.9</version>
-    </dependency>
-    <dependency>
-      <groupId>org.netbeans.external</groupId>
-      <artifactId>swing-layout-1.0.4</artifactId>
-      <version>RELEASE731</version>
-    </dependency>
-    <dependency>
+      <!-- catacombae:hfsx_dmglib -->
       <groupId>com.github.umjammer</groupId>
       <artifactId>dmgextractor</artifactId>
-      <version>0.70.0</version>
+      <version>0.70.1</version>
     </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
