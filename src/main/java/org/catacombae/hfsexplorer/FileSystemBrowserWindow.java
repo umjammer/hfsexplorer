@@ -1185,7 +1185,7 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         ActionListener alOpen = null;
         if(System.getProperty("os.name").toLowerCase().startsWith("windows")) {
             //System.err.println("Windows detected");
-            final String finalCommand = "cmd.exe /c start \"HFSExplorer invoker\" \"" + rec.getName() + "\"";
+            final String[] finalCommand = { "cmd.exe", "/c", "start \"HFSExplorer invoker\" \"" + rec.getName() + "\"" };
             alOpen = new ActionListener() {
                 /* @Override */
                 public void actionPerformed(ActionEvent ae) {
