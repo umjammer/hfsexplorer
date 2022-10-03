@@ -3,7 +3,7 @@
 
   <groupId>catacombae</groupId>
   <artifactId>hfsexplorer</artifactId>
-  <version>0.23.2</version>
+  <version>0.23.3-SNAPSHOT</version>
 
   <build>
     <plugins>
@@ -70,6 +70,11 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
