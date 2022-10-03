@@ -17,6 +17,8 @@
 
 package org.catacombae.storage.fs.hfsplus;
 
+import java.util.logging.Logger;
+
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
 import org.catacombae.hfs.types.hfs.HFSPlusWrapperMDB;
 import org.catacombae.io.ReadableRandomAccessStream;
@@ -33,8 +35,9 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer.FileSystemType;
 import org.catacombae.util.Util;
 
+
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFactory {
     private static final FileSystemRecognizer recognizer = new HFSPlusFileSystemRecognizer();
@@ -55,6 +58,9 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
                     "directories and the journal files should show up in a " +
                     "directory listing.", true);
 
+    private static final Logger log =
+            Logger.getLogger(HFSPlusFileSystemHandlerFactory.class.getName());
+
     public FileSystemCapability[] getCapabilities() {
         return HFSPlusFileSystemHandler.getStaticCapabilities();
     }
@@ -65,6 +71,8 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
                 createAttributes.getBooleanAttribute(StandardAttribute.CACHING_ENABLED);
         boolean posixFilenames =
                 createAttributes.getBooleanAttribute(posixFilenamesAttribute);
+        boolean sfmSubstitutions =
+                createAttributes.getBooleanAttribute(sfmSubstitutionsAttribute);
         boolean composeFilename =
                 createAttributes.getBooleanAttribute(compositionEnabledAttribute);
         boolean hideProtected =
@@ -94,15 +102,16 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
         }
 
         return createHandlerInternal(dataToLoad, useCaching, posixFilenames,
-                composeFilename, hideProtected);
+                sfmSubstitutions, composeFilename, hideProtected);
     }
 
     protected FileSystemHandler createHandlerInternal(DataLocator data,
-            boolean useCaching, boolean posixFilenames, boolean composeFilename,
+            boolean useCaching, boolean posixFilenames,
+            boolean sfmSubstitutions, boolean composeFilename,
             boolean hideProtected)
     {
         return new HFSPlusFileSystemHandler(data, useCaching, posixFilenames,
-                composeFilename, hideProtected);
+                sfmSubstitutions, composeFilename, hideProtected);
     }
 
     @Override
@@ -151,18 +160,20 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
     private static DataLocator hfsUnwrap(DataLocator data) {
         ReadableRandomAccessStream fsStream = data.createReadOnlyFile();
 
-        //System.out.println("Found a wrapped HFS+ volume.");
+        log.fine("Found a wrapped HFS+ volume:");
         byte[] mdbData = new byte[HFSPlusWrapperMDB.STRUCTSIZE];
         fsStream.seek(1024);
         fsStream.read(mdbData);
         HFSPlusWrapperMDB mdb = new HFSPlusWrapperMDB(mdbData, 0);
         ExtDescriptor xd = mdb.getDrEmbedExtent();
         int hfsBlockSize = mdb.getDrAlBlkSiz();
-        //System.out.println("old fsOffset: " + fsOffset);
-        long fsOffset = Util.unsign(mdb.getDrAlBlSt()) * 512 +
-                Util.unsign(xd.getXdrStABN()) * hfsBlockSize; // Lovely method names...
-        long fsLength = Util.unsign(xd.getXdrNumABlks() * hfsBlockSize);
-        //System.out.println("new fsOffset: " + fsOffset);
+        long fsOffset =
+                ((long) Util.unsign(mdb.getDrAlBlSt())) * 512 +
+                ((long) Util.unsign(xd.getXdrStABN())) * hfsBlockSize;
+        long fsLength =
+                ((long) Util.unsign(xd.getXdrNumABlks())) * hfsBlockSize;
+        log.fine("  fsOffset: " + fsOffset);
+        log.fine("  fsLength: " + fsLength);
         // redetect with adjusted fsOffset
 
         return new SubDataLocator(data, fsOffset, fsLength);

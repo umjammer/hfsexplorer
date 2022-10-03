@@ -20,6 +20,8 @@ package org.catacombae.hfsexplorer;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -48,6 +50,9 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFSFile;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSFolder;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSLink;
 
+/**
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
+ */
 public class FileInfoWindow extends HFSExplorerJFrame {
 
     public FileInfoWindow(final FSEntry fsEntry, String[] parentPath) {
@@ -117,6 +122,7 @@ public class FileInfoWindow extends HFSExplorerJFrame {
 
         // Resource fork panel
         JPanel resffPanel = null;
+        ResourceForkReader resffReader = null;
         try {
             if(fsEntry instanceof FSFile) {
                 FSFile fsFile = (FSFile) fsEntry;
@@ -124,17 +130,18 @@ public class FileInfoWindow extends HFSExplorerJFrame {
                 if(resourceFork != null && resourceFork.getLength() > 0) {
                     ReadableRandomAccessStream s =
                             resourceFork.getReadableRandomAccessStream();
-                    ResourceForkReader resffReader = null;
                     try {
                         resffReader = new ResourceForkReader(s);
                         resffPanel = new ResourceForkViewPanel(resffReader);
-                    } finally {
+                    } catch(Exception e) {
                         if(resffReader != null) {
                             resffReader.close();
                         }
                         else if(s != null) {
                             s.close();
                         }
+
+                        throw e;
                     }
                 }
             }
@@ -203,6 +210,19 @@ public class FileInfoWindow extends HFSExplorerJFrame {
             setSize(width, adjustedHeight);
 
         setLocationRelativeTo(null);
+
+        final ResourceForkReader resffReaderFinal = resffReader;
+        addWindowListener(new WindowAdapter() {
+            /* @Override */
+            public void windowClosed(WindowEvent we) {
+                /* We know that this window won't be reused. It's recreated
+                 * every time, so under that assumption we can close the
+                 * ResourceForkReader passed to the ResourceForkViewerPanel. */
+                if(resffReaderFinal != null) {
+                    resffReaderFinal.close();
+                }
+            }
+        });
     }
 
     /*

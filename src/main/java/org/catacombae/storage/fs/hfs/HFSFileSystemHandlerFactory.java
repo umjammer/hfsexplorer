@@ -28,7 +28,7 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandlerFactory;
 import org.catacombae.util.Util;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFactory {
     private static final FileSystemRecognizer recognizer = new HFSFileSystemRecognizer();
@@ -53,18 +53,21 @@ public class HFSFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFacto
                 createAttributes.getBooleanAttribute(StandardAttribute.CACHING_ENABLED);
         boolean posixFilenames =
                 createAttributes.getBooleanAttribute(posixFilenamesAttribute);
+        boolean sfmSubstitutions =
+                createAttributes.getBooleanAttribute(sfmSubstitutionsAttribute);
         String encoding =
                 createAttributes.getStringAttribute(stringEncodingAttribute);
 
         return createHandlerInternal(data, useCaching, posixFilenames,
-                encoding);
+                sfmSubstitutions, encoding);
     }
 
     protected FileSystemHandler createHandlerInternal(DataLocator data,
-            boolean useCaching, boolean posixFilenames, String encoding)
+            boolean useCaching, boolean posixFilenames,
+            boolean sfmSubstitutions, String encoding)
     {
         return new HFSFileSystemHandler(data, useCaching, posixFilenames,
-                encoding);
+                sfmSubstitutions, encoding);
     }
 
     public FileSystemHandlerInfo getHandlerInfo() {

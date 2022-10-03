@@ -27,15 +27,16 @@ import org.catacombae.hfs.x.HFSXVolume;
  * but with a few extensions, like the ability to treat file names in a case
  * sensitive manner).
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSXFileSystemHandler extends HFSPlusFileSystemHandler {
 
     public HFSXFileSystemHandler(DataLocator fsLocator, boolean useCaching,
-            boolean posixNames, boolean doUnicodeFileNameComposition,
-            boolean hideProtected)
+            boolean posixNames, boolean sfmSubstitutions,
+            boolean doUnicodeFileNameComposition, boolean hideProtected)
     {
         super(new HFSXVolume(fsLocator.createReadOnlyFile(), useCaching),
-                posixNames, doUnicodeFileNameComposition, hideProtected);
+                posixNames, sfmSubstitutions, doUnicodeFileNameComposition,
+                hideProtected);
     }
 }

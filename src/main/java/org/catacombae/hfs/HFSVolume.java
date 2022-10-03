@@ -47,7 +47,7 @@ import org.catacombae.io.Readable;
 import org.catacombae.io.ReadableRandomAccessStream;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class HFSVolume {
     /*
@@ -153,7 +153,7 @@ public abstract class HFSVolume {
     /**
      * Performs some sanity checks, like reading from different parts of the
      * volume, in order to ensure that the underlying data storage contains the
-     * entire file system, and that the file system is usable.<br/>
+     * entire file system, and that the file system is usable.<br>
      * This method returns normally if all went well, and otherwise throws an
      * exception with a description of the test that failed.
      *

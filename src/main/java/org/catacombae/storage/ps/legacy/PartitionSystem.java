@@ -20,7 +20,11 @@ package org.catacombae.storage.ps.legacy;
 import java.io.PrintStream;
 import org.catacombae.storage.ps.Partition;
 
-/** Generalization of the features that a simple partitioning system should provide. */
+/**
+ * Generalization of the features that a simple partition system should provide.
+ *
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
+ */
 public interface PartitionSystem {
     /**
      * Performs partition system specific validitity and/or sanity checks to
@@ -36,7 +40,7 @@ public interface PartitionSystem {
 
     /**
      * Fetches the partition entry at index <code>index</code>.
-     * <code>index<code> must be larger than or equal to 0 and less than
+     * <code>index</code> must be larger than or equal to 0 and less than
      * <code>getPartitionCount()</code>.
      * @param index the requested index.
      * @return the requested Partition.

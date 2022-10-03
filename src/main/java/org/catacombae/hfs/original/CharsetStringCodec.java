@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2008 Erik Larsson
+ * Copyright (C) 2008-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import java.nio.charset.UnsupportedCharsetException;
 /**
  * StringCodec that uses a CharsetDecoder internally.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CharsetStringCodec implements StringCodec {
     private final String charsetName;
@@ -68,7 +68,7 @@ public class CharsetStringCodec implements StringCodec {
         try {
             return decoder.decode(ByteBuffer.wrap(data, off, len)).toString();
         } catch(CharacterCodingException e) {
-            throw new RuntimeException("Could not decode data!", e);
+            throw new StringCodecException("Could not decode data!", e);
         }
     }
 
@@ -88,7 +88,7 @@ public class CharsetStringCodec implements StringCodec {
         try {
             return encoder.encode(CharBuffer.wrap(str.toCharArray(), off, len)).array();
         } catch(CharacterCodingException e) {
-            throw new RuntimeException("Could not encode data!", e);
+            throw new StringCodecException("Could not encode data!", e);
         }
     }
 
@@ -96,6 +96,7 @@ public class CharsetStringCodec implements StringCodec {
      * Returns the charset name as it was passed to the constructor.
      * @return the charset name as it was passed to the constructor.
      */
+    /* @Override */
     public String getCharsetName() {
         return charsetName;
     }

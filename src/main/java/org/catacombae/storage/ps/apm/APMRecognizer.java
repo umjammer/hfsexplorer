@@ -23,7 +23,7 @@ import org.catacombae.storage.ps.apm.types.DriverDescriptorRecord;
 import org.catacombae.storage.ps.PartitionSystemRecognizer;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class APMRecognizer implements PartitionSystemRecognizer {
 
@@ -36,14 +36,45 @@ public class APMRecognizer implements PartitionSystemRecognizer {
             fsStream.readFully(firstBlock);
 
             // Look for APM
-            DriverDescriptorRecord ddr = new DriverDescriptorRecord(firstBlock, 0);
-            if(ddr.isValid()) {
-                int blockSize = ddr.getSbBlkSize();
+            int blockSize = 0;
+
+            try {
+                DriverDescriptorRecord ddr =
+                        new DriverDescriptorRecord(firstBlock, 0);
+                if(ddr.isValid()) {
+                    blockSize = ddr.getSbBlkSize();
+                }
+            } catch(Exception e) {
+            }
+
+            if(blockSize == 0) {
+                /* Check if the second block has a valid partition signature. */
+                byte[] secondBlock = new byte[512];
+                fsStream.seek(512);
+                fsStream.readFully(secondBlock);
+                if(secondBlock[0] == 'P' && secondBlock[1] == 'M') {
+                    blockSize = 512;
+                }
+                else {
+                    blockSize = 0;
+                }
+            }
+
+            if(blockSize > 0) {
                 //long numberOfBlocksOnDevice = Util.unsign(ddr.getSbBlkCount());
                 //bitStream.seek(blockSize*1); // second block, first partition in list
                 ApplePartitionMap apm = new ApplePartitionMap(fsStream, blockSize * 1, blockSize);
                 if(apm.getUsedPartitionCount() > 0) {
                     return true;
+                }
+                else if(blockSize != 512) {
+                    /* We may have an APM configured with 512 byte block size
+                     * even though the DDR says otherwise. */
+                    final ApplePartitionMap backupApm =
+                        new ApplePartitionMap(fsStream, 512, 512);
+                    if(backupApm.getUsedPartitionCount() > 0) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception e) {

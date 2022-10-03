@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2008 Erik Larsson
+ * Copyright (C) 2008-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package org.catacombae.hfs.original;
  * be changed over time. This allows you to maintain one StringCodec instance across your app, while
  * still enabling you to alter the method used for coding.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MutableStringCodec <A extends StringCodec> implements StringCodec {
     private A underlying;
@@ -64,6 +64,14 @@ public class MutableStringCodec <A extends StringCodec> implements StringCodec {
     /* @Override */
     public byte[] encode(String str, int off, int len) {
         return underlying.encode(str, off, len);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    /* @Override */
+    public String getCharsetName() {
+        return underlying.getCharsetName();
     }
 
     public void setDecoder(A newDecoder) {

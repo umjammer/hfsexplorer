@@ -32,7 +32,7 @@ import org.catacombae.util.IOUtil;
 import org.catacombae.util.Util;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
     private static final String FILE_HARD_LINK_DIR =
@@ -45,18 +45,21 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
     private static final String JOURNAL_FILE = ".journal";
 
     public HFSPlusFileSystemHandler(DataLocator fsLocator, boolean useCaching,
-            boolean posixNames, boolean doUnicodeFileNameComposition,
-            boolean hideProtected)
+            boolean posixNames, boolean sfmSubstitutions,
+            boolean doUnicodeFileNameComposition, boolean hideProtected)
     {
 
         super(new HFSPlusVolume(fsLocator.createReadOnlyFile(), useCaching),
-                posixNames, doUnicodeFileNameComposition, hideProtected);
+                posixNames, sfmSubstitutions, doUnicodeFileNameComposition,
+                hideProtected);
     }
 
     protected HFSPlusFileSystemHandler(HFSVolume vol, boolean posixNames,
-            boolean doUnicodeFileNameComposition, boolean hideProtected)
+            boolean sfmSubstitutions, boolean doUnicodeFileNameComposition,
+            boolean hideProtected)
     {
-        super(vol, posixNames, doUnicodeFileNameComposition, hideProtected);
+        super(vol, posixNames, sfmSubstitutions, doUnicodeFileNameComposition,
+                hideProtected);
     }
 
     protected boolean shouldHide(CommonHFSCatalogLeafRecord rec) {

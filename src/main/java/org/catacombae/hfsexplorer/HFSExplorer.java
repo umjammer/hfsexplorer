@@ -53,11 +53,14 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandler;
 import org.catacombae.hfs.HFSVolume;
 import org.catacombae.util.Util.Pair;
 
+/**
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
+ */
 @SuppressWarnings("deprecation") // TODO: Fix HFSExplorer so it doesn't use deprecated methods...
 public class HFSExplorer {
-    public static final String VERSION = "0.23.1";
+    public static final String VERSION = "2021.10.9";
     public static final String COPYRIGHT =
-            "Copyright \u00A9 Erik Larsson 2006-2015";
+            "Copyright \u00A9 Erik Larsson 2006-2021";
     public static final String[] NOTICES = {
         "This program is distributed under the GNU General Public License version 3.",
         "See <http://www.gnu.org/copyleft/gpl.html> for the details.",
@@ -67,13 +70,15 @@ public class HFSExplorer {
         "        Copyright \u00A9 2005-2006 Sun Microsystems, Inc. Licensed under",
         "        the Lesser General Public License.",
         "        See <http://www.gnu.org/licenses/lgpl.html> for the details.",
-        "    iHarder Base64 encoder/decoder <http://iharder.sourceforge.net>",
+        "    iHarder Base64 and FileDrop projects <http://iharder.sourceforge.net>",
         "        Public domain software.",
-        "    Apache Ant bzip2 library <http://ant.apache.org/>",
+        "    Apache Ant bzip2 library <https://ant.apache.org/>",
         "        Copyright \u00A9 the Apache Software Foundation (ASF). Licensed",
         "        under the Apache License, Version 2.0.",
         "        See <http://www.apache.org/licenses/LICENSE-2.0> for the details.",
     };
+    public static final String WEB_SITE_URL =
+            "https://catacombae.org/hfsexplorer";
 
     public static BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
     private static class Options {
@@ -1000,7 +1005,7 @@ public class HFSExplorer {
 	// For measurement of the standard terminal width in fixed width environments:
 	// 80:  <-------------------------------------------------------------------------------->
 	println("hfsx - HFSExplorer Command Line Interface");
-        println("Version " + VERSION + " Build #" + BuildNumber.BUILD_NUMBER);
+        println("Version " + VERSION);
         println(COPYRIGHT.replaceAll("\u00A9", "(C)"));
         println();
 	println("Utility to explore various aspects of an HFS/HFS+/HFSX filesystem.");

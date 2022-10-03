@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2006-2008 Erik Larsson
+ * Copyright (C) 2006-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,22 +17,134 @@
 
 package org.catacombae.hfsexplorer.gui;
 
+import java.awt.event.ActionListener;
+import java.nio.charset.Charset;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import org.catacombae.hfsexplorer.Resources;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class FilesystemBrowserPanel extends javax.swing.JPanel {
-    private static final ImageIcon FORWARD_ICON = new javax.swing.ImageIcon(ClassLoader.getSystemResource("res/forward.png"));
-    private static final ImageIcon EXTRACT_ICON = new javax.swing.ImageIcon(ClassLoader.getSystemResource("res/extract.png"));
-    private static final ImageIcon BACK_ICON = new javax.swing.ImageIcon(ClassLoader.getSystemResource("res/back.png"));
-    private static final ImageIcon UP_ICON = new javax.swing.ImageIcon(ClassLoader.getSystemResource("res/folderup.png"));
-    private static final ImageIcon INFO_ICON = new javax.swing.ImageIcon(ClassLoader.getSystemResource("res/info.png"));
+    private static final ImageIcon FORWARD_ICON =
+            new ImageIcon(Resources.FORWARD_ICON);
+    private static final ImageIcon EXTRACT_ICON =
+            new ImageIcon(Resources.EXTRACT_ICON);
+    private static final ImageIcon BACK_ICON =
+            new ImageIcon(Resources.BACK_ICON);
+    private static final ImageIcon UP_ICON =
+            new ImageIcon(Resources.UP_ICON);
+    private static final ImageIcon INFO_ICON =
+            new ImageIcon(Resources.INFO_ICON);
+
+    private static final String[] optionalEncodings = {
+        "MacChineseTrad",
+        "MacKorean",
+        "MacArabic",
+        "MacHebrew",
+        "MacGreek",
+        "MacCyrillic",
+        "MacDevanagari",
+        "MacGurmukhi",
+        "MacGujarati",
+        "MacOriya",
+        "MacBengali",
+        "MacTamil",
+        "MacTelugu",
+        "MacKannada",
+        "MacMalayalam",
+        "MacSinhalese",
+        "MacBurmese",
+        "MacKhmer",
+        "MacThai",
+        "MacLaotian",
+        "MacGeorgian",
+        "MacArmenian",
+        "MacChineseSimp",
+        "MacTibetan",
+        "MacMongolian",
+        "MacEthiopic",
+        "MacCentralEurRoman",
+        "MacVietnamese",
+        "MacExtArabic",
+        "MacSymbol",
+        "MacDingbats",
+        "MacTurkish",
+        "MacCroatian",
+        "MacIcelandic",
+        "MacRomanian",
+        "MacFarsi",
+        "MacUkrainian",
+    };
+
+    private static final Logger log =
+            Logger.getLogger(FilesystemBrowserPanel.class.getName());
 
     /** Creates new form FilesystemBrowserPanel */
     public FilesystemBrowserPanel() {
         initComponents();
         fileTableScroller.getViewport().setBackground(fileTable.getBackground()); // To remove the grey area below the actual table
+        setHFSFieldsVisible(false);
+
+        /*
+         * Add optional encodings to the encoding combo box based on
+         * availability.
+         */
+        for(String encoding : optionalEncodings) {
+            if(Charset.isSupported(encoding) ||
+                    Charset.isSupported("x-" + encoding))
+            {
+                log.fine("Charset is supported: " + encoding);
+                encodingComboBox.addItem(encoding);
+            }
+            else {
+                log.fine("Charset is not supported: " + encoding);
+            }
+        }
+    }
+
+    public void setHFSFieldsVisible(boolean b) {
+        encodingLabel.setVisible(b);
+        encodingComboBox.setVisible(b);
+    }
+
+    /**
+     * Get the selected encoding in the encodings combo box.
+     *
+     * @return the selected encoding in the encodings combo box.
+     */
+    public String getSelectedHFSEncoding() {
+        return encodingComboBox.getSelectedItem().toString();
+    }
+
+    /**
+     * Set the selected encoding in the encodings combo box to the item matching
+     * the supplied string.
+     *
+     * @param encoding The encoding to select.
+     * @return true if the encoding existed in the combo box, false otherwise.
+     */
+    public boolean setSelectedHFSEncoding(String encoding) {
+        for(int i = 0; i < encodingComboBox.getItemCount(); ++i) {
+            Object item = encodingComboBox.getItemAt(i);
+            if(item.toString().equals(encoding)) {
+                encodingComboBox.setSelectedIndex(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Register a listener for when the user changes the selection in the
+     * encodings combo box.
+     *
+     * @param al An {@link ActionListener} that will be notified.
+     */
+    public void registerHFSEncodingChangedListener(ActionListener al) {
+        encodingComboBox.addActionListener(al);
     }
 
     /** This method is called from within the constructor to
@@ -58,6 +170,8 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
         fileTable = new javax.swing.JTable();
         statusLabelPanel = new javax.swing.JPanel();
         statusLabel = new javax.swing.JLabel();
+        encodingLabel = new javax.swing.JLabel();
+        encodingComboBox = new javax.swing.JComboBox();
 
         pathLabel.setText("Path:");
 
@@ -122,6 +236,10 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
 
         boxPanel.add(statusLabelPanel, java.awt.BorderLayout.SOUTH);
 
+        encodingLabel.setText("Encoding:");
+
+        encodingComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "MacRoman", "MacJapanese" }));
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -130,11 +248,11 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .add(pathLabel)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(addressField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 631, Short.MAX_VALUE)
+                .add(addressField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(goButton)
                 .addContainerGap())
-            .add(boxPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+            .add(boxPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 812, Short.MAX_VALUE)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(upButton)
@@ -142,7 +260,11 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
                 .add(extractButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(infoButton)
-                .addContainerGap(545, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 295, Short.MAX_VALUE)
+                .add(encodingLabel)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(encodingComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -151,7 +273,9 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(upButton)
                     .add(extractButton)
-                    .add(infoButton))
+                    .add(infoButton)
+                    .add(encodingComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(encodingLabel))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(addressField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -168,6 +292,8 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
     private javax.swing.JPanel boxPanel;
     public javax.swing.JTree dirTree;
     private javax.swing.JScrollPane dirTreeScroller;
+    private javax.swing.JComboBox encodingComboBox;
+    private javax.swing.JLabel encodingLabel;
     public javax.swing.JButton extractButton;
     public javax.swing.JTable fileTable;
     public javax.swing.JScrollPane fileTableScroller;

@@ -24,6 +24,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.catacombae.hfs.CatalogFile;
 import org.catacombae.hfs.HFSVolume;
 import org.catacombae.hfs.types.hfscommon.CommonBTIndexRecord;
+import org.catacombae.hfs.types.hfscommon.CommonBTLeafRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNode;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFile;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
@@ -39,7 +40,7 @@ import org.catacombae.hfsexplorer.FileSystemBrowser.NoLeafMutableTreeNode;
 import org.catacombae.util.Util.Pair;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CatalogInfoPanel
         extends BTreeInfoPanel<CommonHFSCatalogLeafRecord, CatalogFile>
@@ -56,15 +57,15 @@ public class CatalogInfoPanel
         super(vol.getCatalogFile());
     }
 
-    public String getRootNodeName() {
+    protected String getRootNodeName() {
         return "Catalog root";
     }
 
-    public String getHeaderText() {
+    protected String getHeaderText() {
         return "View of the catalog file's B*-tree:";
     }
 
-    public void createCustomPanels(List<Pair<JPanel, String>> panelsList) {
+    protected void createCustomPanels(List<Pair<JPanel, String>> panelsList) {
         fileInfoPanelHeader = new LeafInfoPanel();
         fileInfoPanel = new FileInfoPanel();
         final JPanel fileInfoPanelContainer =
@@ -85,7 +86,7 @@ public class CatalogInfoPanel
                 FOLDER_NAME));
     }
 
-    public void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
+    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
             CatalogFile catalogFile)
     {
         if(node instanceof CommonHFSCatalogIndexNode) {
@@ -111,20 +112,26 @@ public class CatalogInfoPanel
 
             for(int i = 0; i < recs.length; ++i) {
                 final CommonHFSCatalogLeafRecord rec = recs[i];
-                dmtn.add(new DefaultMutableTreeNode(new BTLeafStorage(i,
-                        recordOffsets[i],
-                        recordOffsets[i + 1] - recordOffsets[i], rec,
-                        rec.getKey().getParentID().toLong() + ":" +
-                        catalogFile.getVolume().decodeString(rec.getKey().
-                        getNodeName()))));
+                if(rec != null) {
+                    dmtn.add(new DefaultMutableTreeNode(new BTLeafStorage(i,
+                            recordOffsets[i],
+                            recordOffsets[i + 1] - recordOffsets[i], rec,
+                            rec.getKey().getParentID().toLong() + ":" +
+                            catalogFile.getVolume().decodeString(rec.getKey().
+                            getNodeName()))));
+                }
+                else {
+                    dmtn.add(new DefaultMutableTreeNode("<Invalid record " +
+                            (i + 1) + ">", false));
+                }
             }
         }
         else
             throw new RuntimeException("Invalid node type in tree.");
     }
 
-    public boolean handleLeafRecord(BTLeafStorage leafStorage) {
-        CommonHFSCatalogLeafRecord rec = leafStorage.getRecord();
+    protected boolean handleLeafRecord(BTLeafStorage leafStorage) {
+        CommonBTLeafRecord rec = leafStorage.getRecord();
         //HFSPlusCatalogLeafRecordData data = rec.getData();
         if(rec instanceof CommonHFSCatalogFileRecord.HFSPlusImplementation) {
             CommonHFSCatalogFile fil =

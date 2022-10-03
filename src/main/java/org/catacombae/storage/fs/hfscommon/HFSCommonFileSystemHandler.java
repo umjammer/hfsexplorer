@@ -36,6 +36,7 @@ import org.catacombae.storage.fs.FSLink;
 import org.catacombae.storage.fs.FileSystemHandler;
 import org.catacombae.storage.fs.FSEntry;
 import org.catacombae.hfs.HFSVolume;
+import org.catacombae.hfs.util.ServicesForMac;
 import org.catacombae.storage.fs.FSFile;
 import org.catacombae.storage.fs.FileSystemCapability;
 
@@ -43,7 +44,7 @@ import org.catacombae.storage.fs.FileSystemCapability;
  * HFS+ implementation of a FileSystemHandler. This implementation can be used
  * to access HFS+ file systems.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
@@ -57,15 +58,23 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
     protected final HFSVolume view;
     private boolean posixNames;
+    private boolean sfmSubstitutions;
     private boolean doUnicodeFileNameComposition;
     protected boolean hideProtected;
 
     protected HFSCommonFileSystemHandler(HFSVolume iView,
                     boolean posixNames,
+                    boolean sfmSubstitutions,
                     boolean iDoUnicodeFileNameComposition,
                     boolean hideProtected) {
+        if(sfmSubstitutions && !posixNames) {
+            throw new IllegalArgumentException("'sfmSubstitutions' requires " +
+                    "'posixNames'.");
+        }
+
         this.view = iView;
         this.posixNames = posixNames;
+        this.sfmSubstitutions = sfmSubstitutions;
         this.doUnicodeFileNameComposition = iDoUnicodeFileNameComposition;
         this.hideProtected = hideProtected;
     }
@@ -332,6 +341,10 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
         if(posixNames) {
             logicalName = posixWrap(logicalName);
+
+            if(sfmSubstitutions) {
+                logicalName = ServicesForMac.remap(logicalName, false);
+            }
         }
 
         return logicalName;
@@ -340,13 +353,17 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
     protected String getOnDiskName(String logicalName) {
         String onDiskName = logicalName;
 
+        if(posixNames) {
+            if(sfmSubstitutions) {
+                onDiskName = ServicesForMac.remap(onDiskName, true);
+            }
+
+            onDiskName = posixWrap(onDiskName);
+        }
+
         if(doUnicodeFileNameComposition) {
             onDiskName = UnicodeNormalizationToolkit.getDefaultInstance().
                     decompose(CharBuffer.wrap(onDiskName));
-        }
-
-        if(posixNames) {
-            onDiskName = posixWrap(onDiskName);
         }
 
         return onDiskName;

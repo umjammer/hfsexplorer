@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2008 Erik Larsson
+ * Copyright (C) 2008-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.catacombae.hfs.original;
 /**
  * Transforms data between Java strings and their respective encoded byte[] forms.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface StringCodec {
     /**
@@ -58,4 +58,25 @@ public interface StringCodec {
      * @return encoded data.
      */
     public byte[] encode(String str, int off, int len);
+
+    /**
+     * Returns the charset name as a string.
+     *
+     * @return the charset name as a string.
+     */
+    public String getCharsetName();
+
+    /**
+     * Exception which should be thrown only when a conversion between binary
+     * data and Unicode fails.
+     */
+    public static class StringCodecException extends RuntimeException {
+        public StringCodecException(String message) {
+            super(message);
+        }
+
+        public StringCodecException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
 }

@@ -33,7 +33,7 @@ import org.catacombae.hfsexplorer.gui.BTreeInfoPanel.BTLeafStorage;
 import org.catacombae.util.Util.Pair;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ExtentsInfoPanel
         extends BTreeInfoPanel<CommonHFSExtentLeafRecord, ExtentsOverflowFile>
@@ -43,20 +43,20 @@ public class ExtentsInfoPanel
         super(fsView.getExtentsOverflowFile());
     }
 
-    public String getRootNodeName() {
+    protected String getRootNodeName() {
         return "Extents overflow root";
     }
 
-    public String getHeaderText() {
+    protected String getHeaderText() {
         return "View of the extent overflow file's B*-tree:";
     }
 
-    public void createCustomPanels(List<Pair<JPanel, String>> customPanelsList)
+    protected void createCustomPanels(List<Pair<JPanel, String>> panelsList)
     {
         /* No custom panels are implemented for the extents overflow file. */
     }
 
-    public void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
+    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
             ExtentsOverflowFile extentsOverflowFile)
     {
         if(node instanceof CommonHFSExtentIndexNode) {
@@ -91,7 +91,7 @@ public class ExtentsInfoPanel
             throw new RuntimeException("Invalid node type in tree: " + node);
     }
 
-    public boolean handleLeafRecord(BTLeafStorage leafStorage) {
+    protected boolean handleLeafRecord(BTLeafStorage leafStorage) {
         /* No custom panels are implemented for the extents overflow file, so no
          * special handling is needed for leaf records. */
         return false;

@@ -50,16 +50,16 @@
 
   <dependencies>
     <dependency>
-      <!-- catacombae:csframework -->
-      <groupId>com.github.umjammer</groupId>
-      <artifactId>catacombaeframework</artifactId>
-      <version>0.0.2</version>
+      <!-- catacombae:csframework, catacombaeframework -->
+      <groupId>catacombae</groupId>
+      <artifactId>csframework</artifactId>
+      <version>0.0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <!-- catacombae:hfsx_dmglib -->
-      <groupId>com.github.umjammer</groupId>
-      <artifactId>dmgextractor</artifactId>
-      <version>0.70.1</version>
+      <!-- catacombae:hfsx_dmglib, dmgextractor -->
+      <groupId>catacombae</groupId>
+      <artifactId>hfsx_dmglib</artifactId>
+      <version>0.70.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
