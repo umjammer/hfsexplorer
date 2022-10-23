@@ -8,6 +8,13 @@
 #define LOGGING_ENABLED TRUE
 #endif /* LOGGING_ENABLED */
 
+/** Format placeholder to use for _TCHAR strings in log messages. */
+#ifdef _UNICODE
+#define FMTts "S"
+#else
+#define FMTts "s"
+#endif
+
 /* <Logging macros and inline helper functions> */
 enum loglevel {
   error = 0x0000010,
@@ -33,9 +40,20 @@ static inline const _TCHAR* loglevelToString(loglevel ll) {
 
 /* Main logging macro. */
 #if LOGGING_ENABLED
-#define LOG(loglevel, format, ...) do { if(loglevelEnabled(loglevel)) { _ftprintf(stderr, _T("%s: ") _T(format) _T("\n"), loglevelToString(loglevel), ##__VA_ARGS__); fflush(stderr); } } while(0)
+static inline void LOG(enum loglevel loglevel, const char *format, ...)
+{
+  if(loglevelEnabled(loglevel)) {
+    va_list ap;
+    va_start(ap, format);
+    _ftprintf(stderr, _T("%s: "), loglevelToString(loglevel));
+    vfprintf(stderr, format, ap);
+    _ftprintf(stderr, _T("\n"));
+    fflush(stderr);
+    va_end(ap);
+  }
+}
 #else
-#define LOG(loglevel, format, ...)
+static inline void LOG(enum loglevel loglevel, const char *format, ...) {}
 #endif
 /* </Logging macros and inline helper functions> */
 

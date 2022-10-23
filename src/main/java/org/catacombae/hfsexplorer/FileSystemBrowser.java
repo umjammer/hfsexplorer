@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2007-2014 Erik Larsson
+ * Copyright (C) 2007-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -63,6 +65,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
@@ -75,9 +78,9 @@ import org.catacombae.util.Util.Pair;
  * A generalization of the file system browser into a very autonomous component with very few
  * dependencies, so that it can be easily reused in the future.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class FileSystemBrowser<A> {
+public class FileSystemBrowser<A> implements Resources {
     private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
             "org.catacombae.debug",
             "org.catacombae.hfsexplorer.debug",
@@ -342,9 +345,9 @@ public class FileSystemBrowser<A> {
 
             private JLabel theOne = new JLabel();
             private JLabel theTwo = new JLabel("", SwingConstants.RIGHT);
-            private ImageIcon documentIcon = new ImageIcon(ClassLoader.getSystemResource("res/emptydocument.png"));
-            private ImageIcon folderIcon = new ImageIcon(ClassLoader.getSystemResource("res/folder.png"));
-            private ImageIcon emptyIcon = new ImageIcon(ClassLoader.getSystemResource("res/nothing.png"));
+            private ImageIcon documentIcon = new ImageIcon(EMPTY_DOCUMENT_ICON);
+            private ImageIcon folderIcon = new ImageIcon(FOLDER_ICON);
+            private ImageIcon emptyIcon = new ImageIcon(EMPTY_ICON);
 
             /* @Override */
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, final int row, final int column) {
@@ -569,6 +572,32 @@ public class FileSystemBrowser<A> {
 	    });
 
         setRoot(null);
+
+        /* If the Look & Feel doesn't provide any icon for nodes in a JTree,
+         * then we use our custom folder icon for all nodes. This is a known
+         * issue with the GTK+ Look & Feel (not sure if it's a bug or by design
+         * but it looks pretty awful). */
+        final DefaultTreeCellRenderer customCellRenderer =
+                new DefaultTreeCellRenderer();
+        boolean useCustomCellRenderer = false;
+
+        if(customCellRenderer.getClosedIcon() == null) {
+            customCellRenderer.setClosedIcon(new ImageIcon(FOLDER_ICON));
+            useCustomCellRenderer = true;
+        }
+        if(customCellRenderer.getOpenIcon() == null) {
+            customCellRenderer.setOpenIcon(new ImageIcon(FOLDER_ICON));
+            useCustomCellRenderer = true;
+        }
+        if(customCellRenderer.getLeafIcon() == null) {
+            customCellRenderer.setLeafIcon(new ImageIcon(FOLDER_ICON));
+            useCustomCellRenderer = true;
+        }
+
+        if(useCustomCellRenderer) {
+            dirTree.setCellRenderer(customCellRenderer);
+        }
+
        	dirTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
 	dirTree.addTreeSelectionListener(new TreeSelectionListener() {
@@ -622,6 +651,14 @@ public class FileSystemBrowser<A> {
 		    adjustTableWidth();
 		}
  	    });
+
+        String savedHFSEncoding = getSavedHFSEncoding();
+        if(savedHFSEncoding != null) {
+            if(!viewComponent.setSelectedHFSEncoding(savedHFSEncoding)) {
+                System.err.println("Could not restore saved HFS encoding: " +
+                        savedHFSEncoding);
+            }
+        }
     }
 
     /**
@@ -1017,6 +1054,59 @@ public class FileSystemBrowser<A> {
     }
 
     /**
+     * Get the selected HFS encoding value in the user interface.
+     *
+     * @return the selected HFS encoding value in the user interface.
+     */
+    String getSelectedHFSEncoding() {
+        return viewComponent.getSelectedHFSEncoding();
+    }
+
+    /**
+     * Persist the current HFS encoding value in the application's preferences.
+     */
+    void saveSelectedHFSEncoding() {
+        try {
+            Preferences p = Preferences.userNodeForPackage(HFSExplorer.class);
+            p.put("DefaultHFSEncoding", viewComponent.getSelectedHFSEncoding());
+            p.flush();
+        } catch(BackingStoreException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Query the saved preferences for any saved HFS encoding value.
+     *
+     * @return
+     *      the saved preference value for HFS encoding, or null if there is no
+     *      saved value.
+     */
+    final String getSavedHFSEncoding() {
+        Preferences p = Preferences.userNodeForPackage(HFSExplorer.class);
+        return p.get("DefaultHFSEncoding", null);
+    }
+
+    /**
+     * Set the visibility of the HFS-specific graphical components.
+     *
+     * @param b true if the HFS fields should be showing, false otherwise.
+     */
+    void setHFSFieldsVisible(boolean b) {
+        viewComponent.setHFSFieldsVisible(b);
+    }
+
+    /**
+     * Register a listener for when the user changes the selection in the HFS
+     * encodings combo box.
+     *
+     * @param al An {@link ActionListener} that will be notified.
+     */
+    void registerHFSEncodingChangedListener(ActionListener al) {
+        viewComponent.registerHFSEncodingChangedListener(al);
+    }
+
+    /**
      * Returns the current user selection as a list of the user objects
      * contained within the records, rather than a list of the records
      * themselves. This is a convenience method.
@@ -1363,8 +1453,8 @@ public class FileSystemBrowser<A> {
      * where to display it.<br>
      * The text will look something like "3 objects selected (11,39 KiB)".
      *
-     * @param selectedFilesCount  number of files currently selected.
-     * @param totalSize           the total size of the selection.
+     * @param selectedFilesCount The number of files currently selected.
+     * @param selectionSize The total size of the selection.
      */
     private void setSelectionStatus(long selectedFilesCount, long selectionSize) {
         String sizeString;

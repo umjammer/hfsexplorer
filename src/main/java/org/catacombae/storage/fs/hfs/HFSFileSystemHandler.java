@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2008-2014 Erik Larsson
+ * Copyright (C) 2008-2021 Erik Larsson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,15 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafRecord;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSFileSystemHandler extends HFSCommonFileSystemHandler {
 
     public HFSFileSystemHandler(DataLocator fsLocator, boolean useCaching,
-            boolean posixNames, String encodingName)
+            boolean posixNames, boolean sfmSubstitutions, String encodingName)
     {
         super(new HFSOriginalVolume(fsLocator.createReadOnlyFile(), useCaching,
-                encodingName), posixNames, false, false);
+                encodingName), posixNames, sfmSubstitutions, false, false);
     }
 
     protected boolean shouldHide(CommonHFSCatalogLeafRecord rec) {
@@ -50,5 +50,13 @@ public class HFSFileSystemHandler extends HFSCommonFileSystemHandler {
     {
         // HFS does not support links.
         return null;
+    }
+
+    public String getEncoding() {
+        return ((HFSOriginalVolume) view).getStringEncoding();
+    }
+
+    public void setEncoding(String encodingName) {
+        ((HFSOriginalVolume) view).setStringEncoding(encodingName);
     }
 }

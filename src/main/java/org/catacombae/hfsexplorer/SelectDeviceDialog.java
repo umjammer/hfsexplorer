@@ -23,6 +23,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,17 +47,28 @@ import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.hfsexplorer.gui.SelectDevicePanel;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.RuntimeIOException;
+import org.catacombae.storage.fs.FileSystemDetector;
+import org.catacombae.storage.fs.FileSystemHandler;
+import org.catacombae.storage.fs.FileSystemHandlerFactory;
+import org.catacombae.storage.fs.FileSystemMajorType;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer.FileSystemType;
+import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.io.ReadableStreamDataLocator;
+import org.catacombae.storage.io.SubDataLocator;
 import org.catacombae.storage.ps.PartitionSystemDetector;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
 import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.PartitionType;
+import org.catacombae.storage.ps.PartitionType.ContentType;
+import org.catacombae.storage.ps.gpt.GPTRecognizer;
 import org.catacombae.util.ObjectContainer;
 
+/**
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
+ */
 public abstract class SelectDeviceDialog extends JDialog {
 
     private SelectDevicePanel guiPanel;
@@ -74,7 +87,9 @@ public abstract class SelectDeviceDialog extends JDialog {
 
     private ReadableRandomAccessStream result = null;
     private String resultCreatePath = null;
-    private String[] detectedDeviceNames;
+    private String[] detectedDeviceNames = null;
+
+    private long lastRefreshTimestamp = 0;
 
     private interface SelectDeviceDialogFactory {
         public boolean isSystemSupported();
@@ -82,8 +97,12 @@ public abstract class SelectDeviceDialog extends JDialog {
                 String title);
     }
 
+    private static final WindowsNT4Factory windowsNt4Factory =
+        new WindowsNT4Factory();
+
     private static final SelectDeviceDialogFactory factories[] = {
         new WindowsFactory(),
+        windowsNt4Factory, /* Must come immediately after WindowsFactory. */
         new LinuxFactory(),
         new MacOSXFactory(),
         new FreeBSDFactory(),
@@ -109,17 +128,7 @@ public abstract class SelectDeviceDialog extends JDialog {
         selectSpecifyGroup.add(selectDeviceButton);
         selectSpecifyGroup.add(specifyDeviceNameButton);
 
-        detectedDevicesCombo.removeAllItems();
-
-        detectedDeviceNames = detectDevices();
-        for(String name : detectedDeviceNames)
-            detectedDevicesCombo.addItem(name);
-
-        if(detectedDeviceNames.length > 0) {
-            detectedDevicesCombo.setSelectedIndex(0);
-            specifyDeviceNameField.setText(getDevicePrefix() +
-                    detectedDevicesCombo.getSelectedItem().toString());
-        }
+        refreshDevices();
 
         autodetectButton.addActionListener(new ActionListener() {
                 /* @Override */
@@ -156,13 +165,19 @@ public abstract class SelectDeviceDialog extends JDialog {
                 public void actionPerformed(ActionEvent ae) {
                     resultCreatePath = specifyDeviceNameField.getText();
                     result = createStream(resultCreatePath);
-                    setVisible(false);
+                    dispose();
                 }
             });
         cancelButton.addActionListener(new ActionListener() {
                 /* @Override */
                 public void actionPerformed(ActionEvent ae) {
-                    setVisible(false);
+                    dispose();
+                }
+            });
+        addWindowFocusListener(new WindowAdapter() {
+                @Override
+                public void windowGainedFocus(WindowEvent we) {
+                    refreshDevices();
                 }
             });
 
@@ -177,7 +192,89 @@ public abstract class SelectDeviceDialog extends JDialog {
         setResizable(false);
     }
 
-    public ReadableRandomAccessStream getPartitionStream() { return result; }
+    private void refreshDevices() {
+        long refreshTimestamp = System.currentTimeMillis();
+        if(refreshTimestamp - lastRefreshTimestamp < 100) {
+            /* Prevent a flood of requests. */
+            return;
+        }
+        lastRefreshTimestamp = refreshTimestamp;
+
+        int selectedIndex = detectedDevicesCombo.getSelectedIndex();
+        detectedDevicesCombo.removeAllItems();
+
+        String newDeviceNames[] = detectDevices();
+        for(String name : newDeviceNames) {
+            detectedDevicesCombo.addItem(name);
+        }
+
+        if(newDeviceNames.length > 0) {
+            /* Calculate new selected index. */
+            final int i_limit =
+                    (detectedDeviceNames == null) ? 0 :
+                    detectedDeviceNames.length;
+            final int j_limit = newDeviceNames.length;
+
+            int i, j;
+            for(i = 0, j = 0; i < i_limit && j < j_limit;) {
+                if(detectedDeviceNames[i].equals(newDeviceNames[j])) {
+                    if(i == selectedIndex) {
+                        break;
+                    }
+
+                    ++i;
+                    ++j;
+                }
+                else if(j <= i) {
+                    ++i;
+                }
+            }
+
+            if(j >= j_limit) {
+                j = j_limit - 1;
+            }
+
+            detectedDevicesCombo.setSelectedIndex(j);
+
+            specifyDeviceNameField.setText(getDevicePrefix() +
+                    detectedDevicesCombo.getSelectedItem().toString());
+        }
+        else {
+            detectedDevicesCombo.setSelectedIndex(-1);
+            specifyDeviceNameField.setText("");
+        }
+
+        detectedDeviceNames = newDeviceNames;
+    }
+
+    public ReadableRandomAccessStream getPartitionStream() {
+        if(this instanceof WindowsNT4 &&
+                result instanceof ReadableWin32FileStream)
+        {
+            /* Check if we need to offset the stream to handle a GPT layout
+             * inside a protective MBR partition. */
+            final int sectorSize =
+                    ((ReadableWin32FileStream) result).getSectorSize();
+            final ReadableRandomAccessStream gptStream;
+
+            /* Try detecting GPT partitions inside MBR protective
+             * partition by creating a sector-sized hole preceding the
+             * device for the MBR. */
+            gptStream = new ReadableConcatenatedStream(
+                    /* ReadableRandomAccessStream firstPart */
+                    result,
+                    /* long startOffset */
+                    -sectorSize,
+                    /* long length */
+                    result.length() + sectorSize);
+
+            GPTRecognizer gptRecognizer = new GPTRecognizer();
+            if(gptRecognizer.detect(gptStream, 0, gptStream.length())) {
+                return gptStream;
+            }
+        }
+        return result;
+    }
 
     /** Could include an identifier of a partitioning scheme. This should only be used to display a descriptive locator. */
     public String getPathName() { return resultCreatePath; }
@@ -215,6 +312,21 @@ public abstract class SelectDeviceDialog extends JDialog {
         for(SelectDeviceDialogFactory factory : factories) {
             if(factory.isSystemSupported()) {
                 dialog = factory.createDeviceDialog(owner, modal, title);
+                if(dialog instanceof SelectDeviceDialog.Windows &&
+                    dialog.detectedDeviceNames.length == 0)
+                {
+                    SelectDeviceDialog nt4dialog =
+                        windowsNt4Factory.createDeviceDialog(
+                            /* Frame owner */
+                            owner,
+                            /* boolean modal */
+                            modal,
+                            /* String title */
+                            title);
+                    if(nt4dialog.detectedDeviceNames.length != 0) {
+                        dialog = nt4dialog;
+                    }
+                }
                 break;
             }
         }
@@ -222,10 +334,92 @@ public abstract class SelectDeviceDialog extends JDialog {
         return dialog;
     }
 
+    private String getFilesystemInfo(ReadableRandomAccessStream deviceStream,
+            String deviceDescription)
+    {
+        String fsInfo = null;
+        DataLocator inputDataLocator = null;
+
+        try {
+            inputDataLocator =
+                    new ReadableStreamDataLocator(deviceStream);
+            FileSystemMajorType[] fsTypes =
+                    FileSystemDetector.detectFileSystem(inputDataLocator);
+            FileSystemHandlerFactory fsFactory = null;
+
+            for(FileSystemMajorType type : fsTypes) {
+                FileSystemHandler fsHandler = null;
+                try {
+                    switch(type) {
+                        case APPLE_HFS:
+                        case APPLE_HFS_PLUS:
+                        case APPLE_HFSX:
+                            fsFactory = type.createDefaultHandlerFactory();
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if(fsFactory != null) {
+                        fsHandler = fsFactory.createHandler(inputDataLocator);
+                        fsInfo = "\"" + fsHandler.getRoot().getName() + "\" " +
+                                "(" + deviceDescription + ")";
+                        break;
+                    }
+                } catch(Exception e) {
+                    System.err.println("Exception while getting file system " +
+                            "label for filesystem major type " + type + ":");
+                    e.printStackTrace();
+                } finally {
+                    if(fsHandler != null) {
+                        fsHandler.close();
+                    }
+                }
+            }
+        } catch(Exception e) {
+            System.err.println("Exception while getting file system label:");
+            e.printStackTrace();
+        } finally {
+            if(inputDataLocator != null) {
+                inputDataLocator.close();
+            }
+        }
+
+        if(fsInfo == null) {
+            fsInfo = deviceDescription;
+        }
+
+        return fsInfo;
+    }
+
+    private String getFilesystemInfoString(String deviceName) {
+        ReadableRandomAccessStream fsStream = null;
+        try {
+            fsStream = createStream(getDevicePrefix() + deviceName);
+            return getFilesystemInfo(fsStream, deviceName);
+        } finally {
+        }
+    }
+
+    private String getFilesystemInfoString(EmbeddedPartitionEntry pe) {
+        ReadableRandomAccessStream fsStream = null;
+        try {
+            fsStream =
+                    new ReadableConcatenatedStream(
+                    createStream(getDevicePrefix() + pe.deviceName),
+                    pe.psOffset + pe.partition.getStartOffset(),
+                    pe.partition.getLength());
+            return getFilesystemInfo(fsStream, pe.toString());
+        } finally {
+        }
+    }
+
     protected void autodetectFilesystems() {
         LinkedList<String> plainFileSystems = new LinkedList<String>();
         LinkedList<EmbeddedPartitionEntry> embeddedFileSystems = new LinkedList<EmbeddedPartitionEntry>();
         //String skipPrefix = null;
+
+        refreshDevices();
 
         // Look for file systems that sit inside partition systems unsupported by Windows.
         for(int i = 0; i < detectedDeviceNames.length; ++i) {
@@ -247,6 +441,8 @@ public abstract class SelectDeviceDialog extends JDialog {
             //    skipPrefix = null;
 
             ReadableRandomAccessStream llf = null;
+            int psOffset = 0;
+            ReadableStreamDataLocator llfLocator = null;
             PartitionSystemHandler partSys = null;
             try {
                 llf = createStream(getDevicePrefix() + deviceName);
@@ -254,6 +450,34 @@ public abstract class SelectDeviceDialog extends JDialog {
                 PartitionSystemType[] detectedTypes =
                         PartitionSystemDetector.detectPartitionSystem(llf,
                         false);
+
+                if(detectedTypes.length == 0 && this instanceof WindowsNT4 &&
+                        llf instanceof ReadableWin32FileStream)
+                {
+                    final int sectorSize =
+                            ((ReadableWin32FileStream) llf).getSectorSize();
+                    final ReadableRandomAccessStream gptStream;
+
+                    /* Try detecting GPT partitions inside MBR protective
+                     * partition by creating a sector-sized hole preceding the
+                     * device for the MBR. */
+                    psOffset = -sectorSize;
+                    gptStream = new ReadableConcatenatedStream(
+                            /* ReadableRandomAccessStream firstPart */
+                            llf,
+                            /* long startOffset */
+                            -sectorSize,
+                            /* long length */
+                            llf.length() + sectorSize);
+
+                    GPTRecognizer a = new GPTRecognizer();
+                    if(a.detect(gptStream, 0, gptStream.length())) {
+                        detectedTypes = new PartitionSystemType[] {
+                            PartitionSystemType.GPT,
+                        };
+                        llf = gptStream;
+                    }
+                }
 
                 PartitionSystemType pst;
                 if(detectedTypes.length == 1)
@@ -275,14 +499,60 @@ public abstract class SelectDeviceDialog extends JDialog {
                     PartitionSystemHandlerFactory fact =
                             pst.createDefaultHandlerFactory();
 
-                    partSys = fact.createHandler(
-                            new ReadableStreamDataLocator(llf));
+                    llfLocator = new ReadableStreamDataLocator(llf);
+                    partSys = fact.createHandler(llfLocator);
 
-                    Partition[] parts = partSys.getPartitions();
-                    for(int j = 0; j < parts.length; ++j) {
-                        Partition part = parts[j];
+                    ArrayList<Partition> parts =
+                            new ArrayList<Partition>(Arrays.asList(partSys.
+                            getPartitions()));
+                    for(int j = 0; j < parts.size(); ++j) {
+                        Partition part = parts.get(j);
                         PartitionType pt = part.getType();
-                        if(pt == PartitionType.APPLE_HFS_CONTAINER ||
+
+                        if(pt.getContentType() == ContentType.PARTITION_SYSTEM)
+                        {
+                            PartitionSystemType epst =
+                                    pt.getAssociatedPartitionSystemType();
+                            PartitionSystemHandler ph =
+                                    epst.createDefaultHandlerFactory().
+                                    createHandler(
+                                    new SubDataLocator(llfLocator,
+                                    part.getStartOffset(),
+                                    part.getLength()));
+                            EmbeddedPartitionEntry outerPartitionEntry =
+                                    new EmbeddedPartitionEntry(deviceName, j,
+                                    pst, part, psOffset);
+                            Partition[] embeddedPartitions = ph.getPartitions();
+                            for(int k = 0; k < embeddedPartitions.length; ++k) {
+                                Partition embeddedPart = embeddedPartitions[k];
+
+                                PartitionType ept = embeddedPart.getType();
+                                if(ept != PartitionType.APPLE_HFS_CONTAINER &&
+                                    ept != PartitionType.APPLE_HFSX)
+                                {
+                                    continue;
+                                }
+
+                                FileSystemType fsType =
+                                        HFSCommonFileSystemRecognizer.
+                                            detectFileSystem(llf,
+                                                part.getStartOffset() +
+                                                embeddedPart.getStartOffset());
+
+                                if(HFSCommonFileSystemRecognizer.
+                                        isTypeSupported(fsType))
+                                {
+                                    fileSystemFound = true;
+                                    embeddedFileSystems.add(
+                                            new EmbeddedPartitionEntry(
+                                            outerPartitionEntry, k, epst,
+                                            embeddedPart, psOffset));
+                                }
+                            }
+
+                            ph.close();
+                        }
+                        else if(pt == PartitionType.APPLE_HFS_CONTAINER ||
                                 pt == PartitionType.APPLE_HFSX) {
                             FileSystemType fsType =
                                     HFSCommonFileSystemRecognizer.
@@ -294,7 +564,7 @@ public abstract class SelectDeviceDialog extends JDialog {
                                 fileSystemFound = true;
                                 embeddedFileSystems.add(
                                         new EmbeddedPartitionEntry(deviceName,
-                                        j, pst, part));
+                                        j, pst, part, psOffset));
                             }
                         }
                     }
@@ -326,19 +596,30 @@ public abstract class SelectDeviceDialog extends JDialog {
                 }
             } finally {
                 if(partSys != null) {
-                    partSys.close(); /* Will also close llf. */
+                    partSys.close(); /* Will also close llfLocator, llf. */
+                }
+                else if(llfLocator != null) {
+                    llfLocator.close(); /* Will also close llf. */
+                }
+                else if(llf != null) {
+                    llf.close();
                 }
             }
         }
 
         if(plainFileSystems.size() >= 1 || embeddedFileSystems.size() >= 1) {
-            String[] plainStrings = plainFileSystems.toArray(
-                    new String[plainFileSystems.size()]);
+            int i;
+
+            String[] plainStrings = new String[plainFileSystems.size()];
+            i = 0;
+            for(String cur : plainFileSystems) {
+                plainStrings[i++] = getFilesystemInfoString(cur);
+            }
 
             String[] embeddedStrings = new String[embeddedFileSystems.size()];
-            int i = 0;
+            i = 0;
             for(EmbeddedPartitionEntry cur : embeddedFileSystems) {
-                embeddedStrings[i++] = cur.toString();
+                embeddedStrings[i++] = getFilesystemInfoString(cur);
             }
 
             String[] allOptions =
@@ -381,16 +662,18 @@ public abstract class SelectDeviceDialog extends JDialog {
                             case APM:
                             case GPT:
                             case MBR:
+                            case DOS_EXTENDED:
                                 ReadableRandomAccessStream llf =
                                         createStream(getDevicePrefix() +
                                         embeddedInfo.deviceName);
 
                                 Partition p = embeddedInfo.partition;
                                 resultCreatePath = getDevicePrefix() +
-                                        selectedValue.toString();
+                                        embeddedInfo.toString();
                                 result = new ReadableConcatenatedStream(llf,
+                                        embeddedInfo.psOffset +
                                         p.getStartOffset(), p.getLength());
-                                setVisible(false);
+                                dispose();
                                 break;
                             default:
                                 throw new RuntimeException("Unexpected " +
@@ -399,10 +682,15 @@ public abstract class SelectDeviceDialog extends JDialog {
                         }
                     }
                     else {
-                        resultCreatePath = getDevicePrefix() +
-                                selectedValue.toString();
+                        final String plainInfo =
+                                plainFileSystems.get(selectedIndex);
+                        if(plainInfo == null) {
+                            throw new RuntimeException("plainInfo == null");
+                        }
+
+                        resultCreatePath = getDevicePrefix() + plainInfo;
                         result = createStream(resultCreatePath);
-                        setVisible(false);
+                        dispose();
                     }
                 }
             }
@@ -417,7 +705,7 @@ public abstract class SelectDeviceDialog extends JDialog {
 // 						    JOptionPane.QUESTION_MESSAGE);
 // 	    if(res == JOptionPane.YES_OPTION) {
 // 		result = DEVICE_PREFIX + plainFileSystems.getFirst();
-// 		setVisible(false);
+// 	        dispose();
 // 	    }
 // 	}
         else
@@ -534,6 +822,83 @@ public abstract class SelectDeviceDialog extends JDialog {
                     activeDeviceNames.addLast(currentDevice);
                 }
                 catch(Exception e) {}
+            }
+
+            return activeDeviceNames.toArray(
+                    new String[activeDeviceNames.size()]);
+        }
+    }
+
+    private static class WindowsNT4Factory implements SelectDeviceDialogFactory
+    {
+        public boolean isSystemSupported() {
+            return System.getProperty("os.name").toLowerCase().
+                    startsWith("windows");
+        }
+
+        public SelectDeviceDialog createDeviceDialog(final Frame owner,
+                final boolean modal, final String title)
+        {
+            return new SelectDeviceDialog.WindowsNT4(owner, modal, title);
+        }
+    }
+
+    private static class WindowsNT4 extends SelectDeviceDialog {
+        public WindowsNT4(final Frame owner, final boolean modal,
+                final String title)
+        {
+            super(owner, modal, title);
+        }
+
+        @Override
+        protected ReadableRandomAccessStream createStream(final String path) {
+            return new ReadableWin32FileStream(path);
+        }
+
+        protected String getDevicePrefix() {
+            return "\\\\.\\";
+        }
+
+        protected String getExampleDeviceName() {
+            return "\\\\.\\E:";
+        }
+
+        protected boolean isPartition(final String deviceName) {
+            /* Technically this is true, however this is used only to determine
+             * if we should ignore it in favour of the internal partition
+             * system parser, and we can't use it if we don't have access to
+             * the whole devices. So return false (maybe this method should be
+             * renamed). */
+            return false;
+        }
+
+        /**
+         * This method is only tested with Windows NT 4.0. (SP6a, x86). Also,
+         * it won't work with devices that are not mounted using the Windows NT
+         * standard names.
+         * @return a list of the names of the detected devices
+         */
+        protected String[] detectDevices() {
+            LinkedList<String> activeDeviceNames = new LinkedList<String>();
+
+            /*
+             * Since I've been too lazy to figure out how to implement a native
+             * method for reading the contents of the device tree I'll just
+             * iterate over all possible drive letters.
+             */
+
+            /* If all else fails, use drive letters. */
+            if(activeDeviceNames.size() == 0) {
+                for(char c = 'A'; c <= 'Z'; ++c) {
+                    try {
+                        String currentDevice = c + ":";
+                        ReadableRandomAccessStream curFile =
+                                createStream(getDevicePrefix() + currentDevice);
+                        curFile.close();
+                        activeDeviceNames.addLast(currentDevice);
+                    } catch(Exception e) {
+                    }
+                }
             }
 
             return activeDeviceNames.toArray(
@@ -1036,16 +1401,35 @@ public abstract class SelectDeviceDialog extends JDialog {
 
     private static final class EmbeddedPartitionEntry {
         public final String deviceName;
+        public final EmbeddedPartitionEntry outerPartitionEntry;
         public final long partitionNumber;
         public final PartitionSystemType psType;
         public final Partition partition;
+        public final long psOffset;
 
         public EmbeddedPartitionEntry(String deviceName, long partitionNumber,
-                PartitionSystemType psType, Partition partition) {
+                PartitionSystemType psType, Partition partition, int psOffset)
+        {
             this.deviceName = deviceName;
+            this.outerPartitionEntry = null;
             this.partitionNumber = partitionNumber;
             this.psType = psType;
             this.partition = partition;
+            this.psOffset = psOffset;
+        }
+
+        public EmbeddedPartitionEntry(
+                EmbeddedPartitionEntry outerPartitionEntry,
+                long partitionNumber, PartitionSystemType psType,
+                Partition partition, int psOffset)
+        {
+            this.deviceName = outerPartitionEntry.deviceName;
+            this.outerPartitionEntry = outerPartitionEntry;
+            this.partitionNumber = partitionNumber;
+            this.psType = psType;
+            this.partition = partition;
+            this.psOffset =
+                    psOffset + outerPartitionEntry.partition.getStartOffset();
         }
 
         private String getPartitionSystemString() {
@@ -1063,10 +1447,16 @@ public abstract class SelectDeviceDialog extends JDialog {
             }
         }
 
+        private String getPartitionString() {
+            return ((outerPartitionEntry != null) ?
+                outerPartitionEntry.getPartitionString() : "") +
+                "[" + getPartitionSystemString() + ":Partition" +
+                partitionNumber + "]";
+        }
+
         @Override
         public String toString() {
-            return deviceName + "[" + getPartitionSystemString() + ":Partition" +
-                    partitionNumber + "]";
+            return deviceName + getPartitionString();
         }
     }
 }

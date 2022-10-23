@@ -161,6 +161,7 @@ static const _TCHAR *classpathComponents[classpathComponentsLength] =
     _T("..\\lib\\swing-layout-1.0.4.jar"),
     _T("..\\lib\\hfsx_dmglib.jar"),
     _T("..\\lib\\apache-ant-1.7.0-bzip2.jar"),
+    _T("..\\lib\\filedrop.jar")
     _T("..\\lib\\iharder-base64.jar")
   };
 
@@ -266,7 +267,7 @@ static inline void printError(const _TCHAR *const prefix, const DWORD errorVal) 
     message[cutPosition-1] = _T('\0');
   }
 
-  LOG(error, "%s%i: \"%s\"", prefix, errorVal, message);
+  LOG(error, "%" FMTts "%i: \"%" FMTts "\"", prefix, errorVal, message);
 
   delete[] message;
   if(fmtMsgMessage != NULL)
@@ -349,8 +350,8 @@ static void uninitializeCOM() {
  * Inline utility function for getting the correct string for a bool value
  * (i.e. not 1 or 0, but "true" or "false").
  */
-static inline const _TCHAR* bool2str(bool b) {
-  return b?_T("true"):_T("false");
+static inline const char* bool2str(bool b) {
+  return b ? "true" : "false";
 }
 
 /**
@@ -370,13 +371,14 @@ static bool appendToEnvironmentVariable(const _TCHAR *const varName,
         GetEnvironmentVariable(varName, oldValue, oldValueAllocatedLength);
 
     if(oldValueLength != oldValueAllocatedLength - 1) {
-        LOG(error, "Could not get environment variable %s. oldValueLength=%d, "
-            "oldValueAllocatedLength=%d.",
+        LOG(error, "Could not get environment variable %" FMTts ". "
+            "oldValueLength=%d, oldValueAllocatedLength=%d.",
             varName, oldValueLength, oldValueAllocatedLength);
         printError(_T("Error: "), GetLastError());
     }
     else {
-        LOG(debug, "Read old %s variable: \"%s\"", varName, oldValue);
+        LOG(debug, "Read old %" FMTts " variable: \"%" FMTts "\"",
+            varName, oldValue);
 
         const DWORD newValueAllocatedLength =
             oldValueLength + appendedValueLength + 1;
@@ -392,10 +394,11 @@ static bool appendToEnvironmentVariable(const _TCHAR *const varName,
 
         newValue[ptr++] = _T('\0');
 
-        LOG(debug, "Setting new %s variable: \"%s\"", varName, newValue);
+        LOG(debug, "Setting new %" FMTts " variable: \"%" FMTts "\"",
+            varName, newValue);
 
         if(SetEnvironmentVariable(varName, newValue) == TRUE) {
-            LOG(debug, "Successfully set %s variable!", varName);
+            LOG(debug, "Successfully set %" FMTts " variable!", varName);
             result = true;
         }
         else {
@@ -416,7 +419,8 @@ static bool appendToEnvironmentVariable(const _TCHAR *const varName,
 /* Begin: Code from Sun's forums. http://forum.java.sun.com/thread.jspa?threadID=5124559&messageID=9441051 */
 
 static int readStringFromRegistry(HKEY key, const _TCHAR *name, LPBYTE buf, DWORD bufsize) {
-  LOG(trace, "int readStringFromRegistry(%d, \"%s\", (_TCHAR*) 0x%X, %d)", key, name, buf, bufsize);
+  LOG(trace, "int readStringFromRegistry(%d, \"%" FMTts "\", (_TCHAR*) 0x%X, "
+    "%d)", key, name, buf, bufsize);
 
   DWORD type, size;
 
@@ -442,23 +446,25 @@ static int readJreKeyFromRegistry(const _TCHAR *leafName, _TCHAR *buf,
   LOG(debug, "  readJreKeyFromRegistry(__out _TCHAR *buf [ptr: 0x%X], %i)",
     (size_t) buf, bufsize);
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, JRE_KEY, 0, KEY_READ, &key) != ERROR_SUCCESS) {
-    LOG(debug, "  Could not open key HKLM\\%s. Aborting.", JRE_KEY);
+    LOG(debug, "  Could not open key HKLM\\%" FMTts ". Aborting.", JRE_KEY);
     return -1;
   }
   if(readStringFromRegistry(key, CURVER_STR, version, sizeof(version)) != 0) {
-    LOG(debug, "  Could not read %s string (CURVER) from Java registry location. Aborting...", CURVER_STR);
+    LOG(debug, "  Could not read %" FMTts " string (CURVER) from Java registry "
+      "location. Aborting...", CURVER_STR);
     RegCloseKey(key);
     return -2;
   }
   // If we call the unicode version of the function, we will get unicode data back, so we can cast to _TCHAR
   if(RegOpenKeyEx(key, (_TCHAR*)version, 0, KEY_READ, &subkey) != ERROR_SUCCESS) {
-    LOG(debug, "  Could not open subkey %s. Aborting...", (_TCHAR*)version);
+    LOG(debug, "  Could not open subkey %" FMTts ". Aborting...",
+      (_TCHAR*)version);
     RegCloseKey(key);
     return -3;
   }
   if(readStringFromRegistry(subkey, leafName, (LPBYTE)buf, bufsize) != 0) {
-    LOG(debug, "  Could not read %s string from Java registry location. "
-      "Aborting...", leafName);
+    LOG(debug, "  Could not read %" FMTts " string from Java registry "
+      "location. Aborting...", leafName);
     RegCloseKey(subkey);
     RegCloseKey(key);
     return -4;
@@ -520,7 +526,7 @@ static bool loadJVMLibrary(const _TCHAR *const libraryPath,
             else if(!appendToEnvironmentVariable(_T("PATH"), javaHomePath,
                 _tcslen(javaHomePath)))
             {
-                LOG(debug, "Error while appending \"%s\" to PATH.\n",
+                LOG(debug, "Error while appending \"%" FMTts "\" to PATH.\n",
                     javaHomePath);
             }
             else if(!appendToEnvironmentVariable(_T("PATH"), _T("\\bin"),
@@ -535,7 +541,7 @@ static bool loadJVMLibrary(const _TCHAR *const libraryPath,
     }
 
     if(pathModificationSuccessful) {
-        LOG(debug, "LoadLibrary(%s);", libraryPath);
+        LOG(debug, "LoadLibrary(%" FMTts ");", libraryPath);
         HINSTANCE jvmLib = LoadLibrary(libraryPath);
         if(jvmLib == NULL) {
             printError(_T("LoadLibrary failed with error "), GetLastError());
@@ -608,10 +614,12 @@ static bool locateJVMThroughJavaHome(JNI_CreateJavaVM_t **JNI_CreateJavaVM_f, HI
 
   _TCHAR *envString = new _TCHAR[32767];
 
-  const int endingsLength = 2;
+  const int endingsLength = 4;
   const _TCHAR *endings[endingsLength] = {
+    _T("\\bin\\client\\jvm.dll"),
+    _T("\\bin\\server\\jvm.dll"),
     _T("\\jre\\bin\\client\\jvm.dll"),
-    _T("\\jre\\bin\\server\\jvm.dll")
+    _T("\\jre\\bin\\server\\jvm.dll"),
   };
 
   for(int i = 0; i < endingsLength; ++i) {
@@ -673,11 +681,12 @@ static bool createJavaVM(JavaVM **jvmOut, HINSTANCE *jvmLibOut) {
     JNIEnv *env;
     JavaVM *jvm;
     jint res;
+    int i;
 
     /* <Build classpath string> */
     int classpathStringLength = 0;
     int pathSeparatorLength = strlen(PATH_SEPARATOR);
-    for(int i = 0; i < classpathComponentsLength; ++i) {
+    for(i = 0; i < classpathComponentsLength; ++i) {
       if(i > 0)
 	classpathStringLength += pathSeparatorLength; // PATH_SEPARATOR
       classpathStringLength += strlen(T2A(classpathComponents[i]));
@@ -686,7 +695,7 @@ static bool createJavaVM(JavaVM **jvmOut, HINSTANCE *jvmLibOut) {
 
     char* classpathString = new char[classpathStringLength];
     int pos = 0;
-    for(int i = 0; i < classpathComponentsLength; ++i) {
+    for(i = 0; i < classpathComponentsLength; ++i) {
       if(i > 0) {
 	strncpy(classpathString+pos, PATH_SEPARATOR, pathSeparatorLength); pos += pathSeparatorLength;
       }
@@ -709,7 +718,8 @@ static bool createJavaVM(JavaVM **jvmOut, HINSTANCE *jvmLibOut) {
     strncpy(classpathOptionString+optionPrefixLength, classpathString, classpathStringLength);
     classpathOptionString[optionPrefixLength+classpathStringLength-1] = '\0';
     _TCHAR *tClasspathOptionString = A2T(classpathOptionString);
-    LOG(debug, "Classpath option string: \"%s\"", tClasspathOptionString);
+    LOG(debug, "Classpath option string: \"%" FMTts "\"",
+        tClasspathOptionString);
 
     JavaVMInitArgs vm_args;
     const int nOptions = 2;
@@ -776,7 +786,7 @@ static bool startJavaVM(JavaVM *jvmInstance, const int javaArgsLength, const _TC
 
   _TCHAR currentWorkingDirectory[MAX_PATH];
   GetCurrentDirectory(MAX_PATH, currentWorkingDirectory);
-  LOG(debug, "Current working dir: \"%s\"", currentWorkingDirectory);
+  LOG(debug, "Current working dir: \"%" FMTts "\"", currentWorkingDirectory);
   /* Proceed... */
   JNIEnv *env;
   jvmInstance->AttachCurrentThread((void **)&env, NULL);
@@ -829,7 +839,8 @@ static bool startJavaVM(JavaVM *jvmInstance, const int javaArgsLength, const _TC
 #endif
 
 	  if(wcCur != NULL && wcCurLength != -1) {
-            LOG(debug, "Converting \"%.*s\" to UTF-8...", wcCurLength, wcCur);
+            LOG(debug, "Converting \"%.*" FMTts "\" to UTF-8...",
+                wcCurLength, wcCur);
 	    char* utf8String;
 	    int utf8StringLength = WideCharToMultiByte(CP_UTF8, 0, wcCur, wcCurLength, NULL, 0, NULL, NULL);
 	    LOG(debug, "utf8StringLength=%d", utf8StringLength);
@@ -881,6 +892,7 @@ static bool createExternalJavaProcess(const _TCHAR *imageFile, int javaArgsLengt
   if(!DISABLE_JAVA_PROCESS_CREATION) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    int i;
     //LOG(debug, "  zeroing memory..."));
     ZeroMemory( &si, sizeof(si) );
     si.cb = sizeof(si);
@@ -890,25 +902,25 @@ static bool createExternalJavaProcess(const _TCHAR *imageFile, int javaArgsLengt
     argsStringBuilder.append(imageFile);
     argsStringBuilder.append(" ");
     argsStringBuilder.append("-classpath ");
-    for(int i = 0; i < classpathComponentsLength; ++i) {
+    for(i = 0; i < classpathComponentsLength; ++i) {
       if(i > 0)
 	argsStringBuilder.append(PATH_SEPARATOR);
       argsStringBuilder.append(classpathComponents[i]);
     }
     argsStringBuilder.append(" ");
-    for(int i = 0; i < startClassComponentsLength; ++i) {
+    for(i = 0; i < startClassComponentsLength; ++i) {
       if(i > 0)
 	argsStringBuilder.append(".");
       argsStringBuilder.append(startClassComponents[i]);
     }
-    for(int i = 0; i < javaArgsLength; ++i) {
+    for(i = 0; i < javaArgsLength; ++i) {
       argsStringBuilder.append(" \"");
       argsStringBuilder.append(javaArgs[i]);
       argsStringBuilder.append("\"");
     }
     _TCHAR *commandLine = argsStringBuilder.toWideCharString(new _TCHAR[argsStringBuilder.length()+1]);
 
-    LOG(debug, "commandLine=\"%s\"", commandLine);
+    LOG(debug, "commandLine=\"%" FMTts "\"", commandLine);
     //LOG(debug, "printing characters in commandLine detailed:");
     //for(int i = 0; commandLine[i] != _T('\0'); ++i)
     //  LOG(debug, "  commandLine[%d]: '%c' (0x%X)", i, commandLine[i], commandLine[i]);
@@ -1011,8 +1023,8 @@ static void resolveClasspath(const _TCHAR *const prefix) {
     _tcscat(classpathString, classpathComponents[i]);
     _tcscat(classpathString, _T("\""));
   }
-  LOG(debug, "resolveClasspath(_TCHAR*) 0x%X) setting global variable classpathString to \"%s\"",
-      prefix, classpathString);
+  LOG(debug, "resolveClasspath(_TCHAR*) 0x%X) setting global variable "
+    "classpathString to \"%" FMTts "\"", prefix, classpathString);
   LOG(trace, "returning from void resolveClasspath((_TCHAR*) 0x%X)", prefix);
 }
 
@@ -1070,10 +1082,10 @@ static bool spawnElevatedProcess(_TCHAR *imageFile, _TCHAR *currentWorkingDirect
   execInfo.nShow = SW_SHOW;
   execInfo.hInstApp = NULL;
   LOG(debug, "&execInfo=%d", (size_t) &execInfo);
-  LOG(debug, "execInfo.lpVerb=\"%s\"", execInfo.lpVerb);
-  LOG(debug, "execInfo.lpFile=\"%s\"", execInfo.lpFile);
-  LOG(debug, "execInfo.lpParameters=\"%s\"", execInfo.lpParameters);
-  LOG(debug, "execInfo.lpDirectory=\"%s\"", execInfo.lpDirectory);
+  LOG(debug, "execInfo.lpVerb=\"%" FMTts "\"", execInfo.lpVerb);
+  LOG(debug, "execInfo.lpFile=\"%" FMTts "\"", execInfo.lpFile);
+  LOG(debug, "execInfo.lpParameters=\"%" FMTts "\"", execInfo.lpParameters);
+  LOG(debug, "execInfo.lpDirectory=\"%" FMTts "\"", execInfo.lpDirectory);
   LOG(debug, "executing ShellExecuteEx...");
   if(ShellExecuteEx(&execInfo) == TRUE) {
     LOG(debug, "ShellExecuteEx success!");
@@ -1162,7 +1174,7 @@ int main(int original_argc, char** original_argv) {
       break;
     }
   }
-  LOG(debug, "Got fully qualified path: \"%s\"", processFilename);
+  LOG(debug, "Got fully qualified path: \"%" FMTts "\"", processFilename);
   /* </Get the fully qualified path of this executable> */
 
 
@@ -1177,7 +1189,8 @@ int main(int original_argc, char** original_argv) {
   _TCHAR *processParentDir = new _TCHAR[processParentDirLength];
   memcpy(processParentDir, processFilename, sizeof(_TCHAR)*(processParentDirLength-1));
   processParentDir[psIndex] = _T('\0');
-  LOG(debug, "Got fully qualified parent dir: \"%s\"", processParentDir);
+  LOG(debug, "Got fully qualified parent dir: \"%" FMTts "\"",
+    processParentDir);
   /* <//Extract the parent directory from the fully qualified path> */
 
 
@@ -1197,22 +1210,75 @@ int main(int original_argc, char** original_argv) {
     returnValue = RETVAL_COULD_NOT_GET_CWD;
   }
   else {
-    LOG(debug, "CWD: \"%s\"", currentWorkingDirectory);
+    /*
+     * The behaviour when no arguments are supplied varies depending on the
+     * Windows version, so query the version with the GetVersion API.
+     * - If the Windows version is Vista or later, invoke UAC to launch an
+     *   elevated process which can access devices etc.
+     * - If the Windows version is earlier than Vista then UAC is not available
+     *   so just carry on launching the application.
+     */
+    const DWORD windowsVersion = GetVersion();
+    const DWORD windowsMajorVersion = (DWORD)(LOBYTE(LOWORD(windowsVersion)));
 
-    if(argc > 1 && _tcscmp(argv[1], _T("-invokeuac")) == 0) {
+    LOG(debug, "CWD: \"%" FMTts "\"", currentWorkingDirectory);
+
+    if((argc == 1 && windowsMajorVersion >= 6) ||
+       (argc > 1 && _tcscmp(argv[1], _T("-invokeuac")) == 0))
+    {
+      int elevatedProcessArgc;
+      _TCHAR **elevatedProcessArgv;
+      int i;
+
       LOG(debug, "\"-invokeuac\" specified. Forking off elevated process...");
 
-      if(spawnElevatedProcess(argv[0], currentWorkingDirectory, argc-2, argv+2))
+      elevatedProcessArgc = (argc < 2) ? 1 : (argc - 1);
+      elevatedProcessArgv =
+        (_TCHAR**) malloc(sizeof(_TCHAR*) * (elevatedProcessArgc + 1));
+      if(!elevatedProcessArgv) {
+        LOG(error, "Failed to allocate subprocess argv.");
+        return RETVAL_UNKNOWN_ERROR;
+      }
+
+      elevatedProcessArgv[0] = _T("-invokeduac");
+      for(i = 1; i < argc - 1; ++i) {
+	elevatedProcessArgv[i] = argv[i + 1];
+      }
+      elevatedProcessArgv[i] = NULL;
+
+      if(spawnElevatedProcess(
+          /* _TCHAR *imageFile */
+          argv[0],
+          /*_TCHAR *currentWorkingDirectory */
+          currentWorkingDirectory,
+          /* int argc */
+          elevatedProcessArgc,
+          /* _TCHAR **argv */
+          elevatedProcessArgv))
+      {
 	returnValue = RETVAL_OK;
+      }
       else {
 	returnValue = RETVAL_INVOKEUAC_FAILED;
 	LOG(error, "Failed to create elevated (UAC) process!");
 	MessageBox(NULL, _T("Failed to create elevated (UAC) process!"), _T("HFSExplorer launch error"), MB_OK);
       }
+
+      free(elevatedProcessArgv);
     }
     else { // No -invokeuac switch supplied
       // <Ugly hack which converts argv[1] into an absolute path name>
       _TCHAR *fullPathName = NULL;
+
+      if(argc > 1 && _tcscmp(argv[1], _T("-invokeduac")) == 0) {
+        /*
+         * Swallow argument simply used to indicate that we are running elevated
+         * so we don't need to do it again.
+         */
+        argv = &argv[1];
+        --argc;
+      }
+
       if(argc > 1) {
 	const int fullPathNameLength =
 	  SearchPath(currentWorkingDirectory,
@@ -1239,7 +1305,7 @@ int main(int original_argc, char** original_argv) {
 	    printError(_T("Could not convert args[1] into pathname. Last error: "), GetLastError());
 	  }
 	  else {
-	    LOG(debug, "full pathname: \"%s\"", fullPathName);
+            LOG(debug, "full pathname: \"%" FMTts "\"", fullPathName);
 	    argv[1] = fullPathName;
 	  }
 	}
@@ -1262,7 +1328,7 @@ int main(int original_argc, char** original_argv) {
         if(!appendToEnvironmentVariable(_T("PATH"), processParentDir,
           _tcslen(processParentDir)))
         {
-          LOG(debug, "Error while appending \"%s\" to PATH.\n",
+          LOG(debug, "Error while appending \"%" FMTts "\" to PATH.\n",
               processParentDir);
           return 0;
         }
@@ -1270,8 +1336,7 @@ int main(int original_argc, char** original_argv) {
         if(!appendToEnvironmentVariable(_T("PATH"), _T("\\") _T(DLL_HOME),
            _tcslen(_T("\\") _T(DLL_HOME))))
         {
-          LOG(debug, "Error while appending \"" _T("\\") _T(DLL_HOME) "\" to "
-              "PATH.\n");
+          LOG(debug, "Error while appending \"\\" DLL_HOME "\" to PATH.\n");
           return 0;
         }
 
@@ -1295,7 +1360,7 @@ int main(int original_argc, char** original_argv) {
 
 	LOG(debug, "Current environment:");
 	while(*lpszVariable) {
-	  LOG(debug, "  %s", lpszVariable);
+          LOG(debug, "  %" FMTts, lpszVariable);
 	  lpszVariable += lstrlen(lpszVariable) + 1;
 	}
 	FreeEnvironmentStrings(lpvEnv);
@@ -1307,11 +1372,12 @@ int main(int original_argc, char** original_argv) {
       const int javaArgsLength = (argc - 1) + prefixArgsLength;
       const _TCHAR **javaArgs = new const _TCHAR*[javaArgsLength];
 
+      int i;
       int curArg = 0;
-      for(int i = 0; i < prefixArgsLength; ++i) {
+      for(i = 0; i < prefixArgsLength; ++i) {
 	javaArgs[curArg++] = prefixArgs[i];
       }
-      for(int i = 1; i < argc; ++i) {
+      for(i = 1; i < argc; ++i) {
 	javaArgs[curArg++] = argv[i];
       }
 
@@ -1345,11 +1411,11 @@ int main(int original_argc, char** original_argv) {
       else {
         int messageBoxRet =
           MessageBox(NULL,
-                     _T("No Java runtime environment found. HFSExplorer cannot "
-                        "function without Java.\n"
-                        "Press \"OK\" to open up http://www.java.com where you "
-                        "can download a Java runtime environment for your "
-			"system."),
+                     _T("No Java runtime environment found. HFSExplorer ")
+                     _T("cannot function without Java.\n")
+                     _T("Press \"OK\" to open up http://www.java.com where ")
+                     _T("you can download a Java runtime environment for ")
+                     _T("your system."),
                      _T("HFSExplorer: Launch error"),
                      MB_OKCANCEL | MB_ICONEXCLAMATION);
 
@@ -1363,8 +1429,8 @@ int main(int original_argc, char** original_argv) {
                          SW_SHOWNORMAL);
           if((size_t) shellExecuteRet <= 32) {
             MessageBox(NULL,
-                       _T("Error while opening your web browser. Please browse "
-                          "to http://www.java.com manually..."),
+                       _T("Error while opening your web browser. Please ")
+                       _T("browse to http://www.java.com manually..."),
                        _T("HFSExplorer: Error opening URL"),
                        MB_OK | MB_ICONERROR);
           }

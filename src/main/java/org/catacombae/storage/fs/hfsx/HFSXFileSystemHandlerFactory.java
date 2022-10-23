@@ -27,7 +27,7 @@ import org.catacombae.storage.fs.FileSystemRecognizer;
 import org.catacombae.storage.fs.hfsplus.HFSPlusFileSystemHandlerFactory;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSXFileSystemHandlerFactory extends HFSPlusFileSystemHandlerFactory {
     private static final FileSystemRecognizer recognizer = new HFSXFileSystemRecognizer();
@@ -43,11 +43,12 @@ public class HFSXFileSystemHandlerFactory extends HFSPlusFileSystemHandlerFactor
 
     @Override
     protected FileSystemHandler createHandlerInternal(DataLocator data,
-            boolean useCaching, boolean posixFilenames, boolean composeFilename,
+            boolean useCaching, boolean posixFilenames,
+            boolean sfmSubstitutions, boolean composeFilename,
             boolean hideProtected)
     {
         return new HFSXFileSystemHandler(data, useCaching, posixFilenames,
-                composeFilename, hideProtected);
+                sfmSubstitutions, composeFilename, hideProtected);
     }
 
     @Override

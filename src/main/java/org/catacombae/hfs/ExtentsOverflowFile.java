@@ -42,7 +42,7 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.ReadableRandomAccessStream;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ExtentsOverflowFile
     extends BTreeFile<CommonHFSExtentKey, CommonHFSExtentLeafRecord>
@@ -67,7 +67,7 @@ public class ExtentsOverflowFile
         }
     }
 
-    protected BTreeFileSession openSession() {
+    BTreeFileSession openSession() {
         return new ExtentsOverflowFileSession();
     }
 
@@ -102,6 +102,16 @@ public class ExtentsOverflowFile
         BTreeFileSession init = openSession();
         //System.err.println("  ExtentsInitProcedure done!");
 
+        try {
+            return getOverflowExtent(init, key);
+        } finally {
+            init.close();
+        }
+    }
+
+    private CommonHFSExtentLeafRecord getOverflowExtent(BTreeFileSession init,
+            CommonHFSExtentKey key)
+    {
 	final int nodeSize = init.bthr.getNodeSize();
 
 	long currentNodeOffset = init.bthr.getRootNodeNumber()*nodeSize;

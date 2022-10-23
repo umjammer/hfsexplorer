@@ -48,7 +48,7 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.ReadableRandomAccessStream;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CatalogFile
     extends BTreeFile<CommonHFSCatalogKey, CommonHFSCatalogLeafRecord>
@@ -81,7 +81,7 @@ public class CatalogFile
      * Opens the catalog file for reading and reads the value of some important
      * variables (the "session").
      */
-    protected BTreeFileSession openSession() {
+    BTreeFileSession openSession() {
         return new CatalogFileSession();
     }
 
@@ -158,7 +158,9 @@ public class CatalogFile
                     newCatalogLeafNode(currentNodeData, 0, nodeSize);
             CommonHFSCatalogLeafRecord[] recs = leaf.getLeafRecords();
             for(CommonHFSCatalogLeafRecord rec : recs) {
-                if(rec.getKey().getParentID().toLong() == parentID.toLong()) {
+                if(rec != null && rec.getKey().getParentID().toLong() ==
+                        parentID.toLong())
+                {
                     if(rec instanceof CommonHFSCatalogFolderRecord)
                         return (CommonHFSCatalogFolderRecord)rec;
                     else
@@ -196,18 +198,27 @@ public class CatalogFile
      * @return the requested node if it exists and has type index node or leaf node, null otherwise
      */
     public CommonBTNode getCatalogNode(long nodeNumber) {
-        BTreeFileSession ses = openSession();
 
-        long currentNodeNumber;
-        if(nodeNumber < 0) { // Means that we should get the root node
-            currentNodeNumber = ses.bthr.getRootNodeNumber();
-            if(currentNodeNumber == 0) // There is no index node, or other content. So the node we
-                return null;           // seek does not exist. Return null.
+        final BTreeFileSession ses = openSession();
+        try {
+            long currentNodeNumber;
+            if(nodeNumber < 0) {
+                // Means that we should get the root node
+                currentNodeNumber = ses.bthr.getRootNodeNumber();
+                if(currentNodeNumber == 0) {
+                    // There is no index node, or other content. So the node we
+                    // seek does not exist. Return null.
+                    return null;
+                }
+            }
+            else {
+                currentNodeNumber = nodeNumber;
+            }
+
+            return getNode(currentNodeNumber, ses);
+        } finally {
+            ses.close();
         }
-        else
-            currentNodeNumber = nodeNumber;
-
-        return getNode(currentNodeNumber);
     }
 
     /**
@@ -329,8 +340,10 @@ public class CatalogFile
     }
 
     /**
-     * More typesafe than <code>listRecords(HFSCatalogNodeID)</code> since it
-     * checks that folderRecord is of appropriate type first.
+     * List all records belonging to a folder.
+     *
+     * More typesafe than {@link #listRecords(CommonHFSCatalogNodeID)} since it
+     * checks that <code>folderRecord</code> has an appropriate type first.
      */
     public CommonHFSCatalogLeafRecord[] listRecords(CommonHFSCatalogLeafRecord folderRecord) {
 	if(folderRecord instanceof CommonHFSCatalogFolderRecord) {
@@ -342,9 +355,12 @@ public class CatalogFile
     }
 
     /**
-     * You should use the method above to access folder listings. However, the
-     * folderID is really all that's needed, but make sure it's a folder ID and
-     * not a file ID, or something bad will happen.
+     * List all records belonging to a folder.
+     *
+     * You should use {@link #listRecords(CommonHFSCatalogLeafRecord)} to access
+     * folder listings. However, the folder ID is really all that's needed, but
+     * make sure it's a folder ID and not a file ID, or something bad will
+     * happen.
      */
     public CommonHFSCatalogLeafRecord[] listRecords(CommonHFSCatalogNodeID folderID) {
         BTreeFileSession init = openSession();
@@ -417,14 +433,19 @@ public class CatalogFile
 
     private static CommonHFSCatalogLeafRecord[] getChildrenTo(CommonHFSCatalogLeafNode leafNode,
             CommonHFSCatalogNodeID nodeID) {
-	LinkedList<CommonHFSCatalogLeafRecord> children = new LinkedList<CommonHFSCatalogLeafRecord>();
-	CommonHFSCatalogLeafRecord[] records = leafNode.getLeafRecords();
-	for(int i = 0; i < records.length; ++i) {
-	    CommonHFSCatalogLeafRecord curRec = records[i];
-	    if(curRec.getKey().getParentID().toLong() == nodeID.toLong())
-		children.addLast(curRec);
-	}
-	return children.toArray(new CommonHFSCatalogLeafRecord[children.size()]);
+        LinkedList<CommonHFSCatalogLeafRecord> children =
+                new LinkedList<CommonHFSCatalogLeafRecord>();
+        CommonHFSCatalogLeafRecord[] records = leafNode.getLeafRecords();
+        for(int i = 0; i < records.length; ++i) {
+            CommonHFSCatalogLeafRecord curRec = records[i];
+            if(curRec != null &&
+                    curRec.getKey().getParentID().toLong() == nodeID.toLong())
+            {
+                children.addLast(curRec);
+            }
+        }
+        return children.toArray(
+                new CommonHFSCatalogLeafRecord[children.size()]);
     }
 
     /*

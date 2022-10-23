@@ -23,7 +23,7 @@ import org.catacombae.io.RandomAccessStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ReadableStreamDataLocator extends DataLocator {
     private SynchronizedReadableRandomAccessStream backingStream;
@@ -54,7 +54,7 @@ public class ReadableStreamDataLocator extends DataLocator {
     }
 
     @Override
-    public synchronized void releaseResources() {
+    protected synchronized void releaseResources() {
         if(closed) {
             throw new RuntimeException("Stream is already closed.");
         }

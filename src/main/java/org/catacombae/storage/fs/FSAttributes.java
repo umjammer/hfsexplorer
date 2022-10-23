@@ -21,7 +21,7 @@ import java.util.Date;
 import org.catacombae.util.Util;
 
 /**
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class FSAttributes {
 
@@ -241,7 +241,7 @@ public abstract class FSAttributes {
         }
 
         public DefaultPOSIXFileAttributes(long userID, long groupID, short fileMode, long inodeNumber) {
-            this(userID, groupID, fileMode, new Long(inodeNumber));
+            this(userID, groupID, fileMode, Long.valueOf(inodeNumber));
         }
 
         private DefaultPOSIXFileAttributes(long userID, long groupID, short fileMode, Long inodeNumber) {

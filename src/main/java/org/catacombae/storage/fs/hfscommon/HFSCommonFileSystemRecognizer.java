@@ -17,14 +17,16 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import org.catacombae.io.AbstractFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
+import org.catacombae.io.RuntimeIOException;
 import org.catacombae.util.Util;
 
 /**
  * This contains methods to detect if the file system is of type MFS, HFS, HFS+
  * or HFSX.
  *
- * @author <a href="http://www.catacombae.org/" target="_top">Erik Larsson</a>
+ * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSCommonFileSystemRecognizer {
 
@@ -66,14 +68,12 @@ public class HFSCommonFileSystemRecognizer {
                 case SIGNATURE_MFS:
                     return FileSystemType.MFS;
                 case SIGNATURE_HFS:
-                    try {
-                        short embeddedSignature =
-                                Util.readShortBE(signatureData, 1024 + 124);
-                        if(embeddedSignature == SIGNATURE_HFS_PLUS)
-                            return FileSystemType.HFS_WRAPPED_HFS_PLUS;
-                        else
-                            return FileSystemType.HFS;
-                    } catch(Exception e) {
+                    short embeddedSignature =
+                            Util.readShortBE(signatureData, 1024 + 124);
+                    if(embeddedSignature == SIGNATURE_HFS_PLUS) {
+                        return FileSystemType.HFS_WRAPPED_HFS_PLUS;
+                    }
+                    else {
                         return FileSystemType.HFS;
                     }
                 case SIGNATURE_HFS_PLUS:
@@ -83,8 +83,23 @@ public class HFSCommonFileSystemRecognizer {
                 default:
                     return FileSystemType.UNKNOWN;
             }
+        } catch(RuntimeIOException e) {
+            final String streamString =
+                    !(bitstream instanceof AbstractFileStream) ? "" :
+                    (" at " + ((AbstractFileStream) bitstream).getOpenPath());
+            System.err.println("Error while detecting file system" +
+                    streamString + ": " + e.getIOCause().getMessage());
+            if(!(bitstream instanceof AbstractFileStream)) {
+                e.printStackTrace();
+            }
+
+            return FileSystemType.UNKNOWN;
         } catch(Exception e) {
-            System.err.println("Exception while detecting file system:");
+            final String streamString =
+                    !(bitstream instanceof AbstractFileStream) ? "" :
+                    (" at " + ((AbstractFileStream) bitstream).getOpenPath());
+            System.err.println("Exception while detecting file system" +
+                    streamString + ": " + e);
             e.printStackTrace();
             return FileSystemType.UNKNOWN;
         }
