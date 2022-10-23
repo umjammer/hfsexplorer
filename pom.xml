@@ -3,7 +3,7 @@
 
   <groupId>catacombae</groupId>
   <artifactId>hfsexplorer</artifactId>
-  <version>0.23.3-SNAPSHOT</version>
+  <version>0.23.3</version>
 
   <build>
     <plugins>
@@ -17,7 +17,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.0.0-M7</version>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <argLine>
@@ -41,7 +41,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.8.1</version>
+        <version>5.9.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -50,16 +50,10 @@
 
   <dependencies>
     <dependency>
-      <!-- catacombae:csframework, catacombaeframework -->
-      <groupId>catacombae</groupId>
-      <artifactId>csframework</artifactId>
-      <version>0.0.3-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <!-- catacombae:hfsx_dmglib, dmgextractor -->
-      <groupId>catacombae</groupId>
-      <artifactId>hfsx_dmglib</artifactId>
-      <version>0.70.2-SNAPSHOT</version>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>dmgextractor</artifactId>
+      <version>0.70.2</version>
     </dependency>
 
     <dependency>
