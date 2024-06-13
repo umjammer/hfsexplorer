@@ -58,19 +58,19 @@ public class HFSCommonAttributeFork implements FSFork {
         this.recordList = recordList;
     }
 
+    @Override
     public FSForkType getType() {
         return null;
     }
 
+    @Override
     public long getLength() {
-        final HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
-        final long length;
+        HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
+        long length;
 
-        if (firstRecordData instanceof HFSPlusAttributesData) {
-            HFSPlusAttributesData attributesData = (HFSPlusAttributesData) firstRecordData;
+        if (firstRecordData instanceof HFSPlusAttributesData attributesData) {
             length = attributesData.getAttrSize();
-        } else if (firstRecordData instanceof HFSPlusAttributesForkData) {
-            HFSPlusAttributesForkData attributesForkData = (HFSPlusAttributesForkData) firstRecordData;
+        } else if (firstRecordData instanceof HFSPlusAttributesForkData attributesForkData) {
             length = attributesForkData.getTheFork().getLogicalSize();
         } else {
             throw new RuntimeException("Unexpected record type of first record: " + firstRecordData.getClass());
@@ -79,15 +79,14 @@ public class HFSCommonAttributeFork implements FSFork {
         return length;
     }
 
+    @Override
     public long getOccupiedSize() {
-        final HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
-        final long occupiedSize;
+        HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
+        long occupiedSize;
 
-        if (firstRecordData instanceof HFSPlusAttributesData) {
-            HFSPlusAttributesData attributesData = (HFSPlusAttributesData) firstRecordData;
+        if (firstRecordData instanceof HFSPlusAttributesData attributesData) {
             occupiedSize = attributesData.getAttrSize();
-        } else if (firstRecordData instanceof HFSPlusAttributesForkData) {
-            HFSPlusAttributesForkData attributesForkData = (HFSPlusAttributesForkData) firstRecordData;
+        } else if (firstRecordData instanceof HFSPlusAttributesForkData attributesForkData) {
             occupiedSize = attributesForkData.getTheFork().getTotalBlocks() *
                     parent.fsHandler.getFSView().getVolumeHeader().getAllocationBlockSize();
         } else {
@@ -97,38 +96,42 @@ public class HFSCommonAttributeFork implements FSFork {
         return occupiedSize;
     }
 
+    @Override
     public boolean isWritable() {
         return false;
     }
 
+    @Override
     public boolean isTruncatable() {
         return false;
     }
 
+    @Override
     public boolean isCompressed() {
         return false;
     }
 
+    @Override
     public String getForkIdentifier() {
         return "Attribute: " + new String(recordList[0].getKey().getAttrName());
     }
 
+    @Override
     public InputStream getInputStream() {
         return new ReadableRandomAccessInputStream(
                 new SynchronizedReadableRandomAccessStream(getReadableRandomAccessStream()));
     }
 
+    @Override
     public ReadableRandomAccessStream getReadableRandomAccessStream() {
-        final HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
-        final ReadableRandomAccessStream stream;
+        HFSPlusAttributesLeafRecordData firstRecordData = recordList[0].getRecordData();
+        ReadableRandomAccessStream stream;
 
-        if (firstRecordData instanceof HFSPlusAttributesData) {
-            final HFSPlusAttributesData attributesData = (HFSPlusAttributesData) firstRecordData;
+        if (firstRecordData instanceof HFSPlusAttributesData attributesData) {
             stream = new ReadableByteArrayStream(attributesData.getAttrData());
-        } else if (firstRecordData instanceof HFSPlusAttributesForkData) {
-            final HFSPlusAttributesForkData attributesForkData = (HFSPlusAttributesForkData) firstRecordData;
+        } else if (firstRecordData instanceof HFSPlusAttributesForkData attributesForkData) {
 
-            LinkedList<CommonHFSExtentDescriptor> allExtents = new LinkedList<CommonHFSExtentDescriptor>();
+            LinkedList<CommonHFSExtentDescriptor> allExtents = new LinkedList<>();
             HFSPlusExtentRecord curRecord = attributesForkData.getTheFork().getExtents();
             int i = 0;
             long totalBlocks = 0;
@@ -142,8 +145,8 @@ public class HFSCommonAttributeFork implements FSFork {
                 curRecord = null;
 
                 if (i < recordList.length) {
-                    final CommonHFSAttributesLeafRecord nextRecord = recordList[++i];
-                    final HFSPlusAttributesLeafRecordData nextRecordData = nextRecord.getRecordData();
+                    CommonHFSAttributesLeafRecord nextRecord = recordList[++i];
+                    HFSPlusAttributesLeafRecordData nextRecordData = nextRecord.getRecordData();
 
                     if (nextRecord.getKey().getStartBlock() != totalBlocks) {
                         throw new RuntimeException("Unexpected start block " +
@@ -152,8 +155,7 @@ public class HFSCommonAttributeFork implements FSFork {
                                 nextRecord.getKey().getStartBlock() + ").");
                     }
 
-                    if (nextRecordData instanceof HFSPlusAttributesExtents) {
-                        final HFSPlusAttributesExtents extentsData = (HFSPlusAttributesExtents) nextRecordData;
+                    if (nextRecordData instanceof HFSPlusAttributesExtents extentsData) {
                         curRecord = extentsData.getExtents();
                     } else {
                         throw new RuntimeException("Unexpected attributes " +
@@ -164,7 +166,7 @@ public class HFSCommonAttributeFork implements FSFork {
 
             stream = new ForkFilter(
                     attributesForkData.getTheFork().getLogicalSize(),
-                    allExtents.toArray(new CommonHFSExtentDescriptor[allExtents.size()]),
+                    allExtents.toArray(CommonHFSExtentDescriptor[]::new),
                     parent.getFileSystemHandler().getFSView().createFSStream(), 0,
                     parent.getFileSystemHandler().getFSView().getVolumeHeader().getAllocationBlockSize(), 0);
         } else {
@@ -174,26 +176,32 @@ public class HFSCommonAttributeFork implements FSFork {
         return stream;
     }
 
+    @Override
     public WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public OutputStream getOutputStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public boolean hasXattrName() {
         return true;
     }
 
+    @Override
     public String getXattrName() {
         return new String(recordList[0].getKey().getAttrName());
     }

@@ -81,6 +81,7 @@ public class GUID implements StaticStruct, StructElements {
         copyBytesInternal(data, offset);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] data = new byte[16];
 
@@ -107,6 +108,7 @@ public class GUID implements StaticStruct, StructElements {
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(GPTEntry.class.getSimpleName());
 
@@ -126,6 +128,7 @@ public class GUID implements StaticStruct, StructElements {
         return db.getResult();
     }
 
+    @Override
     public int size() {
         return length();
     }

@@ -29,7 +29,7 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
  */
 public class GPTHandler extends PartitionSystemHandler {
 
-    private DataLocator partitionData;
+    private final DataLocator partitionData;
 
     public GPTHandler(DataLocator partitionData) {
         this.partitionData = partitionData;

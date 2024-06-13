@@ -53,10 +53,12 @@ public class FourCharCode implements PrintableStruct, StructElements {
         return Util.toASCIIString(getFourCharCode());
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " fourCharCode: \"" + getFourCharCodeAsString() + "\"");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FourCharCode:");
         printFields(ps, prefix);
@@ -66,6 +68,7 @@ public class FourCharCode implements PrintableStruct, StructElements {
         return Util.createCopy(fourCharCode);
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(FourCharCode.class.getSimpleName());
 

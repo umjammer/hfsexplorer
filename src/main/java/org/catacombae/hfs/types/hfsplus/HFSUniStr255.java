@@ -59,7 +59,7 @@ public class HFSUniStr255 implements StructElements, PrintableStruct {
 
         System.arraycopy(data, offset + 0, this.length, 0, 2);
 
-        final int stringLength = Util.unsign(getLength());
+        int stringLength = Util.unsign(getLength());
         if (stringLength > 255) {
             throw new HFSInvalidDataException("Invalid string length for " + getClass().getSimpleName() + ": " + stringLength);
         } else if (length < (2 + stringLength)) {
@@ -124,12 +124,14 @@ public class HFSUniStr255 implements StructElements, PrintableStruct {
         return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " length: " + Util.unsign(getLength()));
         ps.println(prefix + " unicode (decomposed): \"" + getUnicodeAsDecomposedString() + "\"");
         ps.println(prefix + "           (composed): \"" + getUnicodeAsComposedString() + "\"");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSUniStr255:");
         printFields(ps, prefix);
@@ -140,6 +142,7 @@ public class HFSUniStr255 implements StructElements, PrintableStruct {
         return getUnicodeAsComposedString();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSUniStr255.class.getSimpleName());
 

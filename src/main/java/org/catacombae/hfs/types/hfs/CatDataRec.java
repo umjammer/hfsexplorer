@@ -76,16 +76,19 @@ public abstract class CatDataRec implements StaticStruct, PrintableStruct, Struc
         return Util.readByteBE(cdrResrv2);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " cdrType: " + Util.unsign(getCdrType()));
         ps.println(prefix + " cdrResrv2: " + Util.unsign(getCdrResrv2()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CatDataRec:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[STRUCTSIZE];
         int offset = 0;

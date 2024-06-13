@@ -194,7 +194,8 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
     public boolean getFileModeOtherExecute() {
         return ((getFileMode() >> 0) & 0x1) != 0;
     }
-    //public boolean getFileMode() {}
+
+//    public boolean getFileMode() {}
 
     /**
      * Returns the POSIX-type file mode string for this file, as it would appear
@@ -205,37 +206,20 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
     public String getFileModeString() {
         String result;
         byte fileType = getFileModeFileType();
-        switch (fileType) {
-            case FILETYPE_UNDEFINED: // This one appears at the root node (CNID 2) sometimes. dunno what it would look like in ls -l
-                result = "?";
-                break;
-            case FILETYPE_FIFO:
-                result = "p";
-                break;
-            case FILETYPE_CHARACTER_SPECIAL:
-                result = "c";
-                break;
-            case FILETYPE_DIRECTORY:
-                result = "d";
-                break;
-            case FILETYPE_BLOCK_SPECIAL:
-                result = "b";
-                break;
-            case FILETYPE_REGULAR:
-                result = "-";
-                break;
-            case FILETYPE_SYMBOLIC_LINK:
-                result = "l";
-                break;
-            case FILETYPE_SOCKET:
-                result = "s";
-                break;
-            case FILETYPE_WHITEOUT:
-                result = "w";
-                break; // How does this appear in "ls -l" ? and what is it?
-            default:
-                throw new RuntimeException("Unknown file type (read: " + fileType + " REGULAR: " + FILETYPE_REGULAR + " MODE: 0x" + Util.toHexStringBE(getFileMode()) + ")!");
-        }
+        result = switch (fileType) {
+            case FILETYPE_UNDEFINED -> // This one appears at the root node (CNID 2) sometimes. dunno what it would look like in ls -l
+                    "?";
+            case FILETYPE_FIFO -> "p";
+            case FILETYPE_CHARACTER_SPECIAL -> "c";
+            case FILETYPE_DIRECTORY -> "d";
+            case FILETYPE_BLOCK_SPECIAL -> "b";
+            case FILETYPE_REGULAR -> "-";
+            case FILETYPE_SYMBOLIC_LINK -> "l";
+            case FILETYPE_SOCKET -> "s";
+            case FILETYPE_WHITEOUT -> "w"; // How does this appear in "ls -l" ? and what is it?
+            default ->
+                    throw new RuntimeException("Unknown file type (read: " + fileType + " REGULAR: " + FILETYPE_REGULAR + " MODE: 0x" + Util.toHexStringBE(getFileMode()) + ")!");
+        };
 
         if (getFileModeOwnerRead())
             result += "r";
@@ -298,6 +282,7 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " ownerID: " + getOwnerID());
         ps.println(prefix + " groupID: " + getGroupID());
@@ -307,6 +292,7 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         ps.println(prefix + " special: " + getSpecial());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusBSDInfo:");
         printFields(ps, prefix);
@@ -332,13 +318,14 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusBSDInfo.class.getSimpleName());
 
         db.addUIntBE("ownerID", ownerID);
         db.addUIntBE("groupID", groupID);
 
-        final Dictionary adminFlagsDict;
+        Dictionary adminFlagsDict;
         {
             DictionaryBuilder dbAdminFlags = new DictionaryBuilder("UInt8");
             dbAdminFlags.addFlag("append", adminFlags, 2, "Writes to file may only append");
@@ -348,7 +335,7 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         }
         db.add("adminFlags", adminFlagsDict);
 
-        final Dictionary ownerFlagsDict;
+        Dictionary ownerFlagsDict;
         {
             DictionaryBuilder dbOwnerFlags = new DictionaryBuilder("UInt8");
             dbOwnerFlags.addFlag("compressed", ownerFlags, 5,
@@ -361,7 +348,7 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         }
         db.add("ownerFlags", ownerFlagsDict);
 
-        final Dictionary fileModeFlagsDict;
+        Dictionary fileModeFlagsDict;
         {
             DictionaryBuilder dbFileModeFlags = new DictionaryBuilder("UInt16");
 
@@ -397,28 +384,19 @@ public class HFSPlusBSDInfo implements PrintableStruct, StructElements {
         @Override
         public String getValueAsString() {
             byte fileTypeByte = getFileModeFileType();
-            switch (fileTypeByte) {
-                case FILETYPE_UNDEFINED: // This one appears at the root node (CNID 2) sometimes. dunno what it would look like in ls -l
-                    return "Undefined";
-                case FILETYPE_FIFO:
-                    return "FIFO";
-                case FILETYPE_CHARACTER_SPECIAL:
-                    return "Character special file";
-                case FILETYPE_DIRECTORY:
-                    return "Directory";
-                case FILETYPE_BLOCK_SPECIAL:
-                    return "Block special file";
-                case FILETYPE_REGULAR:
-                    return "Regular file";
-                case FILETYPE_SYMBOLIC_LINK:
-                    return "Symbolic link";
-                case FILETYPE_SOCKET:
-                    return "Socket";
-                case FILETYPE_WHITEOUT:
-                    return "Whiteout";
-                default:
-                    return "[Unknown file type: " + fileTypeByte + "]";
-            }
+            return switch (fileTypeByte) {
+                case FILETYPE_UNDEFINED -> // This one appears at the root node (CNID 2) sometimes. dunno what it would look like in ls -l
+                        "Undefined";
+                case FILETYPE_FIFO -> "FIFO";
+                case FILETYPE_CHARACTER_SPECIAL -> "Character special file";
+                case FILETYPE_DIRECTORY -> "Directory";
+                case FILETYPE_BLOCK_SPECIAL -> "Block special file";
+                case FILETYPE_REGULAR -> "Regular file";
+                case FILETYPE_SYMBOLIC_LINK -> "Symbolic link";
+                case FILETYPE_SOCKET -> "Socket";
+                case FILETYPE_WHITEOUT -> "Whiteout";
+                default -> "[Unknown file type: " + fileTypeByte + "]";
+            };
         }
 
         @Override

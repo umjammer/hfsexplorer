@@ -17,6 +17,7 @@
 
 package org.catacombae.hfs.io;
 
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -58,7 +59,7 @@ public class ForkFilter implements ReadableRandomAccessStream {
     private final long allocationBlockSize;
     private final long firstBlockByteOffset;
     private long logicalPosition; // The current position in the fork
-    private long lastLogicalPos; // The position in the fork where we stopped reading last time
+    private final long lastLogicalPos; // The position in the fork where we stopped reading last time
     private long lastPhysicalPos; // The position in the fork where we stopped reading last time
     private boolean all_extents_mapped = false;
 
@@ -153,16 +154,14 @@ public class ForkFilter implements ReadableRandomAccessStream {
                        OverflowExtentsStore overflowExtentsStore,
                        ReadableRandomAccessStream sourceFile, long fsOffset, long allocationBlockSize,
                        long firstBlockByteOffset) {
-        //System.err.println("ForkFilter.<init>(" + forkLength + ", " +
-        //        extentDescriptors + ", " + sourceFile + ", " + fsOffset +
-        //        ", " + allocationBlockSize + ", " + firstBlockByteOffset +
-        //        ");");
-        //System.err.println("  fork has " + extentDescriptors.length +
-        //        " extents.");
+//        logger.log(Level.DEBUG, "ForkFilter.<init>(" + forkLength + ", " +
+//                extentDescriptors + ", " + sourceFile + ", " + fsOffset +
+//                ", " + allocationBlockSize + ", " + firstBlockByteOffset + ");");
+//        logger.log(Level.DEBUG, "  fork has " + extentDescriptors.length + " extents.");
 
         this.forkLength = forkLength;
         this.extentDescriptors =
-                new ArrayList<CommonHFSExtentDescriptor>(Arrays.asList(
+                new ArrayList<>(Arrays.asList(
                         initialExtents));
         this.overflowExtentsStore = overflowExtentsStore;
         this.sourceFile = sourceFile;
@@ -174,11 +173,13 @@ public class ForkFilter implements ReadableRandomAccessStream {
         this.lastPhysicalPos = 0; // Set differently from logicalPosition to trigger a seek at first read
     }
 
+    @Override
     public void seek(long pos) {
-        //System.err.println("ForkFilter.seek(" + pos + ");");
+//        logger.log(Level.DEBUG, "ForkFilter.seek(" + pos + ");");
         logicalPosition = pos;
     }
 
+    @Override
     public int read() {
         byte[] oneByte = new byte[1];
         if (read(oneByte) == 1)
@@ -187,6 +188,7 @@ public class ForkFilter implements ReadableRandomAccessStream {
             return -1;
     }
 
+    @Override
     public int read(byte[] data) {
         return read(data, 0, data.length);
     }
@@ -211,11 +213,10 @@ public class ForkFilter implements ReadableRandomAccessStream {
                 extentRecord = overflowExtentsStore.getExtentRecord(curStartBlock);
             }
 
-            final CommonHFSExtentDescriptor[] descriptors = extentRecord.getRecordData();
+            CommonHFSExtentDescriptor[] descriptors = extentRecord.getRecordData();
 
-            for (int i = 0; i < descriptors.length; ++i) {
-                final CommonHFSExtentDescriptor curDescriptor = descriptors[i];
-                final long blockCount = curDescriptor.getBlockCount();
+            for (CommonHFSExtentDescriptor curDescriptor : descriptors) {
+                long blockCount = curDescriptor.getBlockCount();
 
                 if (blockCount == 0) {
                     // End-of-fork at first occurrence of block count 0.
@@ -231,15 +232,16 @@ public class ForkFilter implements ReadableRandomAccessStream {
         return extentDescriptors.get(extIndex);
     }
 
+    @Override
     public int read(byte[] data, int pos, int len) {
-//        System.err.println("ForkFilter.read(" + data + ", " + pos + ", " + len);
+//        logger.log(Level.DEBUG, "ForkFilter.read(" + data + ", " + pos + ", " + len);
         long offset = Long.MAX_VALUE; // MAX_VALUE as a sentinel for seek
         long bytesToSkip = logicalPosition;
         long curLogicalBlock = 0;
         int extIndex;
         long currentExtentLength;
 
-        if (extentDescriptors.size() < 1 || logicalPosition >= forkLength) {
+        if (extentDescriptors.isEmpty() || logicalPosition >= forkLength) {
             return -1; // EOF
         }
 
@@ -279,10 +281,10 @@ public class ForkFilter implements ReadableRandomAccessStream {
         }
 
         long bytesLeftInStream = forkLength - logicalPosition;
-//        System.err.println("bytesLeftInStream: " + bytesLeftInStream + " len: " + len);
+//        logger.log(Level.DEBUG, "bytesLeftInStream: " + bytesLeftInStream + " len: " + len);
         int totalBytesToRead = bytesLeftInStream < len ? (int) bytesLeftInStream : len;
         int bytesLeftToRead = totalBytesToRead;
-//        System.err.println("bytesLeftToRead: " + bytesLeftToRead);
+//        logger.log(Level.DEBUG, "bytesLeftToRead: " + bytesLeftToRead);
         // Start reading. Extent by extent if needed.
         for (; ; ++extIndex) {
 //            System.out.println("ForkFilter.read: reading extent " + extIndex + ".");
@@ -336,22 +338,25 @@ public class ForkFilter implements ReadableRandomAccessStream {
 
         if (bytesLeftToRead < totalBytesToRead) {
             int bytesRead = totalBytesToRead - bytesLeftToRead;
-//            System.err.println("final bytesRead: " + bytesRead);
+//            logger.log(Level.DEBUG, "final bytesRead: " + bytesRead);
             return bytesRead;
         } else
             return -1;
     }
 
+    @Override
     public byte readFully() throws RuntimeIOException {
         byte[] data = new byte[1];
         readFully(data);
         return data[0];
     }
 
+    @Override
     public void readFully(byte[] data) {
         readFully(data, 0, data.length);
     }
 
+    @Override
     public void readFully(byte[] data, int offset, int length) {
         int bytesRead = 0;
         while (bytesRead < length) {
@@ -363,10 +368,12 @@ public class ForkFilter implements ReadableRandomAccessStream {
         }
     }
 
+    @Override
     public long length() {
         return forkLength;
     }
 
+    @Override
     public long getFilePointer() {
         return logicalPosition;
     }
@@ -380,6 +387,7 @@ public class ForkFilter implements ReadableRandomAccessStream {
         return sourceFile;
     }
 
+    @Override
     public void close() {
         sourceFile.close();
     }
@@ -415,7 +423,7 @@ public class ForkFilter implements ReadableRandomAccessStream {
 
         @Override
         public CommonHFSExtentLeafRecord getExtentRecord(long startBlock) {
-            final CommonHFSExtentLeafRecord rec =
+            CommonHFSExtentLeafRecord rec =
                     extentsOverflowFile.getOverflowExtent(
                             forkType == ForkType.RESOURCE ? true : false,
                             (int) cnid, startBlock);

@@ -17,8 +17,10 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
-import java.io.UnsupportedEncodingException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 import org.catacombae.hfs.HFSVolume;
@@ -41,6 +43,8 @@ import org.catacombae.storage.fs.FileSystemCapability;
 import org.catacombae.storage.fs.FileSystemHandler;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * HFS+ implementation of a FileSystemHandler. This implementation can be used
@@ -50,17 +54,12 @@ import org.catacombae.util.Util;
  */
 public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
-    private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
-            "org.catacombae.debug",
-            "org.catacombae.storage.debug",
-            "org.catacombae.storage.fs.debug",
-            "org.catacombae.storage.fs.hfscommon.debug",
-            "org.catacombae.storage.fs.hfscommon." + HFSCommonFileSystemHandler.class.getSimpleName() + ".debug");
+    private static final Logger logger = getLogger(HFSCommonFileSystemHandler.class.getName());
 
     protected final HFSVolume view;
-    private boolean posixNames;
-    private boolean sfmSubstitutions;
-    private boolean doUnicodeFileNameComposition;
+    private final boolean posixNames;
+    private final boolean sfmSubstitutions;
+    private final boolean doUnicodeFileNameComposition;
     protected boolean hideProtected;
 
     protected HFSCommonFileSystemHandler(HFSVolume iView,
@@ -86,6 +85,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
         };
     }
 
+    @Override
     public FileSystemCapability[] getCapabilities() {
         return getStaticCapabilities();
     }
@@ -134,7 +134,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
      *                   <code>rootRecord</code> is returned.
      * @return the requested entry, or <code>null</code> if it wasn't found.
      */
-    protected CommonHFSCatalogLeafRecord getRecord(final CommonHFSCatalogFolderRecord rootRecord, final String... path) {
+    protected CommonHFSCatalogLeafRecord getRecord(CommonHFSCatalogFolderRecord rootRecord, String... path) {
         /*
          * Algorithm (variables are prefixed with $):
          *
@@ -175,7 +175,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
             // Iterate through all links.
             while (currentRoot instanceof CommonHFSCatalogFileRecord) {
-                final String[] absPath;
+                String[] absPath;
 
                 absPath = getAbsoluteLinkPath(path, i,
                         (CommonHFSCatalogFileRecord) currentRoot);
@@ -186,7 +186,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
                 // Reset visited list before usage if this is the first time
                 if (curVisitedList == null) {
                     if (visitedList == null)
-                        visitedList = new LinkedList<String[]>();
+                        visitedList = new LinkedList<>();
                     else
                         visitedList.clear();
                     curVisitedList = visitedList;
@@ -195,14 +195,12 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
                 if (absPath == null)
                     throw new RuntimeException("'assertion' failed. absPath shouldn't be null");
                 else if (Util.contains(curVisitedList, absPath)) {
-                    if (DEBUG) {
-                        System.err.println("WARNING: Detected cyclic link structure when resolving link target.");
-                        System.err.println("         Resolve stack:");
-                        for (String[] sa : curVisitedList) {
-                            System.err.println("           " + Util.concatenateStrings(sa, "/"));
-                        }
-                        System.err.println("           " + Util.concatenateStrings(absPath, "/"));
+                    logger.log(Level.DEBUG, "WARNING: Detected cyclic link structure when resolving link target.");
+                    logger.log(Level.DEBUG, "         Resolve stack:");
+                    for (String[] sa : curVisitedList) {
+                        logger.log(Level.DEBUG, "           " + Util.concatenateStrings(sa, "/"));
                     }
+                    logger.log(Level.DEBUG, "           " + Util.concatenateStrings(absPath, "/"));
 
                     return null; // Circular linking.
                 } else {
@@ -287,7 +285,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
         return new FSForkType[] {FSForkType.DATA, FSForkType.MACOS_RESOURCE};
     }
 
-    private static char[] posixWrap(final char[] nodeNameChars) {
+    private static char[] posixWrap(char[] nodeNameChars) {
         for (int i = 0; i < nodeNameChars.length; ++i) {
             if (nodeNameChars[i] == '/') {
                 nodeNameChars[i] = ':';
@@ -299,7 +297,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
         return nodeNameChars;
     }
 
-    private static String posixWrap(final String nodeName) {
+    private static String posixWrap(String nodeName) {
         return new String(posixWrap(nodeName.toCharArray()));
     }
 
@@ -362,23 +360,19 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
      * @return the pathname components of the HFS+ POSIX UTF-8 pathname.
      */
     public String[] splitPOSIXUTF8Path(byte[] path, int offset, int length) {
-        try {
-            String s = new String(path, offset, length, "UTF-8");
-            String[] res = s.split("/");
+        String s = new String(path, offset, length, StandardCharsets.UTF_8);
+        String[] res = s.split("/");
 
-            if (!posixNames) {
-                // As per the MacOS <-> POSIX translation semantics, all POSIX
-                // ':' characters are really '/' characters in the MacOS
-                // world.
-                for (int i = 0; i < res.length; ++i) {
-                    res[i] = posixWrap(res[i]);
-                }
+        if (!posixNames) {
+            // As per the MacOS <-> POSIX translation semantics, all POSIX
+            // ':' characters are really '/' characters in the MacOS
+            // world.
+            for (int i = 0; i < res.length; ++i) {
+                res[i] = posixWrap(res[i]);
             }
-
-            return res;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("REALLY UNEXPECTED: Could not decode UTF-8!", e);
         }
+
+        return res;
     }
 
     protected ReadableRandomAccessStream getReadableDataForkStream(CommonHFSCatalogFileRecord fileRecord) {
@@ -397,22 +391,18 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
     String[] listNames(CommonHFSCatalogFolderRecord folderRecord) {
         CommonHFSCatalogLeafRecord[] subRecords = view.getCatalogFile().listRecords(folderRecord);
-        LinkedList<String> result = new LinkedList<String>();
-        for (int i = 0; i < subRecords.length; ++i) {
-            CommonHFSCatalogLeafRecord curRecord = subRecords[i];
-
+        LinkedList<String> result = new LinkedList<>();
+        for (CommonHFSCatalogLeafRecord curRecord : subRecords) {
             if (!shouldHide(curRecord))
                 result.add(getProperNodeName(curRecord));
         }
-        return result.toArray(new String[result.size()]);
+        return result.toArray(String[]::new);
     }
 
     FSEntry[] listFSEntries(CommonHFSCatalogFolderRecord folderRecord) {
         CommonHFSCatalogLeafRecord[] subRecords = view.getCatalogFile().listRecords(folderRecord);
-        LinkedList<FSEntry> result = new LinkedList<FSEntry>();
-        for (int i = 0; i < subRecords.length; ++i) {
-            CommonHFSCatalogLeafRecord curRecord = subRecords[i];
-
+        LinkedList<FSEntry> result = new LinkedList<>();
+        for (CommonHFSCatalogLeafRecord curRecord : subRecords) {
             FSEntry curEntry = null;
 
             if (shouldHide(curRecord)) ;
@@ -424,7 +414,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
             if (curEntry != null)
                 result.addLast(curEntry);
         }
-        return result.toArray(new FSEntry[result.size()]);
+        return result.toArray(FSEntry[]::new);
     }
 
     HFSCommonFSFolder lookupParentFolder(CommonHFSCatalogLeafRecord childRecord) {
@@ -500,8 +490,7 @@ public abstract class HFSCommonFileSystemHandler extends FileSystemHandler {
 
     @Override
     public String[] getTargetPath(FSLink link, String[] parentDir) {
-        if (link instanceof HFSCommonFSLink) {
-            HFSCommonFSLink hfsLink = (HFSCommonFSLink) link;
+        if (link instanceof HFSCommonFSLink hfsLink) {
             return getTruePathFromPosixPath(hfsLink.getLinkTargetPosixPath(), parentDir);
         } else
             throw new RuntimeException("Invalid type: " + link.getClass());

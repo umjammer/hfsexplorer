@@ -32,7 +32,7 @@ public class FileOperationsPanel extends javax.swing.JPanel {
                                ActionListener saveListener) {
         initComponents();
         filenameField.setText(filename);
-        sizeField.setText("" + fileSize + " bytes");
+        sizeField.setText(fileSize + " bytes");
         if (openListener != null) {
             openFileButton.addActionListener(openListener);
             openFileButton.setEnabled(true);

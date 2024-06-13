@@ -84,6 +84,7 @@ public class FolderInfo extends CommonFinderInfo
         super.printFields(ps, prefix);
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FolderInfo:");
         printFields(ps, prefix);

@@ -24,10 +24,14 @@ import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableByteArrayStream;
 
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.storage.ps.mbr.MBRPartitionType;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -38,6 +42,8 @@ import org.catacombae.storage.ps.mbr.MBRPartitionType;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
+
+    private static final Logger logger = getLogger(MBRPartitionTable.class.getName());
 
     /* Until I figure out a way to detect sector size, it will be 512... */
     public static final int DEFAULT_SECTOR_SIZE = 512;
@@ -85,7 +91,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
                     embeddedPS =
                             new DOSExtendedPartitionSystem(raf, p.getStartOffset(), p.getLength(), sectorSize);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             }
 
@@ -117,6 +123,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return embeddedPartitionSystems[index];
     }
 
+    @Override
     public boolean isValid() {
         if (masterBootRecord.isValid()) {
             for (PartitionSystem ebr : embeddedPartitionSystems) {
@@ -128,6 +135,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return false;
     }
 
+    @Override
     public int getPartitionCount() {
         int num = masterBootRecord.getPartitionCount();
         for (PartitionSystem ps : embeddedPartitionSystems) {
@@ -137,6 +145,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return num;
     }
 
+    @Override
     public int getUsedPartitionCount() {
         int num = masterBootRecord.getUsedPartitionCount();
         for (PartitionSystem ps : embeddedPartitionSystems) {
@@ -146,8 +155,9 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return num;
     }
 
+    @Override
     public Partition[] getUsedPartitionEntries() {
-        LinkedList<Partition> tempList = new LinkedList<Partition>();
+        LinkedList<Partition> tempList = new LinkedList<>();
         for (Partition p : masterBootRecord.getUsedPartitionEntries())
             tempList.addLast(p);
 
@@ -158,9 +168,10 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
             }
         }
 
-        return tempList.toArray(new Partition[tempList.size()]);
+        return tempList.toArray(Partition[]::new);
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
         if (index >= 0 && index < 4) {
             return masterBootRecord.getPartitionEntry(index);
@@ -177,8 +188,9 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         throw new IllegalArgumentException("index out of bounds (index=" + index + ")");
     }
 
+    @Override
     public Partition[] getPartitionEntries() {
-        LinkedList<Partition> tempList = new LinkedList<Partition>();
+        LinkedList<Partition> tempList = new LinkedList<>();
         for (Partition p : masterBootRecord.getPartitionEntries())
             tempList.addLast(p);
 
@@ -189,17 +201,20 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
             }
         }
 
-        return tempList.toArray(new Partition[tempList.size()]);
+        return tempList.toArray(Partition[]::new);
     }
 
+    @Override
     public String getLongName() {
         return "Master Boot Record";
     }
 
+    @Override
     public String getShortName() {
         return "MBR";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " masterBootRecord:");
         masterBootRecord.print(ps, prefix + "  ");
@@ -216,6 +231,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + this.getClass().getSimpleName() + ":");
         printFields(ps, prefix);

@@ -59,6 +59,7 @@ public class HFSPlusExtentLeafRecord implements PrintableStruct {
         return recordData;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key: ");
         getKey().print(ps, prefix + "  ");
@@ -66,6 +67,7 @@ public class HFSPlusExtentLeafRecord implements PrintableStruct {
         getRecordData().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusExtentLeafRecord:");
         printFields(ps, prefix);

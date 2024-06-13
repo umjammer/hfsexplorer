@@ -39,7 +39,7 @@ public abstract class HFSPlusAttributesLeafRecordData
     public static final int kHFSPlusAttrForkData = 0x20;
     public static final int kHFSPlusAttrExtents = 0x30;
 
-    private int recordType;
+    private final int recordType;
 
     public HFSPlusAttributesLeafRecordData(byte[] data, int offset) {
         this.recordType = Util.readIntBE(data, offset + 0);
@@ -71,8 +71,9 @@ public abstract class HFSPlusAttributesLeafRecordData
         return 4;
     }
 
+    @Override
     public Dictionary getStructElements() {
-        final Class thisClass = HFSPlusAttributesLeafRecordData.class;
+        final Class<HFSPlusAttributesLeafRecordData> thisClass = HFSPlusAttributesLeafRecordData.class;
         DictionaryBuilder db = new DictionaryBuilder(thisClass.getSimpleName(),
                 "HFS+ attributes leaf record data (abstract superclass)");
 

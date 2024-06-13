@@ -44,7 +44,7 @@ import org.catacombae.util.Util;
 
 public class RepairMyBackupGPT {
 
-    private static BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+    private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
     public static void main(String[] args) throws Exception {
         long runTimeStamp = System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class RepairMyBackupGPT {
         } else
             llf = new FileStream(args[0]);
 
-        final GUIDPartitionTable originalGpt = new GUIDPartitionTable(llf, 0);
+        GUIDPartitionTable originalGpt = new GUIDPartitionTable(llf, 0);
         MutableGUIDPartitionTable gpt = new MutableGUIDPartitionTable(originalGpt);
 
         if (!originalGpt.isValid() && !gpt.isValid()) {
@@ -76,7 +76,7 @@ public class RepairMyBackupGPT {
             // Backup the GPT backup table at the end of the disk.
             String backupFilename2 = null;
             {
-                long backupGPTPos = hdr.getBackupLBA() * blockSize - hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry();
+                long backupGPTPos = hdr.getBackupLBA() * blockSize - (long) hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry();
                 int backupGPTLen = hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry() + blockSize;
 
                 byte[] backup2 = new byte[backupGPTLen];

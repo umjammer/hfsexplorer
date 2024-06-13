@@ -18,9 +18,7 @@
 package org.catacombae.storage.ps.ebr;
 
 import java.io.PrintStream;
-import java.util.LinkedList;
 
-import org.catacombae.storage.ps.Partition;
 import org.catacombae.util.Util;
 
 
@@ -62,7 +60,7 @@ public class ExtendedBootRecord {
 
     /** <code>data</code> is assumed to be at least (<code>offset</code>+512) bytes in length. */
     public ExtendedBootRecord(byte[] data, int offset, long extendedPartitionOffset, long thisRecordOffset, int sectorSize) {
-//        System.err.println("ExtendedBootRecord...");
+//        logger.log(Level.TRACE, "ExtendedBootRecord...");
         System.arraycopy(data, offset + 0, reserved1, 0, reserved1.length);
         System.arraycopy(data, offset + 394, optIBMBootmgrEntry, 0, optIBMBootmgrEntry.length);
         System.arraycopy(data, offset + 403, reserved2, 0, reserved2.length);

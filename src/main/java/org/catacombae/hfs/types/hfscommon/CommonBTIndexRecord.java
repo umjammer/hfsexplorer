@@ -31,11 +31,11 @@ public abstract class CommonBTIndexRecord<K extends CommonBTKey<K>> extends Comm
     protected final byte[] index = new byte[4];
 
     public static <K extends CommonBTKey<K>> CommonBTIndexRecord<K> createHFS(K key, byte[] data, int offset) {
-        return new HFSImplementation<K>(key, data, offset);
+        return new HFSImplementation<>(key, data, offset);
     }
 
     public static <K extends CommonBTKey<K>> CommonBTIndexRecord<K> createHFSPlus(K key, byte[] data, int offset) {
-        return new HFSPlusImplementation<K>(key, data, offset);
+        return new HFSPlusImplementation<>(key, data, offset);
     }
 
     protected CommonBTIndexRecord(K key, byte[] data, int offset) {
@@ -43,6 +43,7 @@ public abstract class CommonBTIndexRecord<K extends CommonBTKey<K>> extends Comm
         System.arraycopy(data, offset + key.occupiedSize(), index, 0, index.length);
     }
 
+    @Override
     public K getKey() {
         return key;
     }
@@ -69,11 +70,13 @@ public abstract class CommonBTIndexRecord<K extends CommonBTKey<K>> extends Comm
         return res;
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CommonBTIndexRecord:");
         printFields(ps, prefix);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.print(ps, prefix + "  ");

@@ -22,11 +22,11 @@ package org.catacombae.hfs;
  */
 public interface ProgressMonitor {
 
-    public void signalCancel();
+    void signalCancel();
 
-    public boolean cancelSignaled();
+    boolean cancelSignaled();
 
-    public void confirmCancel();
+    void confirmCancel();
 
-    public void addDataProgress(long dataSize);
+    void addDataProgress(long dataSize);
 }

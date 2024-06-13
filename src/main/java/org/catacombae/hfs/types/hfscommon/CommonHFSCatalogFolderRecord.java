@@ -39,6 +39,7 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         this.data = data;
     }
 
+    @Override
     public CommonHFSCatalogKey getKey() {
         return key;
     }
@@ -47,11 +48,13 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         return data;
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolderRecord.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "key:");
         getKey().print(ps, prefix + " ");
@@ -59,6 +62,7 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         getData().print(ps, prefix + " ");
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CommonHFSCatalogFolderRecord.class.getSimpleName(),
                         "Folder record");

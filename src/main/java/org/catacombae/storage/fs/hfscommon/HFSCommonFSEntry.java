@@ -60,13 +60,12 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
 
     protected synchronized void fillAttributeForks(List<FSFork> forkList) {
         if (attributeForkList == null) {
-            LinkedList<FSFork> tmpAttributeForkList = new LinkedList<FSFork>();
+            LinkedList<FSFork> tmpAttributeForkList = new LinkedList<>();
 
             AttributesFile attributesFile = fsHandler.getFSView().getAttributesFile();
             if (attributesFile != null) {
                 LinkedList<Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>>> attributeBucketList =
-                        new LinkedList<Pair<char[],
-                                LinkedList<CommonHFSAttributesLeafRecord>>>();
+                        new LinkedList<>();
 
                 for (CommonHFSAttributesLeafRecord attributeRecord :
                         attributesFile.listAttributeRecords(getCatalogNodeID())) {
@@ -84,10 +83,10 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
                             p.getB().addLast(attributeRecord);
                         }
                     } else {
-                        LinkedList<CommonHFSAttributesLeafRecord> bucket = new LinkedList<CommonHFSAttributesLeafRecord>();
+                        LinkedList<CommonHFSAttributesLeafRecord> bucket = new LinkedList<>();
                         bucket.add(attributeRecord);
 
-                        p = new Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>>(attributeRecord.getKey().getAttrName(), bucket);
+                        p = new Pair<>(attributeRecord.getKey().getAttrName(), bucket);
                         attributeBucketList.add(p);
                     }
                 }
@@ -96,7 +95,7 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
                     LinkedList<CommonHFSAttributesLeafRecord> recordList = p.getB();
 
                     tmpAttributeForkList.add(new HFSCommonAttributeFork(this,
-                            recordList.toArray(new CommonHFSAttributesLeafRecord[recordList.size()])));
+                            recordList.toArray(CommonHFSAttributesLeafRecord[]::new)));
                 }
             }
 
@@ -110,12 +109,13 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
         return fsHandler;
     }
 
+    @Override
     public FSFork[] getAllForks() {
-        LinkedList<FSFork> forkList = new LinkedList<FSFork>();
+        LinkedList<FSFork> forkList = new LinkedList<>();
 
         fillForks(forkList);
 
-        return forkList.toArray(new FSFork[forkList.size()]);
+        return forkList.toArray(FSFork[]::new);
     }
 
     protected void fillForks(List<FSFork> forkList) {
@@ -131,6 +131,7 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
         fillAttributeForks(forkList);
     }
 
+    @Override
     public FSFork getForkByType(FSForkType type) {
 
         if (type == FSForkType.MACOS_FINDERINFO)
@@ -139,6 +140,7 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
             return null;
     }
 
+    @Override
     public long getCombinedLength() {
 
         FSFork fork = getFinderInfoFork();

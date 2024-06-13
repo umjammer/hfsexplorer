@@ -48,7 +48,7 @@ public class FileInfoPanel extends javax.swing.JPanel {
     public void setFields(HFSPlusCatalogFile cf) {
         recordTypeField.setText("0x" + Util.toHexStringBE(cf.getRecordType()));
 
-        //flagsDebugField.setText("0x" + Util.toHexStringBE(cf.getFlags()));
+//        flagsDebugField.setText("0x" + Util.toHexStringBE(cf.getFlags()));
         fileLockedBox.setSelected(cf.getFileLockedFlag());
         threadExistsBox.setSelected(cf.getThreadExistsFlag());
 
@@ -134,13 +134,13 @@ public class FileInfoPanel extends javax.swing.JPanel {
                                javax.swing.JTextField forkClumpSizeField,
                                javax.swing.JTextField forkTotalBlocksField,
                                javax.swing.JPanel forkExtentsPanel) {
-        forkLogicalSizeField.setText("" + forkData.getLogicalSize() + " bytes");
-        forkClumpSizeField.setText("" + forkData.getClumpSize() + " bytes");
+        forkLogicalSizeField.setText(forkData.getLogicalSize() + " bytes");
+        forkClumpSizeField.setText(forkData.getClumpSize() + " bytes");
         forkTotalBlocksField.setText("" + forkData.getTotalBlocks());
 
         int i = 0;
         LinkedList<InternalStructViewPanel> structViewPanels =
-                new LinkedList<InternalStructViewPanel>();
+                new LinkedList<>();
         for (HFSPlusExtentDescriptor d : forkData.getExtents().
                 getExtentDescriptors()) {
             if (d.getBlockCount() == 0) {
@@ -168,8 +168,8 @@ public class FileInfoPanel extends javax.swing.JPanel {
 
         org.jdesktop.layout.GroupLayout.SequentialGroup verticalGroup =
                 forkExtentsPanelLayout.createSequentialGroup();
-        if (structViewPanels.size() > 0) {
-            final int preferredGap =
+        if (!structViewPanels.isEmpty()) {
+            int preferredGap =
                     org.jdesktop.layout.LayoutStyle.getSharedInstance().
                             getPreferredGap(forkTotalBlocksField, forkExtentsPanel,
                                     org.jdesktop.layout.LayoutStyle.RELATED,

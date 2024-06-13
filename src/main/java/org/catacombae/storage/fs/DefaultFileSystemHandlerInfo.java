@@ -47,22 +47,27 @@ public class DefaultFileSystemHandlerInfo implements FileSystemHandlerInfo {
         this.author = iAuthor;
     }
 
+    @Override
     public String getHandlerIdentifier() {
         return handlerIdentifier;
     }
 
+    @Override
     public String getHandlerName() {
         return handlerName;
     }
 
+    @Override
     public String getHandlerVersion() {
         return handlerVersion;
     }
 
+    @Override
     public long getRevision() {
         return revision;
     }
 
+    @Override
     public String getAuthor() {
         return author;
     }

@@ -28,8 +28,8 @@ import java.io.File;
  */
 public class SimplerFileFilter extends javax.swing.filechooser.FileFilter {
 
-    private String extension;
-    private String description;
+    private final String extension;
+    private final String description;
 
     public SimplerFileFilter(String extension, String description) {
         this.extension = extension;

@@ -21,11 +21,8 @@ import java.io.PrintStream;
 
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.FastUnicodeCompare;
 import org.catacombae.hfs.types.hfs.CatKeyRec;
-import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafNode.HFSXImplementation;
 import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
-import org.catacombae.hfs.types.hfsx.HFSXKeyCompareType;
 
 
 /**
@@ -37,13 +34,14 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
 
     public abstract CommonHFSCatalogString getNodeName();
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogKey.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
     public static CommonHFSCatalogKey create(CommonHFSCatalogNodeID parentID, CommonHFSCatalogString name) {
-        final long parentIDLong = parentID.toLong();
+        long parentIDLong = parentID.toLong();
         if (parentIDLong > 0xffff_ffffL) {
             throw new RuntimeException("Unexpected: UInt32 overflow in " +
                     "value returned from CommonHFSCatalogNodeID.toLong (" + parentIDLong + ").");
@@ -117,9 +115,9 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return key.getBytes();
         }
 
+        @Override
         public int compareTo(CommonHFSCatalogKey o) {
-            if (o instanceof HFSPlusImplementation) {
-                HFSPlusImplementation k = (HFSPlusImplementation) o;
+            if (o instanceof HFSPlusImplementation k) {
                 return key.compareTo(k.key);
 //                long res = getParentID().toLong() - k.getParentID().toLong();
 //                if (res == 0) {
@@ -143,19 +141,23 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             }
         }
 
+        @Override
         public int maxSize() {
             return key.maxSize();
         }
 
+        @Override
         public int occupiedSize() {
             return key.occupiedSize();
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
@@ -186,10 +188,12 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return CommonHFSCatalogString.createHFS(key.getCkrCName());
         }
 
+        @Override
         public int maxSize() {
             return key.maxSize();
         }
 
+        @Override
         public int occupiedSize() {
             return key.occupiedSize();
         }
@@ -199,6 +203,7 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return key.getBytes();
         }
 
+        @Override
         public int compareTo(CommonHFSCatalogKey o) {
             if (o instanceof HFSImplementation) {
                 return key.compareTo(((HFSImplementation) o).key);
@@ -207,11 +212,13 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             }
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }

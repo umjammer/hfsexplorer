@@ -27,10 +27,10 @@ import java.math.BigInteger;
  */
 public interface Limits {
 
-    public static final int UINT8_MAX = 0xff;
-    public static final int UINT16_MAX = 0xffff;
-    public static final long UINT32_MAX = 0xffff_ffffL;
-    public static final BigInteger UINT64_MAX =
+    int UINT8_MAX = 0xff;
+    int UINT16_MAX = 0xffff;
+    long UINT32_MAX = 0xffff_ffffL;
+    BigInteger UINT64_MAX =
             new BigInteger(1, new byte[] {
                     (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
                     (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,

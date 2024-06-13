@@ -18,10 +18,10 @@
 package org.catacombae.hfsexplorer;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -30,8 +30,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
-import org.catacombae.hfs.types.hfsplus.JournalInfoBlock;
 import org.catacombae.hfsexplorer.fs.ResourceForkReader;
 import org.catacombae.hfsexplorer.gui.FileInfoPanel;
 import org.catacombae.hfsexplorer.gui.FSEntrySummaryPanel;
@@ -53,6 +51,7 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFSFile;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSFolder;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSLink;
 
+import static java.lang.System.getLogger;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
 
@@ -62,7 +61,9 @@ import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
  */
 public class FileInfoWindow extends HFSExplorerJFrame {
 
-    public FileInfoWindow(final FSEntry fsEntry, String[] parentPath) {
+    private static final Logger logger = getLogger(FileInfoWindow.class.getName());
+
+    public FileInfoWindow(FSEntry fsEntry, String[] parentPath) {
         super("Info - " + fsEntry.getName());
 
         JScrollPane summaryPanelScroller = null;
@@ -72,14 +73,14 @@ public class FileInfoWindow extends HFSExplorerJFrame {
 
         // Summary panel
         try {
-            final FSEntrySummaryPanel summaryPanel = new FSEntrySummaryPanel(this, fsEntry, parentPath);
+            FSEntrySummaryPanel summaryPanel = new FSEntrySummaryPanel(this, fsEntry, parentPath);
             summaryPanelScroller = new JScrollPane(summaryPanel, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER);
 
             tabs.addTab("Summary", summaryPanelScroller);
         } catch (Exception e) {
             GUIUtil.displayExceptionDialog(e, 20, this, "Exception while " +
                     "creating FSEntrySummaryPanel.");
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // Details panel
@@ -121,15 +122,14 @@ public class FileInfoWindow extends HFSExplorerJFrame {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // Resource fork panel
         JPanel resffPanel = null;
         ResourceForkReader resffReader = null;
         try {
-            if (fsEntry instanceof FSFile) {
-                FSFile fsFile = (FSFile) fsEntry;
+            if (fsEntry instanceof FSFile fsFile) {
                 FSFork resourceFork = fsFile.getForkByType(FSForkType.MACOS_RESOURCE);
                 if (resourceFork != null && resourceFork.getLength() > 0) {
                     ReadableRandomAccessStream s =
@@ -149,7 +149,7 @@ public class FileInfoWindow extends HFSExplorerJFrame {
                 }
             }
         } catch (MalformedResourceForkException e) {
-            System.err.println("Malformed resource fork:");
+            logger.log(Level.DEBUG, "Malformed resource fork:");
             e.printStackTrace(System.err);
 
             resffPanel = new JPanel();
@@ -158,31 +158,29 @@ public class FileInfoWindow extends HFSExplorerJFrame {
             resffPanel.add(new JLabel("Invalid resource fork data", SwingConstants.CENTER), BorderLayout.CENTER);
 
             JButton saveDataButton = new JButton("Save data...");
-            saveDataButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        final JFileChooser fc = new JFileChooser();
-                        if (fc.showSaveDialog(fc) == JFileChooser.APPROVE_OPTION) {
-                            final ReadableRandomAccessStream rs =
-                                    ((FSFile) fsEntry).getForkByType(FSForkType.MACOS_RESOURCE).
-                                            getReadableRandomAccessStream();
-                            final FileStream fs = new FileStream(fc.getSelectedFile());
+            saveDataButton.addActionListener(e1 -> {
+                try {
+                    JFileChooser fc = new JFileChooser();
+                    if (fc.showSaveDialog(fc) == JFileChooser.APPROVE_OPTION) {
+                        ReadableRandomAccessStream rs =
+                                fsEntry.getForkByType(FSForkType.MACOS_RESOURCE).
+                                        getReadableRandomAccessStream();
+                        FileStream fs = new FileStream(fc.getSelectedFile());
 
-                            IOUtil.streamCopy(rs, fs, 1024 * 1024);
-                        }
-                    } catch (Throwable t) {
-                        System.err.println("Exception while extracting resource fork to file:");
-                        t.printStackTrace(System.err);
-
-                        GUIUtil.displayExceptionDialog(t, 20,
-                                FileInfoWindow.this,
-                                "Exception while extracting resource fork to file:");
+                        IOUtil.streamCopy(rs, fs, 1024 * 1024);
                     }
+                } catch (Throwable t) {
+                    logger.log(Level.DEBUG, "Exception while extracting resource fork to file:");
+                    t.printStackTrace(System.err);
+
+                    GUIUtil.displayExceptionDialog(t, 20,
+                            FileInfoWindow.this,
+                            "Exception while extracting resource fork to file:");
                 }
             });
             resffPanel.add(saveDataButton, BorderLayout.SOUTH);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
             GUIUtil.displayExceptionDialog(e, 20, this, "Exception while creating ResourceForkViewPanel.");
         }
 
@@ -208,8 +206,9 @@ public class FileInfoWindow extends HFSExplorerJFrame {
 
         setLocationRelativeTo(null);
 
-        final ResourceForkReader resffReaderFinal = resffReader;
+        ResourceForkReader resffReaderFinal = resffReader;
         addWindowListener(new WindowAdapter() {
+                @Override
                 public void windowClosed(WindowEvent we) {
                 // We know that this window won't be reused. It's recreated
                 // every time, so under that assumption we can close the

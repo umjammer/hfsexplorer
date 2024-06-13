@@ -171,6 +171,7 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
 // 		     int partitionEntryArrayCRC32, byte[] reserved2) {
 //     }
 
+    @Override
     public int maxSize() {
         // Depends on the sector size. We don't have a fixed maximum size.
         // However, in this case let's say 4096 because I don't know of any
@@ -179,6 +180,7 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
         return 4096;
     }
 
+    @Override
     public int occupiedSize() {
         return blockSize;
     }
@@ -272,9 +274,10 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
         crc.update(numberOfPartitionEntries);
         crc.update(sizeOfPartitionEntry);
         crc.update(partitionEntryArrayCRC32);
-        return (int) (crc.getValue() & 0xffff_ffff);
+        return (int) (crc.getValue() & 0xffff_ffffL);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " signature: 0x" + Util.toHexStringBE(getSignature()));
         ps.println(prefix + " revision: 0x" + Util.toHexStringBE(getRevision()));
@@ -293,11 +296,13 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
         ps.println(prefix + " reserved2: [too much data to display...]");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "GPTHeader:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         int offset = 0;
@@ -337,8 +342,7 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof GPTHeader) {
-            GPTHeader gpth = (GPTHeader) obj;
+        if (obj instanceof GPTHeader gpth) {
             return Util.arraysEqual(getBytes(), gpth.getBytes());
             // Lazy man's method, generating new allocations and work for the GC. But it's convenient.
         } else
@@ -403,7 +407,7 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
         // adding one if the byte size of the partition entry area is not aligned with
         // blockSize.
         //
-        long peByteLen = (newHeader.getNumberOfPartitionEntries() * newHeader.getSizeOfPartitionEntry());
+        long peByteLen = ((long) newHeader.getNumberOfPartitionEntries() * newHeader.getSizeOfPartitionEntry());
         long peLBALen = peByteLen / blockSize + ((peByteLen % blockSize != 0) ? 1 : 0);
         long pePos = newHeader.getPrimaryLBA() - peLBALen;
         byte[] pePosBytes = Util.toByteArrayLE(pePos);
@@ -425,6 +429,7 @@ public class GPTHeader implements DynamicStruct, PrintableStruct, StructElements
         return newHeader;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder dbStruct = new DictionaryBuilder(getClass().getSimpleName());
 

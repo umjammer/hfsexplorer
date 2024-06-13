@@ -81,10 +81,9 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
     }
 
     public void print(PrintStream ps, int pregap) {
-        String pregapString = "";
-        for (int i = 0; i < pregap; ++i)
-            pregapString += " ";
-        print(ps, pregapString);
+        StringBuilder pregapString = new StringBuilder();
+        pregapString.append(" ".repeat(Math.max(0, pregap)));
+        print(ps, pregapString.toString());
     }
 
     private void _printFields(PrintStream ps, String prefix) {
@@ -95,10 +94,12 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
         extents.print(ps, prefix + "  ");
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         _printFields(ps, prefix + " ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusForkData:");
         _printFields(ps, prefix + " ");
@@ -122,6 +123,7 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusForkData.class.getSimpleName());
 
@@ -134,15 +136,15 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
     }
 
     private void _setLogicalSize(long logicalSize) {
-        Util.arrayPutBE(this.logicalSize, 0, (long) logicalSize);
+        Util.arrayPutBE(this.logicalSize, 0, logicalSize);
     }
 
     private void _setClumpSize(int clumpSize) {
-        Util.arrayPutBE(this.clumpSize, 0, (int) clumpSize);
+        Util.arrayPutBE(this.clumpSize, 0, clumpSize);
     }
 
     private void _setTotalBlocks(int totalBlocks) {
-        Util.arrayPutBE(this.totalBlocks, 0, (int) totalBlocks);
+        Util.arrayPutBE(this.totalBlocks, 0, totalBlocks);
     }
 
     private void _setExtents(HFSPlusExtentRecord extents) {

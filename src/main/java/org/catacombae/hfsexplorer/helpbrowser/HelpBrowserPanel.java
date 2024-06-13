@@ -17,20 +17,15 @@
 
 package org.catacombae.hfsexplorer.helpbrowser;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 
 import org.catacombae.hfsexplorer.gui.HFSExplorerJFrame;
 
@@ -49,7 +44,7 @@ public class HelpBrowserPanel extends javax.swing.JPanel {
     private static final String TEST_HOME = "http://hem.bredband.net/catacombae/hfsx.html";
     private final URL homePage;
     private URL currentPage = null;
-    private LinkedList<URL> history = new LinkedList<URL>();
+    private final LinkedList<URL> history = new LinkedList<>();
 
     /**
      * Creates new HelpBrowserPanel.
@@ -60,26 +55,16 @@ public class HelpBrowserPanel extends javax.swing.JPanel {
         this.homePage = iHomePage;
         initComponents();
         htmlView.setEditable(false);
-        htmlView.addHyperlinkListener(new HyperlinkListener() {
-                public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    URL url = e.getURL();
-                    if (url != null)
-                        goToPage(url);
-                }
-            }
-        });
+        htmlView.addHyperlinkListener(e -> {
+        if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+            URL url = e.getURL();
+            if (url != null)
+                goToPage(url);
+        }
+    });
 
-        backButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                goBack();
-            }
-        });
-        homeButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                goHome();
-            }
-        });
+        backButton.addActionListener(e -> goBack());
+        homeButton.addActionListener(e -> goHome());
 
         goHome();
     }
@@ -100,7 +85,7 @@ public class HelpBrowserPanel extends javax.swing.JPanel {
         }
     }
 
-    protected void goToPage(final URL iUrl) {
+    protected void goToPage(URL iUrl) {
         try {
 //            System.out.println("setCurrentPage(" + iUrl + ");");
             if (currentPage != null && iUrl.equals(currentPage)) {

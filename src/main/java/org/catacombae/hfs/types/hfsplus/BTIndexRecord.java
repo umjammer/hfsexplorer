@@ -44,12 +44,14 @@ public class BTIndexRecord implements PrintableStruct {
         return Util.readIntBE(index);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.print(ps, prefix + "  ");
         ps.println(prefix + " index: " + Util.unsign(getIndex()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTIndexRecord:");
         printFields(ps, prefix);

@@ -127,10 +127,12 @@ public class CdrFThdRec extends CatDataRec {
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CdrFThdRec.class.getSimpleName());
 

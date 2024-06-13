@@ -48,8 +48,8 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
 
     public static final int STATIC_SIZE = 16;
 
-    private long reserved;
-    private int attrSize;
+    private final long reserved;
+    private final int attrSize;
     private final byte[] attrData1;
     private final byte[] attrData2;
 
@@ -77,15 +77,18 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
         }
     }
 
+    @Override
     public int size() {
         return occupiedSize();
     }
 
+    @Override
     public int occupiedSize() {
-        final long trueSize = STATIC_SIZE + attrData1.length + (attrData2 != null ? attrData2.length : 0);
+        long trueSize = STATIC_SIZE + attrData1.length + (attrData2 != null ? attrData2.length : 0);
         return trueSize > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) trueSize;
     }
 
+    @Override
     public int maxSize() {
         return Integer.MAX_VALUE;
     }
@@ -110,8 +113,8 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
     }
 
     public final int readAttrData(long pos, byte[] b, int offset, int length) {
-        final long unsignedAttrSize = getAttrSize();
-        final int length1, length2;
+        long unsignedAttrSize = getAttrSize();
+        int length1, length2;
 
         if (pos > unsignedAttrSize) {
             return 0;
@@ -155,6 +158,7 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
         return this.attrSize;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " recordType: " + getRecordType());
         ps.println(prefix + " reserved: ");
@@ -184,11 +188,13 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusAttrData:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         if (this.attrData1.length > Integer.MAX_VALUE - 16) {
             throw new RuntimeException("Struct is too large to fit within a " +
@@ -216,12 +222,12 @@ public class HFSPlusAttributesData extends HFSPlusAttributesLeafRecordData imple
 
     @Override
     public Dictionary getStructElements() {
-        final Class thisClass = HFSPlusAttributesData.class;
+        final Class<HFSPlusAttributesData> thisClass = HFSPlusAttributesData.class;
         DictionaryBuilder db = new DictionaryBuilder(thisClass.getSimpleName(), "HFS+ attributes data");
 
         try {
-            final Field reservedField = thisClass.getDeclaredField("reserved");
-            final Field attrSizeField = thisClass.getDeclaredField("attrSize");
+            Field reservedField = thisClass.getDeclaredField("reserved");
+            Field attrSizeField = thisClass.getDeclaredField("attrSize");
 
             reservedField.setAccessible(true);
             attrSizeField.setAccessible(true);

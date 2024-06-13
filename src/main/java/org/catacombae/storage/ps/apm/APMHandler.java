@@ -30,7 +30,7 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
  */
 public class APMHandler extends PartitionSystemHandler {
 
-    private DataLocator partitionData;
+    private final DataLocator partitionData;
 
     public APMHandler(DataLocator partitionData) {
         this.partitionData = partitionData;
@@ -111,7 +111,7 @@ public class APMHandler extends PartitionSystemHandler {
 
                     if (apm != null) {
                         for (int i = 0; i < apm.getPartitionCount(); ++i) {
-                            final long curLastPartitionBlock = (apm.getPartitionEntry(i).getStartOffset() +
+                            long curLastPartitionBlock = (apm.getPartitionEntry(i).getStartOffset() +
                                             apm.getPartitionEntry(i).getLength() + blockSize - 1) / blockSize;
                             if (curLastPartitionBlock > lastPartitionBlock) {
                                 lastPartitionBlock = curLastPartitionBlock;
@@ -124,7 +124,7 @@ public class APMHandler extends PartitionSystemHandler {
                         // as specified in the DDR. Chances are that the
                         // partition layout refers to a 512-byte sector size.
                         try {
-                            final ApplePartitionMap fallbackApm = new ApplePartitionMap(llf, 512, 512);
+                            ApplePartitionMap fallbackApm = new ApplePartitionMap(llf, 512, 512);
                             if (fallbackApm.getPartitionCount() > 0) {
                                 apm = fallbackApm;
                             }

@@ -65,17 +65,18 @@ public class HFSPlusExtentDescriptor implements StructElements, PrintableStruct 
     }
 
     public void print(PrintStream ps, int pregap) {
-        String pregapString = "";
-        for (int i = 0; i < pregap; ++i)
-            pregapString += " ";
-        print(ps, pregapString);
+        StringBuilder pregapString = new StringBuilder();
+        pregapString.append(" ".repeat(Math.max(0, pregap)));
+        print(ps, pregapString.toString());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName());
         printFields(ps, prefix);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " startBlock: " + getStartBlock());
         ps.println(prefix + " blockCount: " + getBlockCount());
@@ -93,6 +94,7 @@ public class HFSPlusExtentDescriptor implements StructElements, PrintableStruct 
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder sb = new DictionaryBuilder(HFSPlusExtentDescriptor.class.getSimpleName());
 
@@ -103,11 +105,11 @@ public class HFSPlusExtentDescriptor implements StructElements, PrintableStruct 
     }
 
     private void _setStartBlock(int startBlock) {
-        Util.arrayPutBE(this.startBlock, 0, (int) startBlock);
+        Util.arrayPutBE(this.startBlock, 0, startBlock);
     }
 
     private void _setBlockCount(int blockCount) {
-        Util.arrayPutBE(this.blockCount, 0, (int) blockCount);
+        Util.arrayPutBE(this.blockCount, 0, blockCount);
     }
 
     private void _set(HFSPlusExtentDescriptor desc) {

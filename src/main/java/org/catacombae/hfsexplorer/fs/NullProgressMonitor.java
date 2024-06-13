@@ -34,16 +34,20 @@ public class NullProgressMonitor implements ProgressMonitor {
     protected NullProgressMonitor() {
     }
 
+    @Override
     public void signalCancel() {
     }
 
+    @Override
     public boolean cancelSignaled() {
         return false;
     }
 
+    @Override
     public void confirmCancel() {
     }
 
+    @Override
     public void addDataProgress(long dataSize) {
     }
 }

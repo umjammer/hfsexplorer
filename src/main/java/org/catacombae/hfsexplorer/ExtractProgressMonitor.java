@@ -18,9 +18,13 @@
 package org.catacombae.hfsexplorer;
 
 import java.io.File;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 
 import org.catacombae.hfs.ProgressMonitor;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -28,43 +32,45 @@ import org.catacombae.hfs.ProgressMonitor;
  */
 public interface ExtractProgressMonitor extends ProgressMonitor {
 
-    public void updateCalculateDir(String dirname);
+    void updateCalculateDir(String dirname);
 
-    public void updateTotalProgress(double fraction, String message);
+    void updateTotalProgress(double fraction, String message);
 
-    public void updateCurrentDir(String dirname);
+    void updateCurrentDir(String dirname);
 
-    public void updateCurrentFile(String filename, long fileSize);
+    void updateCurrentFile(String filename, long fileSize);
 
-    public void setDataSize(long totalSize);
+    void setDataSize(long totalSize);
 
 //    public boolean confirmOverwriteDirectory(File dir);
 
 //    public boolean confirmSkipDirectory(String... messageLines);
 
-    public CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory);
+    CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory);
 
-    public CreateFileFailedAction createFileFailed(String filename, File parentDirectory);
+    CreateFileFailedAction createFileFailed(String filename, File parentDirectory);
 
-    public DirectoryExistsAction directoryExists(File directory);
+    DirectoryExistsAction directoryExists(File directory);
 
-    public FileExistsAction fileExists(File file);
+    FileExistsAction fileExists(File file);
 
-    public UnhandledExceptionAction unhandledException(String filename,
-                                                       Throwable t);
+    UnhandledExceptionAction unhandledException(String filename,
+                                                Throwable t);
 
-    public String displayRenamePrompt(String currentName, File outDir);
+    String displayRenamePrompt(String currentName, File outDir);
 
-    public ExtractProperties getExtractProperties();
+    ExtractProperties getExtractProperties();
 
-    public static interface ExtractPropertiesListener {
+    interface ExtractPropertiesListener {
 
-        public void propertyChanged(Object changedProperty);
+        void propertyChanged(Object changedProperty);
     }
 
-    public static class ExtractProperties {
+    class ExtractProperties {
 
-        private final LinkedList<ExtractPropertiesListener> listeners = new LinkedList<ExtractPropertiesListener>();
+        private static final Logger logger = getLogger(ExtractProperties.class.getName());
+
+        private final LinkedList<ExtractPropertiesListener> listeners = new LinkedList<>();
         private volatile CreateDirectoryFailedAction createDirAction = CreateDirectoryFailedAction.PROMPT_USER;
         private volatile CreateFileFailedAction createFileAction = CreateFileFailedAction.PROMPT_USER;
         private volatile DirectoryExistsAction dirExistsAction = DirectoryExistsAction.PROMPT_USER;
@@ -125,17 +131,17 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
                 try {
                     listener.propertyChanged(changedProperty);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             }
         }
     }
 
-    public static enum CreateDirectoryFailedAction {PROMPT_USER, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
+    enum CreateDirectoryFailedAction {PROMPT_USER, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
 
-    public static enum CreateFileFailedAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
+    enum CreateFileFailedAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
 
-    public static enum DirectoryExistsAction {
+    enum DirectoryExistsAction {
         PROMPT_USER,
         CONTINUE,
         ALWAYS_CONTINUE,
@@ -145,9 +151,9 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
         CANCEL,
     }
 
-    public static enum FileExistsAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, OVERWRITE, OVERWRITE_ALL, RENAME, AUTO_RENAME, CANCEL}
+    enum FileExistsAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, OVERWRITE, OVERWRITE_ALL, RENAME, AUTO_RENAME, CANCEL}
 
-    public static enum UnhandledExceptionAction {
+    enum UnhandledExceptionAction {
         PROMPT_USER,
         CONTINUE,
         ALWAYS_CONTINUE,

@@ -19,6 +19,7 @@ package org.catacombae.storage.ps.gpt;
 
 import java.nio.LongBuffer;
 import java.util.HashMap;
+import java.util.Objects;
 
 import org.catacombae.storage.ps.PartitionType;
 import org.catacombae.util.Util;
@@ -997,12 +998,12 @@ public enum GPTPartitionType {
     private final Long typeGUIDLsb;
     private final PartitionType enumType;
 
-    private GPTPartitionType(String guidString, PartitionType enumType) {
+    GPTPartitionType(String guidString, PartitionType enumType) {
         this(guidString, null, null, enumType);
     }
 
-    private GPTPartitionType(String guidString, Long typeGUIDMsb, Long typeGUIDLsb, PartitionType enumType) {
-        final char[] guidStringChars = guidString.toCharArray();
+    GPTPartitionType(String guidString, Long typeGUIDMsb, Long typeGUIDLsb, PartitionType enumType) {
+        char[] guidStringChars = guidString.toCharArray();
 
         if (guidStringChars.length != 36) {
             throw new RuntimeException("Invalid length (" + guidStringChars.length + ") for GUID: " + guidString +
@@ -1052,7 +1053,7 @@ public enum GPTPartitionType {
         addReverseLookupReference(LongBuffer.wrap(new long[] {this.typeGUIDMsb, this.typeGUIDLsb}), this);
     }
 
-    private GPTPartitionType() {
+    GPTPartitionType() {
         this.typeGUIDMsb = null;
         this.typeGUIDLsb = null;
         this.enumType = null;
@@ -1062,7 +1063,7 @@ public enum GPTPartitionType {
         long result = 0;
 
         for (int i = 0; i < length; ++i) {
-            final char cur = data[index + i];
+            char cur = data[index + i];
             byte value;
 
             if (cur >= '0' && cur <= '9') {
@@ -1082,7 +1083,7 @@ public enum GPTPartitionType {
         long result = 0;
 
         for (int i = 0; i < length; ++i) {
-            final char cur = data[index + i];
+            char cur = data[index + i];
             byte value;
 
             if (cur >= '0' && cur <= '9') {
@@ -1091,7 +1092,7 @@ public enum GPTPartitionType {
                 value = (byte) (0xA + (cur - 'A'));
             }
 
-            result |= value << (i + (((i % 2) == 0) ? 1 : -1)) * 4;
+            result |= (long) value << (i + (((i % 2) == 0) ? 1 : -1)) * 4;
         }
 
         return result;
@@ -1100,7 +1101,7 @@ public enum GPTPartitionType {
     private static void addReverseLookupReference(LongBuffer lb, GPTPartitionType t) {
         GPTPartitionType conflictingType;
         if (reverseLookupTable == null) {
-            reverseLookupTable = new HashMap<LongBuffer, GPTPartitionType>();
+            reverseLookupTable = new HashMap<>();
         } else if ((conflictingType = reverseLookupTable.get(lb)) != null) {
             throw new RuntimeException("Invalid duplicate partition type: " +
                     t + " (duplicates " + conflictingType + ")");
@@ -1111,10 +1112,7 @@ public enum GPTPartitionType {
 
     public static GPTPartitionType getType(long typeGUIDMsb, long typeGUIDLsb) {
         GPTPartitionType type = reverseLookupTable.get(LongBuffer.wrap(new long[] {typeGUIDMsb, typeGUIDLsb}));
-        if (type != null)
-            return type;
-        else
-            return UNKNOWN_PARTITION_TYPE;
+        return Objects.requireNonNullElse(type, UNKNOWN_PARTITION_TYPE);
     }
 
     public byte[] getBytes() {

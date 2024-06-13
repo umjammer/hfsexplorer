@@ -59,7 +59,7 @@ public class HFSPlusCatalogKey extends BTKey implements DynamicStruct, StructEle
 
         System.arraycopy(data, offset + 0, keyLength, 0, 2);
 
-        final int decodedKeyLength = getKeyLength();
+        int decodedKeyLength = getKeyLength();
         if (decodedKeyLength > MAX_STRUCTSIZE - 2) {
             throw new HFSInvalidDataException("Invalid key length for " +
                     getClass().getSimpleName() + ": " + decodedKeyLength);
@@ -105,8 +105,7 @@ public class HFSPlusCatalogKey extends BTKey implements DynamicStruct, StructEle
 
     @Override
     public int compareTo(BTKey btk) {
-        if (btk instanceof HFSPlusCatalogKey) {
-            HFSPlusCatalogKey catKey = (HFSPlusCatalogKey) btk;
+        if (btk instanceof HFSPlusCatalogKey catKey) {
             if (Util.unsign(getParentID().toInt()) == Util.unsign(catKey.getParentID().toInt()))
                 return FastUnicodeCompare.compare(nodeName.getUnicode(), catKey.getNodeName().getUnicode());
             else if (Util.unsign(getParentID().toInt()) < Util.unsign(catKey.getParentID().toInt()))
@@ -118,6 +117,7 @@ public class HFSPlusCatalogKey extends BTKey implements DynamicStruct, StructEle
         }
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " keyLength: " + Util.unsign(getKeyLength()));
         ps.println(prefix + " parentID: ");
@@ -126,6 +126,7 @@ public class HFSPlusCatalogKey extends BTKey implements DynamicStruct, StructEle
         getNodeName().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusCatalogKey:");
         printFields(ps, prefix);
@@ -136,14 +137,17 @@ public class HFSPlusCatalogKey extends BTKey implements DynamicStruct, StructEle
         return occupiedSize();
     }
 
+    @Override
     public int occupiedSize() {
         return 2 + Util.unsign(getKeyLength());
     }
 
+    @Override
     public int maxSize() {
         return MAX_STRUCTSIZE;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusCatalogKey.class.getSimpleName());
 

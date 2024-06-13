@@ -27,55 +27,55 @@ import java.util.Date;
  */
 public interface HFSPlusCatalogAttributes {
 
-    public static short kHFSFileLockedBit = 0x0000;
-    public static short kHFSFileLockedMask = 0x0001;
+    short kHFSFileLockedBit = 0x0000;
+    short kHFSFileLockedMask = 0x0001;
 
-    public static short kHFSThreadExistsBit = 0x0001;
-    public static short kHFSThreadExistsMask = 0x0002;
+    short kHFSThreadExistsBit = 0x0001;
+    short kHFSThreadExistsMask = 0x0002;
 
-    public static short kHFSHasAttributesBit = 0x0002;
-    public static short kHFSHasAttributesMask = 0x0004;
+    short kHFSHasAttributesBit = 0x0002;
+    short kHFSHasAttributesMask = 0x0004;
 
-    public static short kHFSHasSecurityBit = 0x0003;
-    public static short kHFSHasSecurityMask = 0x0008;
+    short kHFSHasSecurityBit = 0x0003;
+    short kHFSHasSecurityMask = 0x0008;
 
-    public static short kHFSHasFolderCountBit = 0x0004;
-    public static short kHFSHasFolderCountMask = 0x0010;
+    short kHFSHasFolderCountBit = 0x0004;
+    short kHFSHasFolderCountMask = 0x0010;
 
-    public static short kHFSHasLinkChainBit = 0x0005;
-    public static short kHFSHasLinkChainMask = 0x0020;
+    short kHFSHasLinkChainBit = 0x0005;
+    short kHFSHasLinkChainMask = 0x0020;
 
-    public static short kHFSHasChildLinkBit = 0x0006;
-    public static short kHFSHasChildLinkMask = 0x0040;
+    short kHFSHasChildLinkBit = 0x0006;
+    short kHFSHasChildLinkMask = 0x0040;
 
-    public static short kHFSHasDateAddedBit = 0x0007;
-    public static short kHFSHasDateAddedMask = 0x0080;
+    short kHFSHasDateAddedBit = 0x0007;
+    short kHFSHasDateAddedMask = 0x0080;
 
-    public short getRecordType();
+    short getRecordType();
 
-    public short getFlags();
+    short getFlags();
 
-    public int getCreateDate();
+    int getCreateDate();
 
-    public int getContentModDate();
+    int getContentModDate();
 
-    public int getAttributeModDate();
+    int getAttributeModDate();
 
-    public int getAccessDate();
+    int getAccessDate();
 
-    public int getBackupDate();
+    int getBackupDate();
 
-    public HFSPlusBSDInfo getPermissions();
+    HFSPlusBSDInfo getPermissions();
 
-    public int getTextEncoding();
+    int getTextEncoding();
 
-    public Date getCreateDateAsDate();
+    Date getCreateDateAsDate();
 
-    public Date getContentModDateAsDate();
+    Date getContentModDateAsDate();
 
-    public Date getAttributeModDateAsDate();
+    Date getAttributeModDateAsDate();
 
-    public Date getAccessDateAsDate();
+    Date getAccessDateAsDate();
 
-    public Date getBackupDateAsDate();
+    Date getBackupDateAsDate();
 }

@@ -41,11 +41,11 @@ import org.catacombae.csjc.PrintableStruct;
 public interface Partition extends PrintableStruct {
 
     /** Returns the start offset in bytes. */
-    public abstract long getStartOffset();
+    long getStartOffset();
 
     /** Returns the length of the partition in bytes. */
-    public abstract long getLength();
+    long getLength();
 
     /** Returns the type of the partition. */
-    public abstract PartitionType getType();
+    PartitionType getType();
 }

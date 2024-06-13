@@ -38,7 +38,7 @@ public class MainWindow extends JFrame {
     private JMenuItem loadPathItem;
     private JMenuItem exitItem;
     private JMenuItem aboutItem;
-    private JPanel mainPanel;
+    private final JPanel mainPanel;
 
     public MainWindow(JPanel mainPanel) {
         super(BASE_TITLE);

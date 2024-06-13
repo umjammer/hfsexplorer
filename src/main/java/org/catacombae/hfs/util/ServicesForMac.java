@@ -73,7 +73,7 @@ public class ServicesForMac {
     };
 
     public static String remap(String nodeName, boolean unwrap) {
-        final char[] nodeNameChars = nodeName.toCharArray();
+        char[] nodeNameChars = nodeName.toCharArray();
 
         int char_value;
         int i;

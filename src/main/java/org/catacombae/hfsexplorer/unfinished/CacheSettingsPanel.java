@@ -17,8 +17,6 @@
 
 package org.catacombae.hfsexplorer.unfinished;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 
 import org.catacombae.hfs.HFSVolume;
@@ -30,21 +28,17 @@ import org.catacombae.hfs.HFSVolume;
 public class CacheSettingsPanel extends javax.swing.JPanel {
 
     /** Creates new form CacheSettingsPanel */
-    public CacheSettingsPanel(final HFSVolume fsView) {
+    public CacheSettingsPanel(HFSVolume fsView) {
         initComponents();
-        cachingEnabledBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                boolean b = cachingEnabledBox.isSelected();
-                blockSizeField.setEnabled(b);
-                blocksInCacheField.setEnabled(b);
+        cachingEnabledBox.addActionListener(ae -> {
+            boolean b = cachingEnabledBox.isSelected();
+            blockSizeField.setEnabled(b);
+            blocksInCacheField.setEnabled(b);
 
-            }
         });
 
-        applyButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
+        applyButton.addActionListener(ae -> {
 
-            }
         });
     }
 

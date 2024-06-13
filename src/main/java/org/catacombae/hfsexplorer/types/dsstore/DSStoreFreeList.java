@@ -51,10 +51,12 @@ public class DSStoreFreeList implements DynamicStruct, PrintableStruct {
         size = index;
     }
 
+    @Override
     public int maxSize() {
         return Integer.MAX_VALUE; // I guess...
     }
 
+    @Override
     public int occupiedSize() {
         return size;
     }
@@ -72,6 +74,7 @@ public class DSStoreFreeList implements DynamicStruct, PrintableStruct {
         return Util.arrayCopy(this.buckets[bucket].bucketEntries, new int[this.buckets[bucket].bucketEntries.length]);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         for (int i = 0; i < this.buckets.length; ++i) {
             ps.print(prefix + " bucket[" + i + "]: [");
@@ -82,11 +85,13 @@ public class DSStoreFreeList implements DynamicStruct, PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "DSStoreFreeList:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -94,14 +99,14 @@ public class DSStoreFreeList implements DynamicStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
-        for (int i = 0; i < this.buckets.length; ++i) {
-            Util.arrayPutBE(result, offset, this.buckets[i].bucketEntryCount);
+        for (Bucket bucket : this.buckets) {
+            Util.arrayPutBE(result, offset, bucket.bucketEntryCount);
             offset += 4;
 
-            for (int j = 0; j < this.buckets[i].bucketEntryCount; ++j) {
-                Util.arrayPutBE(result, offset, this.buckets[i].bucketEntries[j]);
+            for (int j = 0; j < bucket.bucketEntryCount; ++j) {
+                Util.arrayPutBE(result, offset, bucket.bucketEntries[j]);
                 offset += 4;
             }
         }

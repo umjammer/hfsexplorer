@@ -20,6 +20,8 @@ package org.catacombae.storage.ps.apm.types;
 import org.catacombae.util.Util;
 
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -27,11 +29,15 @@ import java.util.Arrays;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionType;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class APMPartition implements Partition {
+
+    private static final Logger logger = getLogger(APMPartition.class.getName());
 
     public static final short APM_PARTITION_SIGNATURE = 0x504D;
     public static final short APM_PARTITION_OLD_SIGNATURE = 0x5453;
@@ -171,16 +177,16 @@ public class APMPartition implements Partition {
             throw new IllegalArgumentException("'partitionType' has illegal (non-ASCII) characters.");
         }
 
-        Util.arrayPutBE(pmLgDataStart, 0, (int) 0);
+        Util.arrayPutBE(pmLgDataStart, 0, 0);
         Util.arrayPutBE(pmDataCnt, 0, (int) partitionBlockCount);
         Util.arrayPutBE(pmPartStatus, 0, partitionStatus);
-        Util.arrayPutBE(pmLgBootStart, 0, (int) 0);
-        Util.arrayPutBE(pmBootSize, 0, (int) 0);
-        Util.arrayPutBE(pmBootAddr, 0, (int) 0);
-        Util.arrayPutBE(pmBootAddr2, 0, (int) 0);
-        Util.arrayPutBE(pmBootEntry, 0, (int) 0);
-        Util.arrayPutBE(pmBootEntry2, 0, (int) 0);
-        Util.arrayPutBE(pmBootCksum, 0, (int) 0);
+        Util.arrayPutBE(pmLgBootStart, 0, 0);
+        Util.arrayPutBE(pmBootSize, 0, 0);
+        Util.arrayPutBE(pmBootAddr, 0, 0);
+        Util.arrayPutBE(pmBootAddr2, 0, 0);
+        Util.arrayPutBE(pmBootEntry, 0, 0);
+        Util.arrayPutBE(pmBootEntry2, 0, 0);
+        Util.arrayPutBE(pmBootCksum, 0, 0);
         Arrays.fill(pmProcessor, (byte) 0);
         Arrays.fill(pmPad, (byte) 0);
 
@@ -192,12 +198,14 @@ public class APMPartition implements Partition {
     }
 
     // Defined in Partition
+    @Override
     public long getStartOffset() {
         return (Util.unsign(getPmPyPartStart()) + Util.unsign(getPmLgDataStart())) * blockSize;
     }
 
+    @Override
     public long getLength() {
-        final long dataStartSector = Util.unsign(getPmLgDataStart());
+        long dataStartSector = Util.unsign(getPmLgDataStart());
         long dataSectors = Util.unsign(getPmDataCnt());
 
         if (dataSectors == 0) {
@@ -205,8 +213,8 @@ public class APMPartition implements Partition {
             // In case 0 is recorded in 'pmDataCnt' we derive the data size from
             // the size of the partition and the offset of the boot data.
             //
-            final long partitionSectors = Util.unsign(getPmPartBlkCnt());
-            final long bootStartSector = Util.unsign(getPmLgBootStart());
+            long partitionSectors = Util.unsign(getPmPartBlkCnt());
+            long bootStartSector = Util.unsign(getPmLgBootStart());
 
             dataSectors = ((bootStartSector > dataStartSector) ? bootStartSector : partitionSectors) - dataStartSector;
         }
@@ -214,6 +222,7 @@ public class APMPartition implements Partition {
         return dataSectors * blockSize;
     }
 
+    @Override
     public PartitionType getType() {
         return convertPartitionType(getPmParType());
     }
@@ -314,12 +323,12 @@ public class APMPartition implements Partition {
     }
 
     private static boolean getBit(byte[] array, int bit) {
-        final long bitLength = ((long) array.length) << 3;
+        long bitLength = ((long) array.length) << 3;
         if (bit < 0 || bit >= bitLength)
             throw new IllegalArgumentException("'bit' out of range: " + bit);
 
-        final int arrayIndex = (int) ((bitLength - 1 - bit) >>> 3);
-        final int bitIndex = (bit & 0x7);
+        int arrayIndex = (int) ((bitLength - 1 - bit) >>> 3);
+        int bitIndex = (bit & 0x7);
 
         return (array[arrayIndex] & (0x1 << bitIndex)) != 0;
     }
@@ -457,7 +466,7 @@ public class APMPartition implements Partition {
             byte[] md5sum = MessageDigest.getInstance("MD5").digest(pmPad);
             ps.println(prefix + " MD5: " + Util.byteArrayToHexString(md5sum));
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 
@@ -509,6 +518,7 @@ public class APMPartition implements Partition {
             return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         printPartitionInfo(ps, prefix + " ");
         ps.println(prefix + " Partition methods: ");
@@ -517,6 +527,7 @@ public class APMPartition implements Partition {
         ps.println(prefix + "  getType(): " + getType());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "APMPartition:");
         printFields(ps, prefix);
@@ -529,27 +540,28 @@ public class APMPartition implements Partition {
 
     public PartitionType convertPartitionType(byte[] parTypeData) {
         String typeString = Util.readNullTerminatedASCIIString(parTypeData);
-        if (typeString.equals("Apple_partition_map")) // Partition contains a partition map
-            return PartitionType.APPLE_PARTITION_MAP;
-        else if (typeString.equals("Apple_Driver")) // Partition contains a device driver
-            return PartitionType.APPLE_DRIVER;
-        else if (typeString.equals("Apple_Driver43")) // Partition contains a SCSI Manager 4.3 device driver
-            return PartitionType.APPLE_DRIVER43;
-        else if (typeString.equals("Apple_MFS")) // Partition uses the original Macintosh File System (64K ROM version)
-            return PartitionType.APPLE_MFS;
-        else if (typeString.equals("Apple_HFS")) // Partition uses the Hierarchical File System (128K and later ROM versions)
-            return PartitionType.APPLE_HFS_CONTAINER;
-        else if (typeString.equals("Apple_HFSX")) // Partition uses HFSX. Presently, we report it as HFS+, and let the mounter decide.
-            return PartitionType.APPLE_HFSX;
-        else if (typeString.equals("Apple_Unix_SVR2")) // Partition uses the Unix file system
-            return PartitionType.APPLE_UNIX_SVR2;
-        else if (typeString.equals("Apple_PRODOS")) // Partition uses the ProDOS file system
-            return PartitionType.APPLE_PRODOS;
-        else if (typeString.equals("Apple_Free")) // Partition is unused
-            return PartitionType.EMPTY;
-        else if (typeString.equals("Apple_Scratch")) // Partition is empty
-            return PartitionType.EMPTY;
-        else
-            return PartitionType.UNKNOWN;
+        return switch (typeString) {
+            // Partition contains a partition map
+            case "Apple_partition_map" -> PartitionType.APPLE_PARTITION_MAP;
+            // Partition contains a device driver
+            case "Apple_Driver" -> PartitionType.APPLE_DRIVER;
+            // Partition contains a SCSI Manager 4.3 device driver
+            case "Apple_Driver43" -> PartitionType.APPLE_DRIVER43;
+            // Partition uses the original Macintosh File System (64K ROM version)
+            case "Apple_MFS" -> PartitionType.APPLE_MFS;
+            // Partition uses the Hierarchical File System (128K and later ROM versions)
+            case "Apple_HFS" -> PartitionType.APPLE_HFS_CONTAINER;
+            // Partition uses HFSX. Presently, we report it as HFS+, and let the mounter decide.
+            case "Apple_HFSX" -> PartitionType.APPLE_HFSX;
+            // Partition uses the Unix file system
+            case "Apple_Unix_SVR2" -> PartitionType.APPLE_UNIX_SVR2;
+            // Partition uses the ProDOS file system
+            case "Apple_PRODOS" -> PartitionType.APPLE_PRODOS;
+            // Partition is unused
+            case "Apple_Free" -> PartitionType.EMPTY;
+            // Partition is empty
+            case "Apple_Scratch" -> PartitionType.EMPTY;
+            default -> PartitionType.UNKNOWN;
+        };
     }
 }

@@ -98,6 +98,7 @@ public class FXInfo implements PrintableStruct, StructElements {
         return Util.readIntBE(fdPutAway);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " fdIconID: " + getFdIconID());
         ps.println(prefix + " fdReserved: " + getFdReserved());
@@ -107,6 +108,7 @@ public class FXInfo implements PrintableStruct, StructElements {
         ps.println(prefix + " fdPutAway: " + getFdPutAway());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FXInfo:");
         printFields(ps, prefix);
@@ -130,6 +132,7 @@ public class FXInfo implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(FXInfo.class.getSimpleName());
 

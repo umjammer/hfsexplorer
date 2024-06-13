@@ -72,11 +72,13 @@ public class ExtDescriptor implements PrintableStruct, StructElements {
         return Util.readShortBE(xdrNumABlks);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " xdrStABN: " + Util.unsign(getXdrStABN()));
         ps.println(prefix + " xdrNumABlks: " + Util.unsign(getXdrNumABlks()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ExtDescriptor:");
         printFields(ps, prefix);
@@ -93,6 +95,7 @@ public class ExtDescriptor implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(ExtDescriptor.class.getName());
 

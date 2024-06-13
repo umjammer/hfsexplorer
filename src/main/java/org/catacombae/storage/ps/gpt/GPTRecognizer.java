@@ -27,6 +27,7 @@ import org.catacombae.storage.ps.gpt.types.GPTHeader;
  */
 public class GPTRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
 //            ReadableRandomAccessStream llf = data.createReadOnlyFile();

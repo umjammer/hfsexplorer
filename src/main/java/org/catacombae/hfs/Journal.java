@@ -55,7 +55,7 @@ public abstract class Journal {
      */
     public abstract boolean isClean();
 
-    public class Transaction {
+    public static class Transaction {
 
         public final BlockList[] blockLists;
 

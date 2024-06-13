@@ -37,11 +37,13 @@ public abstract class BTNode implements PrintableStruct {
         return nodeDescriptor;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " nodeDescriptor:");
         nodeDescriptor.printFields(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTNode:");
         printFields(ps, prefix);

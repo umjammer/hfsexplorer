@@ -47,9 +47,9 @@ public class BlockInfo implements StaticStruct, PrintableStruct {
 
     private final boolean littleEndian;
 
-    private long bnum;
-    private int bsize;
-    private int next;
+    private final long bnum;
+    private final int bsize;
+    private final int next;
 
     public BlockInfo(byte[] data, int offset, boolean littleEndian) {
         this.littleEndian = littleEndian;
@@ -69,6 +69,7 @@ public class BlockInfo implements StaticStruct, PrintableStruct {
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -107,17 +108,20 @@ public class BlockInfo implements StaticStruct, PrintableStruct {
         return next;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " bnum: " + getBnum());
         ps.println(prefix + " bsize: " + getBsize());
         ps.println(prefix + " next: " + getNext());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BlockInfo:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -125,7 +129,7 @@ public class BlockInfo implements StaticStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int originalOffset = offset;
+        int originalOffset = offset;
 
         if (!littleEndian) {
             Util.arrayPutBE(result, offset, bnum);

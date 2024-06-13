@@ -17,14 +17,14 @@
 
 package org.catacombae.hfsexplorer.tools;
 
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
 
 import org.catacombae.hfsexplorer.GUIUtil;
 import org.catacombae.hfsexplorer.PrefixFileFilter;
@@ -35,11 +35,17 @@ import org.catacombae.hfsexplorer.types.applesingle.EntryDescriptor;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+import static java.awt.Toolkit.getDefaultToolkit;
+import static java.lang.System.getLogger;
+import static javax.swing.KeyStroke.getKeyStroke;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ResourceViewer extends javax.swing.JFrame {
+
+    private static final Logger logger = getLogger(ResourceViewer.class.getName());
 
     private final ResourceForkViewPanel resourceForkViewPanel;
 
@@ -51,11 +57,11 @@ public class ResourceViewer extends javax.swing.JFrame {
 
         initComponents();
 
-        openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        openMenuItem.setAccelerator(getKeyStroke(KeyEvent.VK_O, getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         backgroundPanel.add(resourceForkViewPanel);
 
         openMenuItem.addActionListener(new ActionListener() {
-            private JFileChooser jfc = new JFileChooser();
+            private final JFileChooser jfc = new JFileChooser();
 
             {
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -63,6 +69,7 @@ public class ResourceViewer extends javax.swing.JFrame {
                 jfc.setFileFilter(new PrefixFileFilter("AppleDouble resource forks (._*)", "._"));
             }
 
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if (jfc.showOpenDialog(ResourceViewer.this) == JFileChooser.APPROVE_OPTION) {
                     loadFile(jfc.getSelectedFile());
@@ -79,23 +86,23 @@ public class ResourceViewer extends javax.swing.JFrame {
             fileStream = new ReadableFileStream(f);
 
             // Detect AppleSingle format
-//            System.err.println("Detecting AppleSingle format...");
+//            logger.log(Level.DEBUG, "Detecting AppleSingle format...");
             if (AppleSingleHandler.detectFileFormat(fileStream, 0) != null) {
                 try {
-//                    System.err.println("AppleSingle format found! Creating handler...");
+//                    logger.log(Level.DEBUG, "AppleSingle format found! Creating handler...");
                     AppleSingleHandler handler = new AppleSingleHandler(fileStream);
-//                    System.err.println("Getting resource entry descriptor...");
+//                    logger.log(Level.DEBUG, "Getting resource entry descriptor...");
                     EntryDescriptor desc = handler.getResourceEntryDescriptor();
                     if (desc != null) {
-//                        System.err.println("Getting entry stream...");
+//                        logger.log(Level.DEBUG, "Getting entry stream...");
                         fileStream = handler.getEntryStream(desc);
-//                        System.err.println("done!");
+//                        logger.log(Level.DEBUG, "done!");
                     }
 //                    else
-//                        System.err.println("No resource entry found in AppleSingle structure.");
+//                        logger.log(Level.DEBUG, "No resource entry found in AppleSingle structure.");
                 } catch (Exception e) {
-                    System.err.println("Unhandled exception while detecting AppleSingle format:");
-                    e.printStackTrace();
+                    logger.log(Level.DEBUG, "Unhandled exception while detecting AppleSingle format:");
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             } else {
                 int res = JOptionPane.showConfirmDialog(this, "Invalid AppleDouble file.\n" +
@@ -108,15 +115,15 @@ public class ResourceViewer extends javax.swing.JFrame {
                 }
             }
 
-//            System.err.println("Creating new ResourceForkReader...");
+//            logger.log(Level.DEBUG, "Creating new ResourceForkReader...");
             reader = new ResourceForkReader(fileStream);
-//            System.err.println("Loading resource fork into panel...");
+//            logger.log(Level.DEBUG, "Loading resource fork into panel...");
             resourceForkViewPanel.loadResourceFork(reader);
-//            System.err.println("done!");
+//            logger.log(Level.DEBUG, "done!");
 
             setTitle("Resource Viewer - [" + f.getName() + "]");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
             GUIUtil.displayExceptionDialog(e, this);
 
             resourceForkViewPanel.loadResourceFork(null);
@@ -171,7 +178,7 @@ public class ResourceViewer extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(final String args[]) {
+    public static void main(String[] args) {
         if (System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
             System.setProperty("apple.laf.useScreenMenuBar", "true");
 
@@ -185,16 +192,14 @@ public class ResourceViewer extends javax.swing.JFrame {
             // It's ok. Non-critical.
         }
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ResourceViewer rv = new ResourceViewer();
-                rv.pack();
-                rv.setLocationRelativeTo(null);
-                rv.setVisible(true);
+        java.awt.EventQueue.invokeLater(() -> {
+            ResourceViewer rv = new ResourceViewer();
+            rv.pack();
+            rv.setLocationRelativeTo(null);
+            rv.setVisible(true);
 
-                if (args.length > 0)
-                    rv.loadFile(new File(args[0]));
-            }
+            if (args.length > 0)
+                rv.loadFile(new File(args[0]));
         });
     }
 

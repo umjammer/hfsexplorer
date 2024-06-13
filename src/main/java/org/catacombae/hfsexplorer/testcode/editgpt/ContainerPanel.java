@@ -17,8 +17,8 @@
 
 package org.catacombae.hfsexplorer.testcode.editgpt;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Box;
@@ -30,14 +30,18 @@ import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.csjc.structelements.StringRepresentableField;
 import org.catacombae.csjc.structelements.StructElement;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ContainerPanel extends javax.swing.JPanel {
 
-    private LinkedList<ContainerPanel> subPanels = new LinkedList<ContainerPanel>();
-    private LinkedList<EditStringValuePanel> fields = new LinkedList<EditStringValuePanel>();
+    private static final Logger logger = getLogger(ContainerPanel.class.getName());
+
+    private final LinkedList<ContainerPanel> subPanels = new LinkedList<>();
+    private final LinkedList<EditStringValuePanel> fields = new LinkedList<>();
 
     public ContainerPanel() {
         this(null);
@@ -52,11 +56,7 @@ public class ContainerPanel extends javax.swing.JPanel {
             saveButton.setVisible(false);
         } else {
             descriptionLabel.setVisible(false);
-            saveButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    actionSave();
-                }
-            });
+            saveButton.addActionListener(evt -> actionSave());
         }
     }
 
@@ -113,30 +113,27 @@ public class ContainerPanel extends javax.swing.JPanel {
         String[] keys = rootDict.getKeys();
 
         for (String key : keys) {
-            System.err.println("setFields processing key \"" + key + "\"...");
+            logger.log(Level.DEBUG, "setFields processing key \"" + key + "\"...");
             StructElement curElem = rootDict.getElement(key);
-            System.err.println("  curElem = " + curElem);
-            if (curElem instanceof StringRepresentableField) {
-                StringRepresentableField curField = (StringRepresentableField) curElem;
+            logger.log(Level.DEBUG, "  curElem = " + curElem);
+            if (curElem instanceof StringRepresentableField curField) {
                 EditStringValuePanel panel = new EditStringValuePanel();
                 panel.setDecription(key + " (" + curField.getTypeName() + ")");
                 panel.setValue(curField.getValueAsString());
                 panel.setUserData(curField);
-                System.err.println("  (1)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (1)adding " + panel + " to containerpanel");
                 addComponent(panel);
                 fields.add(panel);
-            } else if (curElem instanceof Dictionary) {
-                Dictionary curDict = (Dictionary) curElem;
+            } else if (curElem instanceof Dictionary curDict) {
                 ContainerPanel panel = new ContainerPanel(key + " (" + curDict.getTypeName() + ")");
                 panel.setFields(curDict);
-                System.err.println("  (2)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (2)adding " + panel + " to containerpanel");
                 addComponent(panel);
                 subPanels.add(panel);
-            } else if (curElem instanceof Array) {
-                Array curArray = (Array) curElem;
+            } else if (curElem instanceof Array curArray) {
                 ContainerPanel panel = new ContainerPanel(key + " (" + curArray.getTypeName() + ")");
                 panel.setFields(curArray);
-                System.err.println("  (2)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (2)adding " + panel + " to containerpanel");
                 addComponent(panel);
                 subPanels.add(panel);
             } else
@@ -151,27 +148,24 @@ public class ContainerPanel extends javax.swing.JPanel {
 
         for (int i = 0; i < elements.length; ++i) {
             StructElement curElem = elements[i];
-            System.err.println("setFields processing array element...");
-            System.err.println("  curElem = " + curElem);
-            if (curElem instanceof StringRepresentableField) {
-                StringRepresentableField curField = (StringRepresentableField) curElem;
+            logger.log(Level.DEBUG, "setFields processing array element...");
+            logger.log(Level.DEBUG, "  curElem = " + curElem);
+            if (curElem instanceof StringRepresentableField curField) {
                 EditStringValuePanel panel = new EditStringValuePanel();
                 panel.setDecription("[" + i + "] (" + curField.getTypeName() + ")");
                 panel.setValue(curField.getValueAsString());
                 panel.setUserData(curField);
-                System.err.println("  (1)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (1)adding " + panel + " to containerpanel");
                 addComponent(panel);
-            } else if (curElem instanceof Dictionary) {
-                Dictionary curDict = (Dictionary) curElem;
+            } else if (curElem instanceof Dictionary curDict) {
                 ContainerPanel panel = new ContainerPanel("[" + i + "] (" + curDict.getTypeName() + ")");
                 panel.setFields(curDict);
-                System.err.println("  (2)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (2)adding " + panel + " to containerpanel");
                 addComponent(panel);
-            } else if (curElem instanceof Array) {
-                Array curArray = (Array) curElem;
+            } else if (curElem instanceof Array curArray) {
                 ContainerPanel panel = new ContainerPanel("[" + i + "] (" + curArray.getTypeName() + ")");
                 panel.setFields(curArray);
-                System.err.println("  (3)adding " + panel + " to containerpanel");
+                logger.log(Level.DEBUG, "  (3)adding " + panel + " to containerpanel");
                 addComponent(panel);
             } else
                 throw new RuntimeException("Unknown StructElement type: " + curElem.getClass());
@@ -183,7 +177,7 @@ public class ContainerPanel extends javax.swing.JPanel {
     private void actionSave() {
         // Gather all the modified components
         List<EditStringValuePanel> modifiedFields = getModifiedFields();
-        if (modifiedFields.size() == 0) {
+        if (modifiedFields.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Nothing to save.", "Information",
                     JOptionPane.INFORMATION_MESSAGE);
             return;
@@ -200,9 +194,9 @@ public class ContainerPanel extends javax.swing.JPanel {
             }
         }
 
-        if (messageBuilder.length() != 0) {
+        if (!messageBuilder.isEmpty()) {
             JOptionPane.showMessageDialog(this, "The following fields failed to validate:\n\n" +
-                    messageBuilder.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                    messageBuilder, "Error", JOptionPane.ERROR_MESSAGE);
         } else {
             messageBuilder.append("The following modifications were made:\n\n");
             for (EditStringValuePanel vp : modifiedFields) {
@@ -216,7 +210,7 @@ public class ContainerPanel extends javax.swing.JPanel {
     }
 
     private List<EditStringValuePanel> getModifiedFields() {
-        LinkedList<EditStringValuePanel> tmpList = new LinkedList<EditStringValuePanel>();
+        LinkedList<EditStringValuePanel> tmpList = new LinkedList<>();
         for (EditStringValuePanel field : fields) {
             if (field.isModified())
                 tmpList.add(field);

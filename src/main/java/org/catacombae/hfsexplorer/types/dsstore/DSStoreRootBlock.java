@@ -40,10 +40,10 @@ public class DSStoreRootBlock implements DynamicStruct {
 
     public static final int STATIC_STRUCTSIZE = 12;
 
-    private int unknown;
-    private int numOffsets;
-    private int unknown2;
-    private int offsetList[];
+    private final int unknown;
+    private final int numOffsets;
+    private final int unknown2;
+    private final int[] offsetList;
 
     public DSStoreRootBlock(byte[] data, int offset) {
         this.unknown = Util.readIntBE(data, offset + 0);
@@ -55,6 +55,7 @@ public class DSStoreRootBlock implements DynamicStruct {
         }
     }
 
+    @Override
     public int maxSize() {
         //
         // The struct is padded up to 1024 + 12 bytes.
@@ -63,6 +64,7 @@ public class DSStoreRootBlock implements DynamicStruct {
         return 0x40c;
     }
 
+    @Override
     public int occupiedSize() {
         return STATIC_STRUCTSIZE + this.numOffsets * 4;
     }
@@ -141,6 +143,7 @@ public class DSStoreRootBlock implements DynamicStruct {
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -148,7 +151,7 @@ public class DSStoreRootBlock implements DynamicStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.unknown);
         offset += 4;

@@ -36,7 +36,7 @@ public interface FSLink extends FSEntry {
      *                  relative pathnames).
      * @return the target of this link, if possible, or <code>null</code> if the link was invalid.
      */
-    public FSEntry getLinkTarget(String[] parentDir);
+    FSEntry getLinkTarget(String[] parentDir);
 
     /**
      * Returns a context specific string which shows the intended target for this link in the syntax
@@ -45,5 +45,5 @@ public interface FSLink extends FSEntry {
      *
      * @return a context specific string which shows the intended target for this link.
      */
-    public String getLinkTargetString();
+    String getLinkTargetString();
 }

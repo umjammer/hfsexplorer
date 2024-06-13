@@ -146,45 +146,20 @@ public class HFSCatalogNodeID implements PrintableStruct {
          * kHFSBogusExtentFileID       = 15,
          * kHFSFirstUserCatalogNodeID  = 16
          */
-        String result;
-        switch (toInt()) {
-            case 1:
-                result = "kHFSRootParentID";
-                break;
-            case 2:
-                result = "kHFSRootFolderID";
-                break;
-            case 3:
-                result = "kHFSExtentsFileID";
-                break;
-            case 4:
-                result = "kHFSCatalogFileID";
-                break;
-            case 5:
-                result = "kHFSBadBlockFileID";
-                break;
-            case 6:
-                result = "kHFSAllocationFileID";
-                break;
-            case 7:
-                result = "kHFSStartupFileID";
-                break;
-            case 8:
-                result = "kHFSAttributesFileID";
-                break;
-            case 14:
-                result = "kHFSRepairCatalogFileID";
-                break;
-            case 15:
-                result = "kHFSBogusExtentFileID";
-                break;
-            case 16:
-                result = "kHFSFirstUserCatalogNodeID";
-                break;
-            default:
-                result = "User Defined ID";
-                break;
-        }
+        String result = switch (toInt()) {
+            case 1 -> "kHFSRootParentID";
+            case 2 -> "kHFSRootFolderID";
+            case 3 -> "kHFSExtentsFileID";
+            case 4 -> "kHFSCatalogFileID";
+            case 5 -> "kHFSBadBlockFileID";
+            case 6 -> "kHFSAllocationFileID";
+            case 7 -> "kHFSStartupFileID";
+            case 8 -> "kHFSAttributesFileID";
+            case 14 -> "kHFSRepairCatalogFileID";
+            case 15 -> "kHFSBogusExtentFileID";
+            case 16 -> "kHFSFirstUserCatalogNodeID";
+            default -> "User Defined ID";
+        };
         return result;
     }
 
@@ -199,10 +174,12 @@ public class HFSCatalogNodeID implements PrintableStruct {
         return "" + toLong(); // + " (" + getDescription() + ")";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
-        ps.println(prefix + " hfsCatalogNodeID: " + toString() + " (" + getDescription() + ")");
+        ps.println(prefix + " hfsCatalogNodeID: " + this + " (" + getDescription() + ")");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSCatalogNodeID:");
         printFields(ps, prefix);

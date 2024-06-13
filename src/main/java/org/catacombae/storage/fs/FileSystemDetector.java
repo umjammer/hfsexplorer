@@ -61,7 +61,7 @@ public class FileSystemDetector {
      */
     public static FileSystemMajorType[] detectFileSystem(ReadableRandomAccessStream fsStream, long off, long len) {
 
-        LinkedList<FileSystemMajorType> result = new LinkedList<FileSystemMajorType>();
+        LinkedList<FileSystemMajorType> result = new LinkedList<>();
 
         for (FileSystemMajorType type : FileSystemMajorType.values()) {
             FileSystemHandlerFactory fact = type.createDefaultHandlerFactory();
@@ -71,6 +71,6 @@ public class FileSystemDetector {
             }
         }
 
-        return result.toArray(new FileSystemMajorType[result.size()]);
+        return result.toArray(FileSystemMajorType[]::new);
     }
 }

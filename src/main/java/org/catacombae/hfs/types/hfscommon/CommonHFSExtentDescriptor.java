@@ -62,14 +62,17 @@ public abstract class CommonHFSExtentDescriptor implements StructElements, Print
             return Util.unsign(hped.getBlockCount());
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hped.printFields(ps, prefix);
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             hped.print(ps, prefix);
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hped.getStructElements();
         }
@@ -93,14 +96,17 @@ public abstract class CommonHFSExtentDescriptor implements StructElements, Print
             return Util.unsign(hped.getXdrNumABlks());
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hped.printFields(ps, prefix);
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             hped.print(ps, prefix);
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hped.getStructElements();
         }

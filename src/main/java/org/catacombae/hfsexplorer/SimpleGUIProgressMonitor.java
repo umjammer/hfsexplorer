@@ -37,6 +37,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
         this.parentComponent = parentComponent;
     }
 
+    @Override
     public ExtractProperties getExtractProperties() {
         return extractProperties;
     }
@@ -84,6 +85,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #createDirectoryFailed(java.awt.Component, java.lang.String, java.io.File)
      */
+    @Override
     public CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory) {
         return createDirectoryFailed(parentComponent, dirname, parentDirectory);
     }
@@ -91,6 +93,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #createFileFailed(java.awt.Component, java.lang.String, java.io.File)
      */
+    @Override
     public CreateFileFailedAction createFileFailed(String filename, File parentDirectory) {
         return createFileFailed(parentComponent, filename, parentDirectory);
     }
@@ -98,6 +101,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #directoryExists(java.awt.Component, java.io.File)
      */
+    @Override
     public DirectoryExistsAction directoryExists(File directory) {
         return directoryExists(parentComponent, directory);
     }
@@ -105,6 +109,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #fileExists(java.awt.Component, java.io.File)
      */
+    @Override
     public FileExistsAction fileExists(File file) {
         return fileExists(parentComponent, file);
     }
@@ -112,6 +117,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #unhandledException(java.awt.Component, java.lang.String, java.lang.Throwable)
      */
+    @Override
     public UnhandledExceptionAction unhandledException(String filename, Throwable t) {
         return unhandledException(parentComponent, filename, t);
     }
@@ -119,6 +125,7 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
     /**
      * @see #displayRenamePrompt(java.awt.Component, java.lang.String, java.io.File)
      */
+    @Override
     public String displayRenamePrompt(String currentName, File outDir) {
         return displayRenamePrompt(parentComponent, currentName, outDir);
     }
@@ -148,16 +155,12 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                 JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
                 null, options, options[0]);
 
-        switch (reply) {
-            case 0:
-                return CreateDirectoryFailedAction.RENAME;
-            case 1:
-                return CreateDirectoryFailedAction.SKIP_DIRECTORY;
-            case 2:
-                return CreateDirectoryFailedAction.AUTO_RENAME;
-            default:
-                return CreateDirectoryFailedAction.CANCEL;
-        }
+        return switch (reply) {
+            case 0 -> CreateDirectoryFailedAction.RENAME;
+            case 1 -> CreateDirectoryFailedAction.SKIP_DIRECTORY;
+            case 2 -> CreateDirectoryFailedAction.AUTO_RENAME;
+            default -> CreateDirectoryFailedAction.CANCEL;
+        };
     }
 
     /**
@@ -183,18 +186,13 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                 JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
                 null, options, options[0]);
 
-        switch (reply) {
-            case 0:
-                return CreateFileFailedAction.RENAME;
-            case 1:
-                return CreateFileFailedAction.SKIP_FILE;
-            case 2:
-                return CreateFileFailedAction.SKIP_DIRECTORY;
-            case 3:
-                return CreateFileFailedAction.AUTO_RENAME;
-            default:
-                return CreateFileFailedAction.CANCEL;
-        }
+        return switch (reply) {
+            case 0 -> CreateFileFailedAction.RENAME;
+            case 1 -> CreateFileFailedAction.SKIP_FILE;
+            case 2 -> CreateFileFailedAction.SKIP_DIRECTORY;
+            case 3 -> CreateFileFailedAction.AUTO_RENAME;
+            default -> CreateFileFailedAction.CANCEL;
+        };
     }
 
     /**
@@ -227,20 +225,14 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                 JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
 
-        switch (reply) {
-            case 0:
-                return DirectoryExistsAction.CONTINUE;
-            case 1:
-                return DirectoryExistsAction.ALWAYS_CONTINUE;
-            case 2:
-                return DirectoryExistsAction.RENAME;
-            case 3:
-                return DirectoryExistsAction.SKIP_DIRECTORY;
-            case 4:
-                return DirectoryExistsAction.AUTO_RENAME;
-            default:
-                return DirectoryExistsAction.CANCEL;
-        }
+        return switch (reply) {
+            case 0 -> DirectoryExistsAction.CONTINUE;
+            case 1 -> DirectoryExistsAction.ALWAYS_CONTINUE;
+            case 2 -> DirectoryExistsAction.RENAME;
+            case 3 -> DirectoryExistsAction.SKIP_DIRECTORY;
+            case 4 -> DirectoryExistsAction.AUTO_RENAME;
+            default -> DirectoryExistsAction.CANCEL;
+        };
     }
 
     /**
@@ -269,22 +261,15 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                         "exists.", "Warning", JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.WARNING_MESSAGE, null, options, options[0]);
 
-        switch (reply) {
-            case 0:
-                return FileExistsAction.OVERWRITE;
-            case 1:
-                return FileExistsAction.OVERWRITE_ALL;
-            case 2:
-                return FileExistsAction.RENAME;
-            case 3:
-                return FileExistsAction.SKIP_FILE;
-            case 4:
-                return FileExistsAction.SKIP_DIRECTORY;
-            case 5:
-                return FileExistsAction.AUTO_RENAME;
-            default:
-                return FileExistsAction.CANCEL;
-        }
+        return switch (reply) {
+            case 0 -> FileExistsAction.OVERWRITE;
+            case 1 -> FileExistsAction.OVERWRITE_ALL;
+            case 2 -> FileExistsAction.RENAME;
+            case 3 -> FileExistsAction.SKIP_FILE;
+            case 4 -> FileExistsAction.SKIP_DIRECTORY;
+            case 5 -> FileExistsAction.AUTO_RENAME;
+            default -> FileExistsAction.CANCEL;
+        };
     }
 
     /**
@@ -305,17 +290,17 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                 "Abort",
         };
 
-        String message = "An exception occurred while extracting " +
-                "\"" + filename + "\"!";
-        message += "\n  " + t.toString();
+        StringBuilder message = new StringBuilder("An exception occurred while extracting " +
+                "\"" + filename + "\"!");
+        message.append("\n  ").append(t.toString());
         for (StackTraceElement ste : t.getStackTrace()) {
-            message += "\n    " + ste.toString();
+            message.append("\n    ").append(ste.toString());
         }
-        message += "\n\nThe file has not been completely extracted.";
-        message += "\nDo you want to continue with the extraction?";
+        message.append("\n\nThe file has not been completely extracted.");
+        message.append("\nDo you want to continue with the extraction?");
 
         int reply = JOptionPane.showOptionDialog(parentComponent,
-                message,
+                message.toString(),
                 "Error",
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.ERROR_MESSAGE,
@@ -323,18 +308,11 @@ public class SimpleGUIProgressMonitor extends BasicExtractProgressMonitor {
                 options,
                 options[2]);
 
-        UnhandledExceptionAction ret;
-        switch (reply) {
-            case 0:
-                ret = UnhandledExceptionAction.CONTINUE;
-                break;
-            case 1:
-                ret = UnhandledExceptionAction.ALWAYS_CONTINUE;
-                break;
-            default:
-                ret = UnhandledExceptionAction.ABORT;
-                break;
-        }
+        UnhandledExceptionAction ret = switch (reply) {
+            case 0 -> UnhandledExceptionAction.CONTINUE;
+            case 1 -> UnhandledExceptionAction.ALWAYS_CONTINUE;
+            default -> UnhandledExceptionAction.ABORT;
+        };
 
         return ret;
     }

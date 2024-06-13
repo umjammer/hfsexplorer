@@ -63,12 +63,12 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
 
     private int magic;
     private int endian;
-    private long start;
-    private long end;
-    private long size;
-    private int blhdrSize;
-    private int checksum;
-    private int jhdrSize;
+    private final long start;
+    private final long end;
+    private final long size;
+    private final int blhdrSize;
+    private final int checksum;
+    private final int jhdrSize;
 
     public JournalHeader(byte[] data, int offset) {
         magic = Util.readIntBE(data, offset + 0);
@@ -101,6 +101,7 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -189,6 +190,7 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
         return jhdrSize;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " magic: " + getMagic());
         ps.println(prefix + " endian: " + getEndian());
@@ -200,11 +202,13 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
         ps.println(prefix + " jhdrSize: " + getJhdrSize());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "JournalHeader:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -254,6 +258,7 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder("JournalHeader",
                 "Header for the journal data, describing what region of data " +
@@ -293,8 +298,8 @@ public class JournalHeader implements StaticStruct, PrintableStruct, StructEleme
         data[38] = 0;
         data[39] = 0;
 
-        for (int i = 0; i < data.length; i++) {
-            cksum = (cksum << 8) ^ (cksum + Util.unsign(data[i]));
+        for (byte datum : data) {
+            cksum = (cksum << 8) ^ (cksum + Util.unsign(datum));
         }
 
         return (~cksum);

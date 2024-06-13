@@ -35,10 +35,12 @@ public abstract class CommonHFSAttributesLeafRecord extends CommonBTLeafRecord<C
         return new HFSPlusImplementation(record);
     }
 
+    @Override
     public abstract CommonHFSAttributesKey getKey();
 
     public abstract HFSPlusAttributesLeafRecordData getRecordData();
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -72,10 +74,12 @@ public abstract class CommonHFSAttributesLeafRecord extends CommonBTLeafRecord<C
             return record.getBytes();
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             record.printFields(ps, prefix);
         }
 
+        @Override
         public Dictionary getStructElements() {
             DictionaryBuilder db = new DictionaryBuilder(
                     "CommonHFSAttributesLeafRecord.HFSPlusImplementation",

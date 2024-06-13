@@ -22,21 +22,21 @@ package org.catacombae.jparted.lib;
  */
 public interface AbstractFile {
 
-    public void seek(long pos);
+    void seek(long pos);
 
-    public int read();
+    int read();
 
-    public int read(byte[] data);
+    int read(byte[] data);
 
-    public int read(byte[] data, int pos, int len);
+    int read(byte[] data, int pos, int len);
 
-    public void readFully(byte[] data);
+    void readFully(byte[] data);
 
-    public void readFully(byte[] data, int offset, int length);
+    void readFully(byte[] data, int offset, int length);
 
-    public long length();
+    long length();
 
-    public long getFilePointer();
+    long getFilePointer();
 
-    public void close();
+    void close();
 }

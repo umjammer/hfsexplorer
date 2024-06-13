@@ -107,6 +107,7 @@ public class CdrFilRec extends CatDataRec {
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -286,6 +287,7 @@ public class CdrFilRec extends CatDataRec {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CdrThdRec.class.getSimpleName());
 

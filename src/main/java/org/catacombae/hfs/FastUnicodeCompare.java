@@ -137,7 +137,7 @@ public class FastUnicodeCompare {
      * means that there are no case mappings or ignored characters in that block.
      * Ignored characters are mapped to zero.
      */
-    private static int[] gLowerCaseTable = {
+    private static final int[] gLowerCaseTable = {
 
             // High-byte indices ( == 0 iff no case mapping and no ignorables )
 

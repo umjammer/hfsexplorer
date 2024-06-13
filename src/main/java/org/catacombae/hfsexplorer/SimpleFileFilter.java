@@ -18,7 +18,6 @@
 package org.catacombae.hfsexplorer;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.LinkedList;
 import javax.swing.filechooser.FileFilter;
 
@@ -32,7 +31,7 @@ public class SimpleFileFilter extends FileFilter {
     private String description;
 
     public SimpleFileFilter() {
-        extensions = new LinkedList<String>();
+        extensions = new LinkedList<>();
         description = "";
     }
 
@@ -45,14 +44,10 @@ public class SimpleFileFilter extends FileFilter {
     }
 
     public void removeExtension(String iextension) {
-        final Iterator<String> it = extensions.iterator();
-        while (it.hasNext()) {
-            if (it.next().equals(iextension)) {
-                it.remove();
-            }
-        }
+        extensions.removeIf(s -> s.equals(iextension));
     }
 
+    @Override
     public boolean accept(File f) {
 
         if (f.isDirectory())
@@ -67,6 +62,7 @@ public class SimpleFileFilter extends FileFilter {
         return false;
     }
 
+    @Override
     public String getDescription() {
         return description;
     }

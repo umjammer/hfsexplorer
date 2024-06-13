@@ -17,6 +17,8 @@
 
 package org.catacombae.hfs;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,17 +32,20 @@ import org.catacombae.hfs.types.hfscommon.CommonBTLeafRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor.NodeType;
-import org.catacombae.hfs.types.hfscommon.CommonHFSExtentKey;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.Readable;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
+
+import static java.lang.System.getLogger;
 
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeafRecord<K>> implements Limits {
+
+    private static final Logger logger = getLogger(BTreeFile.class.getName());
 
     final HFSVolume vol;
 
@@ -90,28 +95,28 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
         //
         R largestMatchingRecord = null;
 
-//        System.err.println("findLEKey(): Entering loop...");
+//        logger.log(Level.DEBUG, "findLEKey(): Entering loop...");
         for (R record : indexNode.getBTKeyedRecords()) {
             K recordKey = record.getKey();
 
-//            System.err.print("findLEKey():   Processing record");
+//            logger.log(Level.DEBUG, "findLEKey():   Processing record");
 //            if (recordKey instanceof CommonHFSExtentKey)
-//                System.err.print(" with key " + getDebugString((CommonHFSExtentKey) recordKey));
-//            System.err.print("...");
+//                logger.log(Level.DEBUG, " with key " + getDebugString((CommonHFSExtentKey) recordKey));
+//            logger.log(Level.DEBUG, "...");
 
             if (recordKey.compareTo(searchKey) <= 0 &&
                     (largestMatchingRecord == null ||
                             recordKey.compareTo(largestMatchingRecord.getKey()) > 0)) {
 
                 largestMatchingRecord = record;
-//                System.err.print("match!");
+//                logger.log(Level.DEBUG, "match!");
             }
 //            else
-//                System.err.print("no match.");
-//            System.err.println();
+//                logger.log(Level.DEBUG, "no match.");
+//            logger.log(Level.DEBUG, );
         }
 
-//        System.err.println("findLEKey(): Returning...");
+//        logger.log(Level.DEBUG, "findLEKey(): Returning...");
         return largestMatchingRecord;
     }
 
@@ -136,7 +141,7 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
      */
     protected <R extends CommonBTKeyedRecord<K>> List<R> findLEKeys(
             CommonBTKeyedNode<R> keyedNode, K minKeyInclusive, K maxKeyExclusive, boolean strict) {
-        final LinkedList<R> result = new LinkedList<R>();
+        LinkedList<R> result = new LinkedList<>();
 
         findLEKeys(keyedNode, minKeyInclusive, maxKeyExclusive, strict, result);
 
@@ -237,7 +242,7 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
      *
      * @return the B-tree root node of the B-tree file.
      */
-    public CommonBTNode getRootNode() {
+    public CommonBTNode<?> getRootNode() {
         BTreeFileSession ses = openSession();
 
         try {
@@ -268,39 +273,31 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
         }
     }
 
-    CommonBTNode getNode(long nodeNumber, BTreeFileSession ses) {
+    CommonBTNode<?> getNode(long nodeNumber, BTreeFileSession ses) {
         final String METHOD = "getNode";
-        final int nodeSize = ses.bthr.getNodeSize();
+        int nodeSize = ses.bthr.getNodeSize();
 
-        CommonBTNode node;
+        CommonBTNode<?> node;
         byte[] nodeData = new byte[nodeSize];
         try {
             ses.btreeStream.seek(nodeNumber * nodeSize);
             ses.btreeStream.readFully(nodeData);
         } catch (RuntimeException e) {
-            System.err.println("RuntimeException in " + METHOD + ". Printing additional information:");
-            System.err.println("  nodeNumber=" + nodeNumber);
-            System.err.println("  nodeSize=" + nodeSize);
-            System.err.println("  init.btreeStream.length()=" + ses.btreeStream.length());
-            System.err.println("  (currentNodeNumber * nodeSize)=" + (nodeNumber * nodeSize));
+            logger.log(Level.DEBUG, "RuntimeException in " + METHOD + ". Printing additional information:");
+            logger.log(Level.DEBUG, "  nodeNumber=" + nodeNumber);
+            logger.log(Level.DEBUG, "  nodeSize=" + nodeSize);
+            logger.log(Level.DEBUG, "  init.btreeStream.length()=" + ses.btreeStream.length());
+            logger.log(Level.DEBUG, "  (currentNodeNumber * nodeSize)=" + (nodeNumber * nodeSize));
             throw e;
         }
 
         CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(nodeData, 0);
-        switch (nodeDescriptor.getNodeType()) {
-            case HEADER:
-                node = createCommonBTHeaderNode(nodeData, 0, nodeSize);
-                break;
-            case INDEX:
-                node = createIndexNode(nodeData, 0, nodeSize);
-                break;
-            case LEAF:
-                node = createLeafNode(nodeData, 0, nodeSize);
-                break;
-            default:
-                node = null;
-                break;
-        }
+        node = switch (nodeDescriptor.getNodeType()) {
+            case HEADER -> createCommonBTHeaderNode(nodeData, 0, nodeSize);
+            case INDEX -> createIndexNode(nodeData, 0, nodeSize);
+            case LEAF -> createLeafNode(nodeData, 0, nodeSize);
+            default -> null;
+        };
 
         return node;
     }
@@ -314,7 +311,7 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
      * @return the requested node if it exists and has type header, index node
      * or leaf node, or <code>null</code> otherwise.
      */
-    public CommonBTNode getNode(long nodeNumber) {
+    public CommonBTNode<?> getNode(long nodeNumber) {
         BTreeFileSession ses = openSession();
         try {
             return getNode(nodeNumber, ses);
@@ -338,7 +335,7 @@ public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeaf
         BTreeFileSession ses = openSession();
 
         try {
-            final int nodeSize = ses.bthr.getNodeSize();
+            int nodeSize = ses.bthr.getNodeSize();
 
             long currentNodeOffset = ses.bthr.getRootNodeNumber() * nodeSize;
 

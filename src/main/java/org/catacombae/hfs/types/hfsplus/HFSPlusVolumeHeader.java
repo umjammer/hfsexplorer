@@ -17,6 +17,7 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -109,7 +110,7 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
     }
 
     private HFSPlusVolumeHeader(boolean mutable, byte[] data, int offset) {
-        //this(new ByteArrayInputStream(data, offset, _getSize()));
+//        this(new ByteArrayInputStream(data, offset, _getSize()));
         System.arraycopy(data, offset + 0, signature, 0, 2);
         System.arraycopy(data, offset + 2, version, 0, 2);
         System.arraycopy(data, offset + 4, attributes, 0, 4);
@@ -367,20 +368,21 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
 //        ps.println(prefix + ": " + );
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         _printFields(ps, prefix + " ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusVolumeHeader:");
         _printFields(ps, prefix + " ");
     }
 
     public void printAttributes(PrintStream ps, int pregap) {
-        String pregapString = "";
-        for (int i = 0; i < pregap; ++i)
-            pregapString += " ";
-        printAttributes(ps, pregapString);
+        StringBuilder pregapString = new StringBuilder();
+        pregapString.append(" ".repeat(Math.max(0, pregap)));
+        printAttributes(ps, pregapString.toString());
     }
 
     public void printAttributes(PrintStream ps, String prefix) {
@@ -399,7 +401,7 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
 
 //    public static void main(String[] args) throws Exception {
 //        if (args.length != 2)
-//            System.err.println("usage: main <file> <byte position>");
+//            logger.log(Level.DEBUG, "usage: main <file> <byte position>");
 //        else {
 //            Long pos = Long.parseLong(args[1]);
 //
@@ -429,6 +431,7 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
         return db.getResult();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusVolumeHeader.class.getSimpleName());
 
@@ -472,71 +475,71 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
     }
 
     private void _setSignature(short signature) {
-        Util.arrayPutBE(this.signature, 0, (short) signature);
+        Util.arrayPutBE(this.signature, 0, signature);
     }
 
     private void _setVersion(short version) {
-        Util.arrayPutBE(this.version, 0, (short) version);
+        Util.arrayPutBE(this.version, 0, version);
     }
 
     private void _setAttributes(int attributes) {
-        Util.arrayPutBE(this.attributes, 0, (int) attributes);
+        Util.arrayPutBE(this.attributes, 0, attributes);
     }
 
     private void _setLastMountedVersion(int lastMountedVersion) {
-        Util.arrayPutBE(this.lastMountedVersion, 0, (int) lastMountedVersion);
+        Util.arrayPutBE(this.lastMountedVersion, 0, lastMountedVersion);
     }
 
     private void _setJournalInfoBlock(int journalInfoBlock) {
-        Util.arrayPutBE(this.journalInfoBlock, 0, (int) journalInfoBlock);
+        Util.arrayPutBE(this.journalInfoBlock, 0, journalInfoBlock);
     }
 
     private void _setCreateDate(int createDate) {
-        Util.arrayPutBE(this.createDate, 0, (int) createDate);
+        Util.arrayPutBE(this.createDate, 0, createDate);
     }
 
     private void _setModifyDate(int modifyDate) {
-        Util.arrayPutBE(this.modifyDate, 0, (int) modifyDate);
+        Util.arrayPutBE(this.modifyDate, 0, modifyDate);
     }
 
     private void _setBackupDate(int backupDate) {
-        Util.arrayPutBE(this.backupDate, 0, (int) backupDate);
+        Util.arrayPutBE(this.backupDate, 0, backupDate);
     }
 
     private void _setCheckedDate(int checkedDate) {
-        Util.arrayPutBE(this.checkedDate, 0, (int) checkedDate);
+        Util.arrayPutBE(this.checkedDate, 0, checkedDate);
     }
 
     private void _setFileCount(int fileCount) {
-        Util.arrayPutBE(this.fileCount, 0, (int) fileCount);
+        Util.arrayPutBE(this.fileCount, 0, fileCount);
     }
 
     private void _setFolderCount(int folderCount) {
-        Util.arrayPutBE(this.folderCount, 0, (int) folderCount);
+        Util.arrayPutBE(this.folderCount, 0, folderCount);
     }
 
     private void _setBlockSize(int blockSize) {
-        Util.arrayPutBE(this.blockSize, 0, (int) blockSize);
+        Util.arrayPutBE(this.blockSize, 0, blockSize);
     }
 
     private void _setTotalBlocks(int totalBlocks) {
-        Util.arrayPutBE(this.totalBlocks, 0, (int) totalBlocks);
+        Util.arrayPutBE(this.totalBlocks, 0, totalBlocks);
     }
 
     private void _setFreeBlocks(int freeBlocks) {
-        Util.arrayPutBE(this.freeBlocks, 0, (int) freeBlocks);
+        Util.arrayPutBE(this.freeBlocks, 0, freeBlocks);
     }
 
     private void _setNextAllocation(int nextAllocation) {
-        Util.arrayPutBE(this.nextAllocation, 0, (int) nextAllocation);
+        Util.arrayPutBE(this.nextAllocation, 0, nextAllocation);
     }
 
     private void _setRsrcClumpSize(int rsrcClumpSize) {
-        Util.arrayPutBE(this.rsrcClumpSize, 0, (int) rsrcClumpSize);
+        Util.arrayPutBE(this.rsrcClumpSize, 0, rsrcClumpSize);
     }
 
     private void _setDataClumpSize(int dataClumpSize) {
-        Util.arrayPutBE(this.dataClumpSize, 0, (int) dataClumpSize);
+        Util.arrayPutBE(this.dataClumpSize, 0, dataClumpSize);
     }
 
     private HFSCatalogNodeID.Mutable _getMutableNextCatalogID() {
@@ -548,11 +551,11 @@ public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruc
     }
 
     private void _setWriteCount(int writeCount) {
-        Util.arrayPutBE(this.writeCount, 0, (int) writeCount);
+        Util.arrayPutBE(this.writeCount, 0, writeCount);
     }
 
     private void _setEncodingsBitmap(long encodingsBitmap) {
-        Util.arrayPutBE(this.encodingsBitmap, 0, (long) encodingsBitmap);
+        Util.arrayPutBE(this.encodingsBitmap, 0, encodingsBitmap);
     }
 
     private HFSVolumeFinderInfo.Mutable _getMutableFinderInfo() {

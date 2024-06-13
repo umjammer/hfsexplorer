@@ -40,9 +40,9 @@ public class DSStoreTableOfContentsEntry implements DynamicStruct {
     public static final int MAX_STRUCTSIZE = 260;
     public static final int MIN_STRUCTSIZE = 5;
 
-    private byte tocNameLength;
+    private final byte tocNameLength;
     private final byte[] tocName;
-    private int tocValue;
+    private final int tocValue;
 
     public DSStoreTableOfContentsEntry(byte[] data, int offset) {
         this.tocNameLength = Util.readByteBE(data, offset + 0);
@@ -51,10 +51,12 @@ public class DSStoreTableOfContentsEntry implements DynamicStruct {
         this.tocValue = Util.readIntBE(data, offset + 1 + this.tocNameLength);
     }
 
+    @Override
     public int maxSize() {
         return MAX_STRUCTSIZE;
     }
 
+    @Override
     public int occupiedSize() {
         return MIN_STRUCTSIZE + this.tocNameLength;
     }
@@ -101,6 +103,7 @@ public class DSStoreTableOfContentsEntry implements DynamicStruct {
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         getBytes(result, 0);
@@ -108,7 +111,7 @@ public class DSStoreTableOfContentsEntry implements DynamicStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.tocNameLength);
         offset += 1;

@@ -106,6 +106,7 @@ public class HFSPlusExtentKey extends BTKey implements StructElements {
         return Util.unsign(getStartBlock());
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " keyLength: " + getKeyLength());
         ps.println(prefix + " forkType: " + getForkType());
@@ -115,6 +116,7 @@ public class HFSPlusExtentKey extends BTKey implements StructElements {
         ps.println(prefix + " startBlock: " + getStartBlock());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusExtentKey:");
         printFields(ps, prefix);
@@ -122,17 +124,12 @@ public class HFSPlusExtentKey extends BTKey implements StructElements {
 
     @Override
     public int compareTo(BTKey btk) {
-        if (btk instanceof HFSPlusExtentKey) {
-            HFSPlusExtentKey extKey = (HFSPlusExtentKey) btk;
+        if (btk instanceof HFSPlusExtentKey extKey) {
             // fileID, forkType, startBlock
             if (getFileID().toLong() == extKey.getFileID().toLong()) {
                 if (getUnsignedForkType() == extKey.getUnsignedForkType()) {
-                    if (getUnsignedStartBlock() == extKey.getUnsignedStartBlock())
-                        return 0;
-                    else if (getUnsignedStartBlock() < extKey.getUnsignedStartBlock())
-                        return -1;
-                    else // getStartBlock() > extKey.getStartBlock()
-                        return 1;
+                    // getStartBlock() > extKey.getStartBlock()
+                    return Long.compare(getUnsignedStartBlock(), extKey.getUnsignedStartBlock());
                 } else if (getUnsignedForkType() < extKey.getUnsignedForkType())
                     return -1;
                 else // getForkType() > extKey.getForkType()
@@ -157,6 +154,7 @@ public class HFSPlusExtentKey extends BTKey implements StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder("HFSPlusExtentKey", "HFS+ extent key");
 

@@ -19,6 +19,8 @@ package org.catacombae.hfsexplorer.tools;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -35,6 +37,8 @@ import org.catacombae.hfsexplorer.types.dsstore.DSStoreTableOfContentsEntry;
 import org.catacombae.hfsexplorer.types.dsstore.DSStoreTreeBlock;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * Utility which prints the contents of a .DS_Store file, including the content
@@ -44,8 +48,9 @@ import org.catacombae.util.Util;
  */
 public class DSStoreInfo {
 
-    private static void hexDump(byte[] data, int dataOffset, int dataSize,
-                                String insetString) {
+    private static final Logger logger = getLogger(DSStoreInfo.class.getName());
+
+    private static void hexDump(byte[] data, int dataOffset, int dataSize, String insetString) {
         int hexdigits = 0;
         for (int j = dataSize; j != 0; j >>>= 8) {
             hexdigits += 2;
@@ -61,7 +66,7 @@ public class DSStoreInfo {
                 }
                 if (k < kMax) {
                     System.out.print(Util.toHexStringBE(
-                            (byte) data[dataOffset + j + k]));
+                            data[dataOffset + j + k]));
                 } else {
                     System.out.print("  ");
                 }
@@ -71,8 +76,8 @@ public class DSStoreInfo {
                 if (k < kMax) {
                     byte curByte = data[dataOffset + j + k];
                     if (curByte < 0x20 || curByte >= 127) {
-                        /* ASCII control character or outside ASCII range.
-                         Represented by '.'. */
+                        // ASCII control character or outside ASCII range.
+                        // Represented by '.'.
                         System.out.print(".");
                     } else {
                         System.out.print((char) curByte);
@@ -90,7 +95,7 @@ public class DSStoreInfo {
         hexDump(data, 0, data.length, insetString);
     }
 
-    private static enum EntryType {
+    private enum EntryType {
         EntryTypeInvalid(null),
         EntryTypeExtendedInfoEnd(-1),
         EntryTypeDirectoryName(0),
@@ -113,7 +118,7 @@ public class DSStoreInfo {
 
         private final Integer value;
 
-        private EntryType(Integer value) {
+        EntryType(Integer value) {
             this.value = value;
         }
 
@@ -208,30 +213,9 @@ public class DSStoreInfo {
                     System.out.println(insetString + "        Name: " +
                             Util.readString(data, offset + j, entrySize, "MacRoman"));
                     break;
-                case EntryTypeDirectoryIDs:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
                 case EntryTypeAbsolutePath:
                     System.out.println(insetString + "        Path: " +
                             Util.readString(data, offset + j, entrySize, "MacRoman"));
-                    break;
-                case EntryTypeAppleShareZoneName:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
-                case EntryTypeAppleShareServerName:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
-                case EntryTypeAppleShareUserName:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
-                case EntryTypeDriverName:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
-                case EntryTypeRevisedAppleShareInfo:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
-                    break;
-                case EntryTypeAppleRemoteAccessDialupInfo:
-                    hexDump(data, offset + j, entrySize, insetString + "        ");
                     break;
                 case EntryTypeFileNameUnicode:
                 case EntryTypeDirectoryNameUnicode:
@@ -240,18 +224,16 @@ public class DSStoreInfo {
                     System.out.println(insetString + "        Name: " +
                             Util.readString(data, offset + j + 2, entrySize - 2, "UTF-16BE"));
                     break;
-                case EntryTypeUNIXRelativePath:
-                    System.out.println(insetString + "        Path: " +
-                            Util.readString(data, offset + j, entrySize, "UTF-8"));
-                    break;
-                case EntryTypeUNIXVolumePath:
+                case EntryTypeUNIXRelativePath, EntryTypeUNIXVolumePath:
                     System.out.println(insetString + "        Path: " +
                             Util.readString(data, offset + j, entrySize, "UTF-8"));
                     break;
                 case EntryTypeDiskImageAlias:
                     printAlias(data, offset + j, entrySize, insetString + "    ");
                     break;
-                case EntryTypeInvalid:
+                case EntryTypeInvalid, EntryTypeDirectoryIDs, EntryTypeAppleShareZoneName,
+                     EntryTypeAppleShareServerName, EntryTypeAppleShareUserName, EntryTypeDriverName,
+                     EntryTypeRevisedAppleShareInfo, EntryTypeAppleRemoteAccessDialupInfo:
                 default:
                     hexDump(data, offset + j, entrySize, insetString + "        ");
                     break;
@@ -272,41 +254,34 @@ public class DSStoreInfo {
             System.out.println(insetString + "<unsupported format>");
         } else if (entry instanceof BinaryPlist.NullEntry) {
             System.out.println(insetString + "NULL");
-        } else if (entry instanceof BinaryPlist.BooleanEntry) {
-            BinaryPlist.BooleanEntry e = (BinaryPlist.BooleanEntry) entry;
+        } else if (entry instanceof BinaryPlist.BooleanEntry e) {
             System.out.println(insetString + "Boolean: " + (e.getValue() ? "true" : "false"));
         } else if (entry instanceof BinaryPlist.FillEntry) {
             System.out.println(insetString + "Fill");
-        } else if (entry instanceof BinaryPlist.IntegerEntry) {
-            BinaryPlist.IntegerEntry e = (BinaryPlist.IntegerEntry) entry;
+        } else if (entry instanceof BinaryPlist.IntegerEntry e) {
             byte[] valueData = e.getValueData();
             BigInteger value = e.getValue();
             System.out.println(insetString + "Integer (" + (valueData.length * 8) + "-bit): " + value + " " +
                     "(0x" + Util.byteArrayToHexString(valueData) + ")");
-        } else if (entry instanceof BinaryPlist.DecimalEntry) {
-            BinaryPlist.DecimalEntry e = (BinaryPlist.DecimalEntry) entry;
+        } else if (entry instanceof BinaryPlist.DecimalEntry e) {
             byte[] valueData = e.getValueData();
             BigDecimal value = e.getValue();
             System.out.println(insetString + "Real number " +
                     "(" + (valueData.length * 8) + "-bit): " + (value != null ? value : "<unsupported format>"));
-        } else if (entry instanceof BinaryPlist.DateEntry) {
-            BinaryPlist.DateEntry e = (BinaryPlist.DateEntry) entry;
+        } else if (entry instanceof BinaryPlist.DateEntry e) {
             byte[] valueData = e.getValueData();
             Date d = e.getValue();
             System.out.println(insetString + "Date (" + (valueData.length * 8) + "-bit): " +
                     ((d != null) ? d : "<unsupported format>"));
-        } else if (entry instanceof BinaryPlist.DataEntry) {
-            BinaryPlist.DataEntry e = (BinaryPlist.DataEntry) entry;
+        } else if (entry instanceof BinaryPlist.DataEntry e) {
             byte[] valueData = e.getValueData();
             System.out.println(insetString + "Data (" + valueData.length + " bytes):");
             hexDump(valueData, insetString + "  ");
-        } else if (entry instanceof BinaryPlist.ASCIIStringEntry) {
-            BinaryPlist.ASCIIStringEntry e = (BinaryPlist.ASCIIStringEntry) entry;
+        } else if (entry instanceof BinaryPlist.ASCIIStringEntry e) {
             byte[] valueData = e.getValueData();
             System.out.println(insetString + "ASCII string (" + valueData.length + " characters):");
             System.out.println(insetString + "  " + e.getValue());
-        } else if (entry instanceof BinaryPlist.UnicodeStringEntry) {
-            BinaryPlist.UnicodeStringEntry e = (BinaryPlist.UnicodeStringEntry) entry;
+        } else if (entry instanceof BinaryPlist.UnicodeStringEntry e) {
             byte[] valueData = e.getValueData();
             System.out.println(insetString + "Unicode string (" + (valueData.length / 2) + " characters):");
             System.out.println(insetString + "  " + e.getValue());
@@ -321,8 +296,7 @@ public class DSStoreInfo {
                 System.out.println(insetString + "  Value:");
                 printBinaryPlistValue(value, insetString + "    ");
             }
-        } else if (entry instanceof BinaryPlist.DictionaryEntry) {
-            BinaryPlist.DictionaryEntry e = (BinaryPlist.DictionaryEntry) entry;
+        } else if (entry instanceof BinaryPlist.DictionaryEntry e) {
             LinkedList<BinaryPlist.Entry> keys = e.getKeys();
 
             System.out.println(insetString + "Dictionary (" + keys.size() + " entries):");
@@ -351,11 +325,10 @@ public class DSStoreInfo {
         printBinaryPlistValue(plist.getRootEntry(), insetString);
     }
 
-    private static void printTreeBlockRecursive(
-            byte[] dsStoreData, DSStoreRootBlock rootBlock, int inset, int blockID) {
-        String insetString = "";
+    private static void printTreeBlockRecursive(byte[] dsStoreData, DSStoreRootBlock rootBlock, int inset, int blockID) {
+        StringBuilder insetString = new StringBuilder();
         while (inset != 0) {
-            insetString += "        ";
+            insetString.append("        ");
             --inset;
         }
 
@@ -431,7 +404,7 @@ public class DSStoreInfo {
                 if (Util.toASCIIString(structID).equals("pict")) {
                     // This data is in Mac OS alias format, pointing at the
                     // location of the background image.
-                    printAlias(dsStoreData, curOffset, blobSize, insetString);
+                    printAlias(dsStoreData, curOffset, blobSize, insetString.toString());
                 } else if (Util.toASCIIString(structID).equals("BKGD") && blobSize == 12) {
                     //
                     // Background of the Finder window. Starts with a FourCC
@@ -503,7 +476,7 @@ public class DSStoreInfo {
                     System.out.println(insetString + "        Right: " + right);
 
                     int view = Util.readIntBE(dsStoreData, curOffset + 8);
-                    final String viewLabel;
+                    String viewLabel;
                     if (Util.toASCIIString(view).equals("icnv")) {
                         viewLabel = "Icon view";
                     } else if (Util.toASCIIString(view).equals("Nlsv")) {
@@ -611,7 +584,7 @@ public class DSStoreInfo {
             } else if (Util.toASCIIString(structType).equals("bool")) {
                 // A bool is a one-byte boolean value expected to be 0 or 1.
                 byte value = dsStoreData[curOffset];
-                System.out.println(insetString + "      Value: " + value + " / 0x" + Util.toHexStringBE((byte) value));
+                System.out.println(insetString + "      Value: " + value + " / 0x" + Util.toHexStringBE(value));
                 curOffset += 1;
             } else {
                 throw new RuntimeException("Unknown struct type \"" + Util.toASCIIString(structType) + "\" " +
@@ -628,11 +601,11 @@ public class DSStoreInfo {
     }
 
     public static void main(String[] args) {
-        final RandomAccessFile dsStoreFile;
-        final byte[] dsStoreData;
+        RandomAccessFile dsStoreFile;
+        byte[] dsStoreData;
 
         if (args.length < 1) {
-            System.err.println("usage: DSStoreInfo <file>");
+            logger.log(Level.DEBUG, "usage: DSStoreInfo <file>");
             System.exit(1);
             return;
         }
@@ -640,22 +613,22 @@ public class DSStoreInfo {
         try {
             dsStoreFile = new RandomAccessFile(args[0], "r");
         } catch (IOException e) {
-            System.err.println("Error while opening .DS_Store file: " +
+            logger.log(Level.DEBUG, "Error while opening .DS_Store file: " +
                     e.getMessage());
             System.exit(1);
             return;
         }
 
         try {
-            final long dsStoreFileLength = dsStoreFile.length();
+            long dsStoreFileLength = dsStoreFile.length();
             if (dsStoreFileLength < 0 || dsStoreFileLength > Integer.MAX_VALUE) {
-                System.err.println(".DS_Store file is unreasonably large (" + dsStoreFileLength + "). Aborting...");
+                logger.log(Level.DEBUG, ".DS_Store file is unreasonably large (" + dsStoreFileLength + "). Aborting...");
                 System.exit(1);
                 return;
             }
             dsStoreData = new byte[(int) dsStoreFileLength];
         } catch (IOException e) {
-            System.err.println("Error while querying .DS_Store file size: " + e.getMessage());
+            logger.log(Level.DEBUG, "Error while querying .DS_Store file size: " + e.getMessage());
             System.exit(1);
             return;
         }
@@ -663,13 +636,13 @@ public class DSStoreInfo {
         try {
             int bytesRead = dsStoreFile.read(dsStoreData);
             if (bytesRead < dsStoreData.length) {
-                System.err.println("Partial read while reading .DS_Store " +
+                logger.log(Level.DEBUG, "Partial read while reading .DS_Store " +
                         "file data: " + bytesRead + " / " + dsStoreData.length + " read");
                 System.exit(1);
                 return;
             }
         } catch (IOException e) {
-            System.err.println("Error while reading .DS_Store file data: " + e.getMessage());
+            logger.log(Level.DEBUG, "Error while reading .DS_Store file data: " + e.getMessage());
             System.exit(1);
             return;
         }
@@ -678,13 +651,13 @@ public class DSStoreInfo {
         h.print(System.out, "");
 
         if (!Arrays.equals(h.getRawSignature(), DSStoreHeader.SIGNATURE)) {
-            System.err.println("Mismatching root block offsets, this is not a valid .DS_Store file.");
+            logger.log(Level.DEBUG, "Mismatching root block offsets, this is not a valid .DS_Store file.");
             System.exit(1);
             return;
         }
 
         if (h.getRawRootBlockOffset1() != h.getRawRootBlockOffset2()) {
-            System.err.println("Mismatching root block offsets, this is not a valid .DS_Store file.");
+            logger.log(Level.DEBUG, "Mismatching root block offsets, this is not a valid .DS_Store file.");
             System.exit(1);
             return;
         }
@@ -720,7 +693,7 @@ public class DSStoreInfo {
         try {
             dsStoreFile.close();
         } catch (IOException e) {
-            System.err.println("Error while closing .DS_Store file: " + e.getMessage());
+            logger.log(Level.DEBUG, "Error while closing .DS_Store file: " + e.getMessage());
             System.exit(1);
         }
     }

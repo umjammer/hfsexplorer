@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 
-import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.gpt.types.GPTEntry;
 import org.catacombae.storage.ps.gpt.types.GPTHeader;
 import org.catacombae.storage.ps.gpt.types.GUIDPartitionTable;
@@ -33,7 +32,6 @@ import org.catacombae.io.FileStream;
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.storage.ps.gpt.GPTPartitionType;
 import org.catacombae.util.Util;
-import vavi.util.properties.FormattedPropertiesFactory.Basic;
 
 
 /**
@@ -75,7 +73,7 @@ import vavi.util.properties.FormattedPropertiesFactory.Basic;
  */
 public class RepairMyGPTPlease4 {
 
-    private static BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+    private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
     public static void main(String[] args) throws Exception {
         long runTimeStamp = System.currentTimeMillis();
@@ -85,7 +83,7 @@ public class RepairMyGPTPlease4 {
         else
             llf = new FileStream(args[0]);
 
-        final GUIDPartitionTable originalGpt = new GUIDPartitionTable(llf, 0);
+        GUIDPartitionTable originalGpt = new GUIDPartitionTable(llf, 0);
         MutableGUIDPartitionTable gpt = new MutableGUIDPartitionTable(originalGpt);
 
         if (originalGpt.isValid() && gpt.isValid()) {
@@ -94,7 +92,7 @@ public class RepairMyGPTPlease4 {
 
             // Backup the entire partition table part of the disk, in case something goes wrong
             // First the MBR and GPT tables at the beginning of the disk.
-            final byte[] mbr = new byte[blockSize];
+            byte[] mbr = new byte[blockSize];
             byte[] backup1 = new byte[blockSize + hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry()];
             llf.seek(0);
             llf.readFully(mbr);
@@ -109,7 +107,7 @@ public class RepairMyGPTPlease4 {
 
             // Then the backup GPT table at the end of the disk.
             byte[] backup2 = new byte[hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry() + blockSize];
-            llf.seek(hdr.getBackupLBA() * blockSize - hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry());
+            llf.seek(hdr.getBackupLBA() * blockSize - (long) hdr.getNumberOfPartitionEntries() * hdr.getSizeOfPartitionEntry());
             llf.read(backup2);
             String backupFilename2 = "gpt_backup_table-" + runTimeStamp + ".backup";
             System.out.print("Backing up GPT backup header and table to \"" + backupFilename2 + "\"...");

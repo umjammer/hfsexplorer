@@ -19,11 +19,15 @@ package org.catacombae.storage.io.win32;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import java.nio.charset.StandardCharsets;
 
-import org.apache.tools.ant.types.resources.First;
 import org.catacombae.io.AbstractFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -31,9 +35,11 @@ import org.catacombae.util.Util;
  */
 public class ReadableWin32FileStream implements ReadableRandomAccessStream, AbstractFileStream {
 
+    private static final Logger logger = getLogger(ReadableWin32FileStream.class.getName());
+
     protected byte[] fileHandle;
     protected final int sectorSize; //Detect this later..
-    private String openPath;
+    private final String openPath;
     protected long filePointer = 0;
     private static final Object loadLibSync = new Object();
     private static boolean libraryLoaded = false;
@@ -42,7 +48,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
      * Set this variable to true if you want some messages printed to stderr when the library is
      * loaded.
      */
-    public static boolean verboseLoadLibrary = false;
+    public static final boolean verboseLoadLibrary = false;
 
     private enum ArchitectureIdentifier {
 
@@ -55,11 +61,11 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
         private final String idString;
 
-        private ArchitectureIdentifier() {
+        ArchitectureIdentifier() {
             this.idString = null;
         }
 
-        private ArchitectureIdentifier(String idString) {
+        ArchitectureIdentifier(String idString) {
             this.idString = idString;
         }
 
@@ -71,7 +77,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
     private static ArchitectureIdentifier getJVMArchitecture() {
         // Trying to cover all thinkable cases here...
         // Got some hints from http://lopica.sourceforge.net/os.html
-        final String osArch = System.getProperty("os.arch");
+        String osArch = System.getProperty("os.arch");
         if (osArch.equalsIgnoreCase("x86") ||
                 osArch.equalsIgnoreCase("i386") ||
                 osArch.equalsIgnoreCase("i486") ||
@@ -107,20 +113,20 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
      * from the architecture string specified in this system's ArchitectureIdentifier.
      */
     private static void loadLibrary() {
-        final ArchitectureIdentifier archId = getJVMArchitecture();
+        ArchitectureIdentifier archId = getJVMArchitecture();
         if (archId == ArchitectureIdentifier.UNKNOWN) {
-            System.err.println(System.getProperty("os.arch") + ": architecture unknown! Cannot locate appropriate native I/O library.");
+            logger.log(Level.DEBUG, System.getProperty("os.arch") + ": architecture unknown! Cannot locate appropriate native I/O library.");
             throw new RuntimeException("loadLibrary(): CPU architecture unknown!");
         } else {
-            final String libName = "llio_" + archId.getArchitectureString();
+            String libName = "llio_" + archId.getArchitectureString();
             try {
-                if (verboseLoadLibrary) System.err.println("Trying to load native library \"" + libName + "\"...");
+                if (verboseLoadLibrary) logger.log(Level.DEBUG, "Trying to load native library \"" + libName + "\"...");
                 System.loadLibrary(libName);
-                if (verboseLoadLibrary) System.err.println("Native library \"" + libName + "\" successfully loaded.");
+                if (verboseLoadLibrary) logger.log(Level.DEBUG, "Native library \"" + libName + "\" successfully loaded.");
                 libraryLoaded = true;
             } catch (UnsatisfiedLinkError e) {
-                System.err.println("ERROR: Native library \"" + libName + "\" failed to load!");
-                System.err.println("java.library.path=\"" + System.getProperty("java.library.path") + "\"");
+                logger.log(Level.DEBUG, "ERROR: Native library \"" + libName + "\" failed to load!");
+                logger.log(Level.DEBUG, "java.library.path=\"" + System.getProperty("java.library.path") + "\"");
                 throw e;
             }
         }
@@ -148,8 +154,9 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
         openPath = filename;
     }
 
+    @Override
     public void seek(long pos) {
-//        System.err.println("WindowsLowLevelIO.seek(" + pos + ");");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.seek(" + pos + ");");
 
         if (fileHandle != null) {
             // We seek to the beginning of the sector containing pos
@@ -159,8 +166,9 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public int read() {
-//        System.err.println("WindowsLowLevelIO.read();");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read();");
         byte[] oneByte = new byte[1];
         if (read(oneByte) == 1)
             return oneByte[0] & 0xFF;
@@ -168,13 +176,15 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             return -1;
     }
 
+    @Override
     public int read(byte[] data) {
-//        System.err.println("WindowsLowLevelIO.read(byte[" + data.length + "]);");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read(byte[" + data.length + "]);");
         return read(data, 0, data.length);
     }
 
+    @Override
     public int read(byte[] data, int pos, int len) {
-//        System.err.println("WindowsLowLevelIO.read(byte[" + data.length + "], " + pos + ", " + len + ");");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read(byte[" + data.length + "], " + pos + ", " + len + ");");
         if (fileHandle != null) {
             //
             // First make sure that we are at the beginning of the sector containing
@@ -196,14 +206,14 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             // Add the bytes that we will have to skip to the total read length.
             int alignedLen = (int) fpDiff + len;
 
-//            System.err.println("Before crash:");
-//            System.err.println("  trueFp=" + trueFp);
-//            System.err.println("  fpDiff=" + fpDiff);
-//            System.err.println("  alignedLen=" + alignedLen);
-//            System.err.println("  sectorSize=" + sectorSize);
-//            System.err.println("  alignedLen/sectorSize=" + (alignedLen / sectorSize));
-//            System.err.println("  alignedLen%sectorSize=" + (alignedLen % sectorSize));
-//            System.err.println("  (alignedLen%sectorSize!=0?1:0))*sectorSize=" + ((alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize);
+//            logger.log(Level.DEBUG, "Before crash:");
+//            logger.log(Level.DEBUG, "  trueFp=" + trueFp);
+//            logger.log(Level.DEBUG, "  fpDiff=" + fpDiff);
+//            logger.log(Level.DEBUG, "  alignedLen=" + alignedLen);
+//            logger.log(Level.DEBUG, "  sectorSize=" + sectorSize);
+//            logger.log(Level.DEBUG, "  alignedLen/sectorSize=" + (alignedLen / sectorSize));
+//            logger.log(Level.DEBUG, "  alignedLen%sectorSize=" + (alignedLen % sectorSize));
+//            logger.log(Level.DEBUG, "  (alignedLen%sectorSize!=0?1:0))*sectorSize=" + ((alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize);
 
             // Allocate a sufficiently large temp buffer aligned to the sector size.
             byte[] tmp = new byte[(alignedLen / sectorSize + (alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize];
@@ -224,16 +234,19 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public byte readFully() {
         byte[] data = new byte[1];
         readFully(data);
         return data[0];
     }
 
+    @Override
     public void readFully(byte[] data) {
         readFully(data, 0, data.length);
     }
 
+    @Override
     public void readFully(byte[] data, int offset, int length) {
         if (fileHandle != null) {
             int bytesRead = 0;
@@ -248,25 +261,28 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public long length() {
-//        System.err.println("WindowsLowLevelIO.length();");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.length();");
         if (fileHandle != null) {
 //            throw new RuntimeException("Could not get file size.");
-//            System.err.println("  returning " + length(fileHandle));
+//            logger.log(Level.DEBUG, "  returning " + length(fileHandle));
             return length(fileHandle);
         } else
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public long getFilePointer() {
-//        System.err.println("WindowsLowLevelIO.getFilePointer();");
+//        logger.log(Level.DEBUG, "WindowsLowLevelIO.getFilePointer();");
         if (fileHandle != null) {
-//            System.err.println("  returning " + filePointer);
+//            logger.log(Level.DEBUG, "  returning " + filePointer);
             return filePointer;//getFilePointer(fileHandle);
         } else
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public void close() {
         if (fileHandle != null) {
             close(fileHandle);
@@ -298,6 +314,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
         return openNative(filename);
     }
 
+    @Override
     public String getOpenPath() {
         return openPath;
     }
@@ -340,7 +357,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
                 int bytesRead = wllio1.read(buf);
                 System.out.println(" Bytes read: " + bytesRead);
                 System.out.println(" As hex:    0x" + Util.byteArrayToHexString(buf));
-                System.out.println(" As string: \"" + new String(buf, "US-ASCII") + "\"");
+                System.out.println(" As string: \"" + new String(buf, StandardCharsets.US_ASCII) + "\"");
             } else if (args[1].equals("eject")) {
                 System.out.print("Press any key to eject media...");
                 stdin.readLine();
@@ -351,7 +368,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             } else
                 System.out.println("Nothing to do.");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         wllio1.close();
     }

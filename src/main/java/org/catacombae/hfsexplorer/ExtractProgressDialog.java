@@ -18,8 +18,6 @@
 package org.catacombae.hfsexplorer;
 
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -45,7 +43,7 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
     private volatile boolean cancelSignaled = false;
     private long completedSize = 0;
     private long totalSize = -1;
-    private DecimalFormat sizeFormatter = new DecimalFormat("0.00");
+    private final DecimalFormat sizeFormatter = new DecimalFormat("0.00");
 
     public ExtractProgressDialog(Frame owner) {
         this(owner, false);
@@ -54,32 +52,23 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
     private ExtractProgressDialog(Frame owner, boolean modal) {
         super(owner, "Extracting...", modal);
 
-        final JPanel backgroundPanel = new JPanel();
+        JPanel backgroundPanel = new JPanel();
 
         extractProperties = new ExtractProperties();
         progressPanel = new ExtractProgressPanel();
         settingsPanel = new ExtractSettingsPanel(extractProperties);
 
         cancelButton = progressPanel.cancelButton;
-        cancelButton.addActionListener(new ActionListener() {
+        cancelButton.addActionListener(ae -> signalCancel());
 
-                public void actionPerformed(ActionEvent ae) {
-                signalCancel();
-            }
-        });
-
-        progressPanel.addShowSettingsButtonListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                boolean selected = progressPanel.getShowSettingsButtonSelected();
-                if (selected)
-                    backgroundPanel.add(settingsPanel);
-                else
-                    backgroundPanel.remove(settingsPanel);
-                pack();
-            }
-
-        });
+        progressPanel.addShowSettingsButtonListener(e -> {
+        boolean selected = progressPanel.getShowSettingsButtonSelected();
+        if (selected)
+            backgroundPanel.add(settingsPanel);
+        else
+            backgroundPanel.remove(settingsPanel);
+        pack();
+    });
 
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.PAGE_AXIS));
         backgroundPanel.add(progressPanel);
@@ -99,31 +88,38 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
         setResizable(false);
     }
 
+    @Override
     public void updateCalculateDir(String dirname) {
         progressPanel.updateCalculateDir(dirname);
     }
 
+    @Override
     public void updateTotalProgress(double fraction, String message) {
         progressPanel.updateTotalProgress(fraction, message);
     }
 
+    @Override
     public void updateCurrentDir(String dirname) {
         progressPanel.updateCurrentDir(dirname);
     }
 
+    @Override
     public void updateCurrentFile(String filename, long fileSize) {
         progressPanel.updateCurrentFile(filename, fileSize);
     }
 
+    @Override
     public synchronized void signalCancel() {
         cancelButton.setEnabled(false);
         cancelSignaled = true;
     }
 
+    @Override
     public boolean cancelSignaled() {
         return cancelSignaled;
     }
 
+    @Override
     public void confirmCancel() {
         if (isVisible())
             dispose();
@@ -135,11 +131,13 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
         dispose();
     }
 
+    @Override
     public void setDataSize(long totalSize) {
         this.totalSize = totalSize;
         addDataProgress(0);
     }
 
+    @Override
     public void addDataProgress(long dataSize) {
         completedSize += dataSize;
         String message = SpeedUnitUtils.bytesToBinaryUnit(completedSize, sizeFormatter) + "/" +
@@ -157,30 +155,37 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
 //        return SimpleGUIProgressMonitor.confirmSkipDirectory(this, messageLines);
 //    }
 
+    @Override
     public CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory) {
         return SimpleGUIProgressMonitor.createDirectoryFailed(this, dirname, parentDirectory);
     }
 
+    @Override
     public CreateFileFailedAction createFileFailed(String filename, File parentDirectory) {
         return SimpleGUIProgressMonitor.createFileFailed(this, filename, parentDirectory);
     }
 
+    @Override
     public DirectoryExistsAction directoryExists(File directory) {
         return SimpleGUIProgressMonitor.directoryExists(this, directory);
     }
 
+    @Override
     public FileExistsAction fileExists(File file) {
         return SimpleGUIProgressMonitor.fileExists(this, file);
     }
 
+    @Override
     public UnhandledExceptionAction unhandledException(String filename, Throwable t) {
         return SimpleGUIProgressMonitor.unhandledException(this, filename, t);
     }
 
+    @Override
     public String displayRenamePrompt(String currentName, File outDir) {
         return SimpleGUIProgressMonitor.displayRenamePrompt(this, currentName, outDir);
     }
 
+    @Override
     public ExtractProperties getExtractProperties() {
         return extractProperties;
     }

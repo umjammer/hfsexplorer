@@ -97,6 +97,7 @@ public class ResourceHeader implements StaticStruct, PrintableStruct {
         return Util.readIntBE(mapLength);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " dataOffset: " + getDataOffset());
         ps.println(prefix + " mapOffset: " + getMapOffset());
@@ -104,11 +105,13 @@ public class ResourceHeader implements StaticStruct, PrintableStruct {
         ps.println(prefix + " mapLength: " + getMapLength());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ResourceHeader:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -123,6 +126,7 @@ public class ResourceHeader implements StaticStruct, PrintableStruct {
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }

@@ -26,15 +26,16 @@ import java.io.File;
  */
 public class TestFileSystemView extends javax.swing.JFrame {
 
-    private class FakeFile extends File {
+    private static class FakeFile extends File {
 
-        private boolean isDirectory;
+        private final boolean isDirectory;
 
         public FakeFile(boolean dir) {
             super(".");
             this.isDirectory = dir;
         }
 
+        @Override
         public boolean isDirectory() {
             return isDirectory;
         }
@@ -104,12 +105,8 @@ public class TestFileSystemView extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new TestFileSystemView().setVisible(true);
-            }
-        });
+    public static void main(String[] args) {
+        java.awt.EventQueue.invokeLater(() -> new TestFileSystemView().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

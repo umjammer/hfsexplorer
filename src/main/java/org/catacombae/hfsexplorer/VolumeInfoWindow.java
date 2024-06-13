@@ -18,6 +18,8 @@
 package org.catacombae.hfsexplorer;
 
 import java.awt.BorderLayout;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -33,6 +35,8 @@ import org.catacombae.hfsexplorer.gui.HFSExplorerJFrame;
 import org.catacombae.hfsexplorer.gui.JournalInfoPanel;
 import org.catacombae.hfsexplorer.gui.StructViewPanel;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * A window that queries a HFSish file system about its volume properties and displays them
@@ -42,15 +46,17 @@ import org.catacombae.hfsexplorer.gui.StructViewPanel;
  */
 public class VolumeInfoWindow extends HFSExplorerJFrame {
 
+    private static final Logger logger = getLogger(VolumeInfoWindow.class.getName());
+
     public VolumeInfoWindow(HFSVolume fsView) {
         super("Volume information");
 
-        final JTabbedPane tabs = new JTabbedPane();
+        JTabbedPane tabs = new JTabbedPane();
 
         // The "Volume header" tab
 
         try {
-            final JPanel volumeInfoPanel;
+            JPanel volumeInfoPanel;
             CommonHFSVolumeHeader volHeader = fsView.getVolumeHeader();
             volumeInfoPanel = new StructViewPanel("Volume header", volHeader.getStructElements(), true);
 
@@ -60,13 +66,13 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
             tabs.addTab("Volume header", volumeInfoPanelScroller);
             volumeInfoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // The "Catalog file info" tab
 
         try {
-            final JTabbedPane catalogTabs = new JTabbedPane();
+            JTabbedPane catalogTabs = new JTabbedPane();
 
             try {
                 StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
@@ -79,7 +85,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                         setUnitIncrement(10);
                 catalogTabs.addTab("Header record", headerRecordPanelScroller);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
             CatalogInfoPanel catalogInfoPanel = new CatalogInfoPanel(fsView);
@@ -91,13 +97,13 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
 
             tabs.addTab("Catalog file", catalogTabs);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // The "Extents overflow file info" tab
 
         try {
-            final JTabbedPane extentsTabs = new JTabbedPane();
+            JTabbedPane extentsTabs = new JTabbedPane();
 
             try {
                 StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
@@ -109,7 +115,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                 headerRecordPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
                 extentsTabs.addTab("Header record", headerRecordPanelScroller);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
             ExtentsInfoPanel extentsInfoPanel = new ExtentsInfoPanel(fsView);
@@ -121,16 +127,16 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
 
             tabs.addTab("Extents overflow file", extentsTabs);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // The "Attributes file info" tab
 
         try {
-            final AttributesFile attributesFile = fsView.getAttributesFile();
+            AttributesFile attributesFile = fsView.getAttributesFile();
 
             if (attributesFile != null) {
-                final JTabbedPane attributesTabs = new JTabbedPane();
+                JTabbedPane attributesTabs = new JTabbedPane();
 
                 try {
                     StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
@@ -142,7 +148,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                     headerRecordPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
                     attributesTabs.addTab("Header record", headerRecordPanelScroller);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
 
                 AttributesInfoPanel attributesInfoPanel = new AttributesInfoPanel(fsView.getAttributesFile());
@@ -155,7 +161,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                 tabs.addTab("Attributes file", attributesTabs);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // The "Journal info" tab (optional)
@@ -167,7 +173,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                 tabs.addTab("Journal", journalInfoPanel);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         // The "Allocation file info" tab
@@ -181,7 +187,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
 //            tabs.addTab("Allocation file info", allocationFileInfoPanelScroller);
 //            allocationFileInfoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
 //        } catch (Exception e) {
-//            e.printStackTrace();
+//            logger.log(Level.ERROR, e.getMessage(), e);
 //        }
 
         add(tabs, BorderLayout.CENTER);
@@ -191,7 +197,7 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
         int width = getSize().width;
         int height = getSize().height;
         int adjustedHeight = width + width / 2;
-//        System.err.println("w: " + width + " h: " + height + " ah: " + adjustedHeight);
+//        logger.log(Level.DEBUG, "w: " + width + " h: " + height + " ah: " + adjustedHeight);
         if (adjustedHeight < height)
             setSize(width, adjustedHeight);
 

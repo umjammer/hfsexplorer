@@ -39,5 +39,5 @@ public interface PartitionSystemRecognizer {
      * @return <code>true</code> if a partition system can be detected at the
      * specified offset in fsStream, and <code>false</code> otherwise.
      */
-    public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
+    boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
 }

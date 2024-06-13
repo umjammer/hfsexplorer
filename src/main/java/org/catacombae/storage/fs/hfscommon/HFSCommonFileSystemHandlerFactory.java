@@ -39,6 +39,7 @@ public abstract class HFSCommonFileSystemHandlerFactory extends FileSystemHandle
                             "in Microsoft's now defunct Services for Mac software.",
                     false);
 
+    @Override
     public CustomAttribute[] getSupportedCustomAttributes() {
         return new CustomAttribute[] {
                 posixFilenamesAttribute,

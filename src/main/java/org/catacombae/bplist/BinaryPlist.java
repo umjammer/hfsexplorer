@@ -17,6 +17,8 @@
 
 package org.catacombae.bplist;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ import org.catacombae.bplist.types.BinaryPlistFooter;
 import org.catacombae.bplist.types.BinaryPlistHeader;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * Class wrapping binary plist data for easier access to the structured data
@@ -35,6 +39,8 @@ import org.catacombae.util.Util;
  * @author Erik Larsson
  */
 public class BinaryPlist {
+
+    private static final Logger logger = getLogger(BinaryPlist.class.getName());
 
     private final BinaryPlistHeader header;
     private final byte[] offsetMap;
@@ -105,12 +111,8 @@ public class BinaryPlist {
 
         byte marker = data[offset + physicalOffset];
 
-        /*
-        System.out.println(insetString + "Reading element at " +
-                virtualOffset + " -> " + physicalOffset);
-        System.out.println(insetString + "  (marker: " +
-                "0x" + Util.toHexStringBE(marker) + ")");
-        */
+//        System.out.println(insetString + "Reading element at " + virtualOffset + " -> " + physicalOffset);
+//        System.out.println(insetString + "  (marker: " + "0x" + Util.toHexStringBE(marker) + ")");
 
         switch (marker & 0xF0) {
             case 0x00:
@@ -121,7 +123,7 @@ public class BinaryPlist {
                 } else if (marker == 0x09) {
                     result = new BooleanEntry(true);
                 } else if (marker == 0x0F) {
-                    /* TODO: Find out what this marker is supposed to mean. */
+                    // TODO: Find out what this marker is supposed to mean.
                     result = new FillEntry();
                 } else {
                     result = new UnknownEntry(marker);
@@ -193,7 +195,7 @@ public class BinaryPlist {
                     long rawValue = Util.readLongBE(valueData);
 
                     BigDecimal value =
-                            new BigDecimal(Double.longBitsToDouble(rawValue));
+                            BigDecimal.valueOf(Double.longBitsToDouble(rawValue));
 
                     long unixTimestamp =
                             978307200 +
@@ -246,7 +248,7 @@ public class BinaryPlist {
                                         offset + physicalOffset + 2, new byte[sizeSize], 0,
                                         sizeSize));
                         if (sizeBigInt.bitCount() > 31) {
-                            System.err.println("Unexpected number of bits (" +
+                            logger.log(Level.DEBUG, "Unexpected number of bits (" +
                                     sizeBigInt.bitCount() + ") in size bits " +
                                     "nibble! Byte: 0x" +
                                     Util.toHexStringBE(sizeSizeByte));
@@ -256,7 +258,7 @@ public class BinaryPlist {
                             dataOffset += 1 + sizeSize;
                         }
                     } else {
-                        System.err.println("Unexpected marker in size bits " +
+                        logger.log(Level.DEBUG, "Unexpected marker in size bits " +
                                 "nibble! Byte: 0x" +
                                 Util.toHexStringBE(sizeSizeByte));
                         dataOffset = 0;
@@ -315,7 +317,7 @@ public class BinaryPlist {
                                             new byte[valueSize * refSize], 0,
                                             valueSize * refSize);
 
-                            LinkedList<Entry> entries = new LinkedList<Entry>();
+                            LinkedList<Entry> entries = new LinkedList<>();
                             for (int i = 0; i < valueSize; ++i) {
                                 BigInteger valueRef =
                                         new BigInteger(Util.arrayCopy(data,
@@ -348,8 +350,8 @@ public class BinaryPlist {
                                             new byte[valueSize * refSize * 2], 0,
                                             valueSize * refSize * 2);
 
-                            LinkedList<Entry> keys = new LinkedList<Entry>();
-                            LinkedList<Entry> values = new LinkedList<Entry>();
+                            LinkedList<Entry> keys = new LinkedList<>();
+                            LinkedList<Entry> values = new LinkedList<>();
                             for (int i = 0; i < valueSize; ++i) {
                                 BigInteger keyRef = new BigInteger(Util.arrayCopy(
                                         data,
@@ -577,7 +579,7 @@ public class BinaryPlist {
         }
 
         public LinkedList<Entry> getEntries() {
-            return new LinkedList<Entry>(entries);
+            return new LinkedList<>(entries);
         }
     }
 
@@ -609,7 +611,7 @@ public class BinaryPlist {
              * Put values in an array list since they will be looked up by index
              * during a normal iteration.
              */
-            this.values = new ArrayList<Entry>(values);
+            this.values = new ArrayList<>(values);
         }
 
         public byte[] getValueData() {
@@ -617,7 +619,7 @@ public class BinaryPlist {
         }
 
         public LinkedList<Entry> getKeys() {
-            return new LinkedList<Entry>(keys);
+            return new LinkedList<>(keys);
         }
 
         public Entry getValue(int index) {

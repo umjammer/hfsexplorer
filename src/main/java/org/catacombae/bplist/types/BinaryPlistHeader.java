@@ -38,7 +38,7 @@ public class BinaryPlistHeader {
     public static final int STRUCTSIZE = 8;
 
     private final byte[] signature = new byte[1 * 6];
-    private short version;
+    private final short version;
 
     public BinaryPlistHeader(byte[] data, int offset) {
         System.arraycopy(data, offset + 0, this.signature, 0, 1 * 6);
@@ -90,7 +90,7 @@ public class BinaryPlistHeader {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         System.arraycopy(this.signature, 0, result, offset, this.signature.length);
         offset += this.signature.length;

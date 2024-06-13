@@ -89,7 +89,7 @@ public class PartitionSystemDetector {
     public static PartitionSystemType[] detectPartitionSystem(
             ReadableRandomAccessStream psStream, long off, long len, boolean includeOverridden) {
 
-        LinkedList<PartitionSystemType> rawResult = new LinkedList<PartitionSystemType>();
+        LinkedList<PartitionSystemType> rawResult = new LinkedList<>();
 
         for (PartitionSystemType type : PartitionSystemType.values()) {
             if (!type.isTopLevelCapable()) {
@@ -109,7 +109,7 @@ public class PartitionSystemDetector {
         if (includeOverridden) {
             result = rawResult;
         } else {
-            result = new LinkedList<PartitionSystemType>();
+            result = new LinkedList<>();
 
             for (PartitionSystemType type : rawResult) {
                 boolean isOverridden = false;
@@ -134,6 +134,6 @@ public class PartitionSystemDetector {
             }
         }
 
-        return result.toArray(new PartitionSystemType[result.size()]);
+        return result.toArray(PartitionSystemType[]::new);
     }
 }

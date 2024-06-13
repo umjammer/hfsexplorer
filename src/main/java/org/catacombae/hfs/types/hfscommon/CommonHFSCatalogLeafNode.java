@@ -30,15 +30,14 @@ public abstract class CommonHFSCatalogLeafNode extends CommonBTKeyedNode<CommonH
     }
 
     public CommonHFSCatalogLeafRecord[] getLeafRecords() {
-        return ic.records.toArray(new CommonHFSCatalogLeafRecord[ic.records.size()]);
+        return ic.records.toArray(CommonHFSCatalogLeafRecord[]::new);
     }
 
     public static CommonHFSCatalogLeafNode createHFSPlus(byte[] data, int offset, int nodeSize) {
         return new HFSPlusImplementation(data, offset, nodeSize);
     }
 
-    public static CommonHFSCatalogLeafNode createHFSX(byte[] data, int offset,
-                                                      int nodeSize, byte keyCompareType) {
+    public static CommonHFSCatalogLeafNode createHFSX(byte[] data, int offset, int nodeSize, byte keyCompareType) {
         return new HFSXImplementation(data, offset, nodeSize, keyCompareType).
                 getInternal();
     }

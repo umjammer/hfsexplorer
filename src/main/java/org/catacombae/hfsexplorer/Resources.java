@@ -27,25 +27,25 @@ import java.net.URL;
  */
 public interface Resources {
 
-    public static final URL FOLDER_ICON = ClassLoader.getSystemResource("res/folder.png");
+    URL FOLDER_ICON = ClassLoader.getSystemResource("res/folder.png");
 
-    public static final URL EMPTY_DOCUMENT_ICON = ClassLoader.getSystemResource("res/emptydocument.png");
+    URL EMPTY_DOCUMENT_ICON = ClassLoader.getSystemResource("res/emptydocument.png");
 
-    public static final URL EMPTY_ICON = ClassLoader.getSystemResource("res/nothing.png");
+    URL EMPTY_ICON = ClassLoader.getSystemResource("res/nothing.png");
 
-    public static final URL FORWARD_ICON = ClassLoader.getSystemResource("res/forward.png");
+    URL FORWARD_ICON = ClassLoader.getSystemResource("res/forward.png");
 
-    public static final URL EXTRACT_ICON = ClassLoader.getSystemResource("res/extract.png");
+    URL EXTRACT_ICON = ClassLoader.getSystemResource("res/extract.png");
 
-    public static final URL BACK_ICON = ClassLoader.getSystemResource("res/back.png");
+    URL BACK_ICON = ClassLoader.getSystemResource("res/back.png");
 
-    public static final URL UP_ICON = ClassLoader.getSystemResource("res/folderup.png");
+    URL UP_ICON = ClassLoader.getSystemResource("res/folderup.png");
 
-    public static final URL INFO_ICON = ClassLoader.getSystemResource("res/info.png");
+    URL INFO_ICON = ClassLoader.getSystemResource("res/info.png");
 
-    public static final URL APPLICATION_ICON_16 = ClassLoader.getSystemResource("res/finderdrive_folderback_16.png");
+    URL APPLICATION_ICON_16 = ClassLoader.getSystemResource("res/finderdrive_folderback_16.png");
 
-    public static final URL APPLICATION_ICON_32 = ClassLoader.getSystemResource("res/finderdrive_folderback_32.png");
+    URL APPLICATION_ICON_32 = ClassLoader.getSystemResource("res/finderdrive_folderback_32.png");
 
-    public static final URL APPLICATION_ICON_48 = ClassLoader.getSystemResource("res/finderdrive_folderback_48.png");
+    URL APPLICATION_ICON_48 = ClassLoader.getSystemResource("res/finderdrive_folderback_48.png");
 }

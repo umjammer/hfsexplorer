@@ -113,7 +113,7 @@ public abstract class BasicFSEntry implements FSEntry {
 //    public String[] getAbsolutePath() {
 //        LinkedList<String> pathBuilder = new LinkedList<String>();
 //        getCanonicalPathInternal(pathBuilder);
-//        return pathBuilder.toArray(new String[pathBuilder.size()]);
+//        return pathBuilder.toArray(String[]::new);
 //    }
 
 //    void getCanonicalPathInternal(LinkedList<String> components) {

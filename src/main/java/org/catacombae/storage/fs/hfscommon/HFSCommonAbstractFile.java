@@ -18,6 +18,7 @@
 package org.catacombae.storage.fs.hfscommon;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFile;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
@@ -25,7 +26,6 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogNodeID;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.fs.FSAttributes;
-import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSFork;
 import org.catacombae.storage.fs.FSForkType;
 
@@ -70,20 +70,19 @@ public abstract class HFSCommonAbstractFile extends HFSCommonFSEntry {
             throw new IllegalArgumentException("iFileRecord must not be null!");
 
         this.fileRecord = iFileRecord;
-        if (iHardLinkRecord != null)
-            this.keyRecord = iHardLinkRecord;
-        else
-            this.keyRecord = iFileRecord;
+        this.keyRecord = Objects.requireNonNullElse(iHardLinkRecord, iFileRecord);
         CommonHFSCatalogFile catalogFile = fileRecord.getData();
         this.attributes = new HFSCommonFSAttributes(this, catalogFile);
         this.rawDataFork = new HFSCommonFSFork(this, FSForkType.DATA, catalogFile.getDataFork());
         this.resourceFork = new HFSCommonFSFork(this, FSForkType.MACOS_RESOURCE, catalogFile.getResourceFork());
     }
 
+    @Override
     public FSAttributes getAttributes() {
         return attributes;
     }
 
+    @Override
     public String getName() {
         return fsHandler.getProperNodeName(keyRecord);
     }
@@ -93,6 +92,7 @@ public abstract class HFSCommonAbstractFile extends HFSCommonFSEntry {
 //        return parent.lookupParentFolder(keyRecord);
 //    }
 
+    @Override
     public boolean isCompressed() {
         return getDataFork().isCompressed();
     }
@@ -114,24 +114,22 @@ public abstract class HFSCommonAbstractFile extends HFSCommonFSEntry {
 
     @Override
     public FSFork getForkByType(FSForkType type) {
-        switch (type) {
-            case DATA:
-                return getDataFork();
-            case MACOS_RESOURCE:
-                return getResourceFork();
-            default:
-                return super.getForkByType(type);
-        }
+        return switch (type) {
+            case DATA -> getDataFork();
+            case MACOS_RESOURCE -> getResourceFork();
+            default -> super.getForkByType(type);
+        };
     }
 
     @Override
     public long getCombinedLength() {
-        final FSFork resFork = getResourceFork();
+        FSFork resFork = getResourceFork();
 
         return super.getCombinedLength() + getDataFork().getLength() +
                 (resFork != null ? resFork.getLength() : 0);
     }
 
+    @Override
     protected CommonHFSCatalogNodeID getCatalogNodeID() {
         return fileRecord.getData().getFileID();
     }
@@ -140,6 +138,7 @@ public abstract class HFSCommonAbstractFile extends HFSCommonFSEntry {
         return rawDataFork;
     }
 
+    @Override
     protected FSFork getResourceFork() {
         return resourceFork.getLength() > 0 ? resourceFork : null;
     }

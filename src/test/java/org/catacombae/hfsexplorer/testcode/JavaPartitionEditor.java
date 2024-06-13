@@ -49,10 +49,11 @@ public class JavaPartitionEditor extends javax.swing.JPanel {
                         "Number", "Type", "Offset", "Length"
                 }
         ) {
-            boolean[] canEdit = new boolean[] {
+            final boolean[] canEdit = new boolean[] {
                     false, false, false, false
             };
 
+            @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit[columnIndex];
             }

@@ -120,17 +120,13 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
     }
 
     private static JPanel createPanel(String label, StructElement elem) {
-        if (elem instanceof StringRepresentableField) {
-            StringRepresentableField f = (StringRepresentableField) elem;
+        if (elem instanceof StringRepresentableField f) {
             return new TextViewPanel(label + ":", f);
-        } else if (elem instanceof FlagField) {
-            FlagField f = (FlagField) elem;
+        } else if (elem instanceof FlagField f) {
             return new FlagViewPanel(label, f);
-        } else if (elem instanceof Array) {
-            Array a = (Array) elem;
+        } else if (elem instanceof Array a) {
             return new InternalStructViewPanel(label + ":", a);
-        } else if (elem instanceof Dictionary) {
-            Dictionary d = (Dictionary) elem;
+        } else if (elem instanceof Dictionary d) {
             return new InternalStructViewPanel(label + ":", d);
         } else
             throw new RuntimeException("Unsupported StructElement subtype: " +

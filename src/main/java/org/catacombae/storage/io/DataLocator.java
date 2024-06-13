@@ -65,7 +65,7 @@ public abstract class DataLocator {
         closed = true;
     }
 
-    private synchronized void dereference(final boolean closing) {
+    private synchronized void dereference(boolean closing) {
         if (((closed || closing) && references <= 0) || (!(closed || closing) && references <= 1)) {
             throw new RuntimeException("Too few references left!");
         }

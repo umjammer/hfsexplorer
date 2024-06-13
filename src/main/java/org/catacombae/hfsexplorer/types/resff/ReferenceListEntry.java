@@ -93,6 +93,7 @@ public class ReferenceListEntry implements StaticStruct, PrintableStruct {
         return Util.readIntBE(reserved1);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " resourceID: 0x" + Util.toHexStringBE(getResourceID()));
         ps.println(prefix + " resourceNameOffset: " + getResourceNameOffset());
@@ -101,11 +102,13 @@ public class ReferenceListEntry implements StaticStruct, PrintableStruct {
         ps.println(prefix + " reserved1: 0x" + Util.toHexStringBE(getReserved1()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ReferenceListEntry:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -122,6 +125,7 @@ public class ReferenceListEntry implements StaticStruct, PrintableStruct {
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }

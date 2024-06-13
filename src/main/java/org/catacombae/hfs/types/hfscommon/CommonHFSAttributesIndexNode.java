@@ -43,7 +43,7 @@ public abstract class CommonHFSAttributesIndexNode
         @Override
         protected CommonBTIndexRecord<CommonHFSAttributesKey> createBTRecord(
                 int recordNumber, byte[] data, int offset, int length) {
-            final CommonHFSAttributesKey key = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(data, offset));
+            CommonHFSAttributesKey key = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(data, offset));
 
             return CommonBTIndexRecord.createHFSPlus(key, data, offset);
         }

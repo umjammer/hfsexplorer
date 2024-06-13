@@ -51,11 +51,11 @@ public class DXInfo implements PrintableStruct, StructElements {
     public static final int STRUCTSIZE = 16;
 
     private final Point frScroll;
-    private int frOpenChain;
-    private byte frScript;
-    private byte frXFlags;
-    private short frComment;
-    private int frPutAway;
+    private final int frOpenChain;
+    private final byte frScript;
+    private final byte frXFlags;
+    private final short frComment;
+    private final int frPutAway;
 
     public DXInfo(byte[] data, int offset) {
         this.frScroll = new Point(data, offset + 0);
@@ -101,6 +101,7 @@ public class DXInfo implements PrintableStruct, StructElements {
     }
 
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " frScroll: ");
         getFrScroll().print(ps, prefix + "  ");
@@ -111,6 +112,7 @@ public class DXInfo implements PrintableStruct, StructElements {
         ps.println(prefix + " frPutAway: " + getFrPutAway());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "DXInfo:");
         printFields(ps, prefix);
@@ -123,7 +125,7 @@ public class DXInfo implements PrintableStruct, StructElements {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         {
             byte[] tempData = this.frScroll.getBytes();
@@ -150,6 +152,7 @@ public class DXInfo implements PrintableStruct, StructElements {
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
 
         DictionaryBuilder db = new DictionaryBuilder(DXInfo.class.getSimpleName());

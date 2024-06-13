@@ -57,26 +57,26 @@ public class AliasHeader {
 
     public static final int STRUCTSIZE = 150;
 
-    private int userType;
-    private short aliasSize;
-    private short version;
-    private short flags;
-    private byte volumeNameLength;
+    private final int userType;
+    private final short aliasSize;
+    private final short version;
+    private final short flags;
+    private final byte volumeNameLength;
     private final byte[] volumeName = new byte[1 * 27];
-    private int volumeCreateTimestamp;
-    private short volumeFsType;
-    private short driveType;
-    private int parentID;
-    private byte fileNameLength;
+    private final int volumeCreateTimestamp;
+    private final short volumeFsType;
+    private final short driveType;
+    private final int parentID;
+    private final byte fileNameLength;
     private final byte[] fileName = new byte[1 * 63];
-    private int fileID;
-    private int fileCreateTimestamp;
-    private int fileType;
-    private int fileCreator;
-    private short nextLevelUpFromAlias;
-    private short nextLevelDownToTarget;
-    private int volumeAttributes;
-    private short fileSystemID;
+    private final int fileID;
+    private final int fileCreateTimestamp;
+    private final int fileType;
+    private final int fileCreator;
+    private final short nextLevelUpFromAlias;
+    private final short nextLevelDownToTarget;
+    private final int volumeAttributes;
+    private final short fileSystemID;
     private final byte[] reserved = new byte[1 * 10];
 
     public AliasHeader(byte[] data, int offset) {
@@ -339,22 +339,15 @@ public class AliasHeader {
     }
 
     public static String driveTypeToString(short driveType) {
-        switch (driveType & 0xFFFF) {
-            case 0:
-                return "HD (fixed)";
-            case 1:
-                return "Network";
-            case 2:
-                return "400k FD";
-            case 3:
-                return "800k FD";
-            case 4:
-                return "1.44M FD";
-            case 5:
-                return "Ejectable media";
-            default:
-                return null;
-        }
+        return switch (driveType & 0xFFFF) {
+            case 0 -> "HD (fixed)";
+            case 1 -> "Network";
+            case 2 -> "400k FD";
+            case 3 -> "800k FD";
+            case 4 -> "1.44M FD";
+            case 5 -> "Ejectable media";
+            default -> null;
+        };
     }
 
     public void printFields(PrintStream ps, String prefix) {
@@ -401,7 +394,7 @@ public class AliasHeader {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.userType);
         offset += 4;

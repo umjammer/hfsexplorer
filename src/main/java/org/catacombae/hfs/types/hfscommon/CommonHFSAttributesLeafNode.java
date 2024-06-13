@@ -30,7 +30,7 @@ public abstract class CommonHFSAttributesLeafNode extends CommonBTKeyedNode<Comm
     }
 
     public CommonHFSAttributesLeafRecord[] getLeafRecords() {
-        return ic.records.toArray(new CommonHFSAttributesLeafRecord[ic.records.size()]);
+        return ic.records.toArray(CommonHFSAttributesLeafRecord[]::new);
     }
 
     public static CommonHFSAttributesLeafNode createHFSPlus(byte[] data, int offset, int nodeSize) {
@@ -45,7 +45,7 @@ public abstract class CommonHFSAttributesLeafNode extends CommonBTKeyedNode<Comm
 
         @Override
         protected CommonHFSAttributesLeafRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
-            final HFSPlusAttributesLeafRecord record = new HFSPlusAttributesLeafRecord(data, offset);
+            HFSPlusAttributesLeafRecord record = new HFSPlusAttributesLeafRecord(data, offset);
 
             return CommonHFSAttributesLeafRecord.create(record);
         }

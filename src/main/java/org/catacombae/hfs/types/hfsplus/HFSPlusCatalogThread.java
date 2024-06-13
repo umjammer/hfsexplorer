@@ -56,6 +56,7 @@ public class HFSPlusCatalogThread extends HFSPlusCatalogLeafRecordData implement
         nodeName = new HFSUniStr255(data, offset + 8);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         byte[] tempData;
@@ -76,13 +77,15 @@ public class HFSPlusCatalogThread extends HFSPlusCatalogLeafRecordData implement
     }
 
     public int length() {
-        return 2 + 2 + parentID.length() + nodeName.length();
+        return 2 + 2 + HFSCatalogNodeID.length() + nodeName.length();
     }
 
+    @Override
     public int occupiedSize() {
         return length();
     }
 
+    @Override
     public int maxSize() {
         return 520;
     }
@@ -104,6 +107,7 @@ public class HFSPlusCatalogThread extends HFSPlusCatalogLeafRecordData implement
         return nodeName;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " recordType: " + getRecordType());
         ps.println(prefix + " reserved: " + getReserved());
@@ -113,11 +117,13 @@ public class HFSPlusCatalogThread extends HFSPlusCatalogLeafRecordData implement
         getNodeName().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusCatalogThread:");
         printFields(ps, prefix);
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusCatalogThread.class.getSimpleName());
 

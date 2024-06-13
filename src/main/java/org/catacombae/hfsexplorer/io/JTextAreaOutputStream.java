@@ -52,7 +52,7 @@ public class JTextAreaOutputStream extends OutputStream {
     private final String encoding;
     private final GapContent content;
     private boolean updateRequested = false;
-    private PlainDocument document;
+    private final PlainDocument document;
 
     /**
      * Creates a new JTextAreaOutputStream which writes to <code>textArea</code> and synchronizes
@@ -171,24 +171,22 @@ public class JTextAreaOutputStream extends OutputStream {
 
                 if (textAreaScroller != null && !updateRequested) {
                     updateRequested = true;
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            synchronized (syncObject) {
+                    SwingUtilities.invokeLater(() -> {
+                        synchronized (syncObject) {
 //                                textArea.append(curBuilder.toString());
 //                                curBuilder.setLength(0);
-                                updateRequested = false;
-                                JScrollBar sb = textAreaScroller.getVerticalScrollBar();
-                                sb.setValue(sb.getMaximum() - sb.getVisibleAmount());
-                            }
+                            updateRequested = false;
+                            JScrollBar sb = textAreaScroller.getVerticalScrollBar();
+                            sb.setValue(sb.getMaximum() - sb.getVisibleAmount());
+                        }
 //                            textArea.append(s);
 //                            textArea.append(" [Update!] ");
-                        }
                     });
                 }
             } catch (Exception e) {
                 StringBuilder sb = new StringBuilder();
                 Util.buildStackTrace(e, Integer.MAX_VALUE, sb);
-                stdErr.println(sb.toString());
+                stdErr.println(sb);
 //                GUIUtil.displayExceptionDialog(e, 100, null);
             }
         }

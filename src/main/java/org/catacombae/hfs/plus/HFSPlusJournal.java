@@ -17,7 +17,6 @@
 
 package org.catacombae.hfs.plus;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.catacombae.hfs.Journal;
@@ -123,8 +122,8 @@ class HFSPlusJournal extends Journal {
 
     @Override
     public JournalHeader getJournalHeader() {
-        final JournalInfoBlock infoBlock = getJournalInfoBlock();
-        final ReadableRandomAccessStream journalStream = getJournalDataStream(infoBlock);
+        JournalInfoBlock infoBlock = getJournalInfoBlock();
+        ReadableRandomAccessStream journalStream = getJournalDataStream(infoBlock);
 
         try {
             return journalStream != null ? getJournalHeader(infoBlock, journalStream) : null;
@@ -135,8 +134,8 @@ class HFSPlusJournal extends Journal {
         }
     }
 
-    private JournalHeader getJournalHeader(JournalInfoBlock infoBlock, ReadableRandomAccessStream journalStream) {
-        final byte[] headerData = new byte[JournalHeader.length()];
+    private static JournalHeader getJournalHeader(JournalInfoBlock infoBlock, ReadableRandomAccessStream journalStream) {
+        byte[] headerData = new byte[JournalHeader.length()];
 
         journalStream.readFully(headerData);
 
@@ -157,13 +156,13 @@ class HFSPlusJournal extends Journal {
 
     @Override
     public boolean isClean() {
-        final JournalHeader journalHeader = getJournalHeader();
+        JournalHeader journalHeader = getJournalHeader();
 
         return journalHeader.getRawStart() == journalHeader.getRawEnd();
     }
 
-    private long wrappedReadFully(ReadableRandomAccessStream stream, long currentPos, byte[] data, int offset,
-                                  int length, ObjectContainer<Boolean> wrappedAround) {
+    private static long wrappedReadFully(ReadableRandomAccessStream stream, long currentPos, byte[] data, int offset,
+                                         int length, ObjectContainer<Boolean> wrappedAround) {
         int bytesRead;
         long res;
 
@@ -191,19 +190,20 @@ class HFSPlusJournal extends Journal {
         return res;
     }
 
-    private long wrappedReadFully(ReadableRandomAccessStream stream, long currentPos, byte[] data,
-                                  ObjectContainer<Boolean> wrappedAround) {
+    private static long wrappedReadFully(ReadableRandomAccessStream stream, long currentPos, byte[] data,
+                                         ObjectContainer<Boolean> wrappedAround) {
         return wrappedReadFully(stream, currentPos, data, 0, data.length, wrappedAround);
     }
 
+    @Override
     public Transaction[] getPendingTransactions() {
-        final JournalInfoBlock infoBlock = getJournalInfoBlock();
-        final ReadableRandomAccessStream journalStream = getJournalDataStream(infoBlock);
-        final JournalHeader jh = getJournalHeader(infoBlock, journalStream);
-        final long start = jh.getRawStart();
-        final long end = jh.getRawEnd();
-        final long size = jh.getRawSize();
-        final int blockListHeaderSize = jh.getRawBlhdrSize();
+        JournalInfoBlock infoBlock = getJournalInfoBlock();
+        ReadableRandomAccessStream journalStream = getJournalDataStream(infoBlock);
+        JournalHeader jh = getJournalHeader(infoBlock, journalStream);
+        long start = jh.getRawStart();
+        long end = jh.getRawEnd();
+        long size = jh.getRawSize();
+        int blockListHeaderSize = jh.getRawBlhdrSize();
 
         if (start < 0)
             throw new RuntimeException("'start' overflows.");
@@ -217,11 +217,11 @@ class HFSPlusJournal extends Journal {
             return new Transaction[0];
         }
 
-        final LinkedList<Transaction> pendingTransactionList = new LinkedList<Transaction>();
-        final LinkedList<BlockList> curBlockListList = new LinkedList<BlockList>();
-        final LinkedList<BlockInfo> curBlockInfoList = new LinkedList<BlockInfo>();
+        LinkedList<Transaction> pendingTransactionList = new LinkedList<>();
+        LinkedList<BlockList> curBlockListList = new LinkedList<>();
+        LinkedList<BlockInfo> curBlockInfoList = new LinkedList<>();
 
-        ObjectContainer<Boolean> wrappedAround = new ObjectContainer<Boolean>(false);
+        ObjectContainer<Boolean> wrappedAround = new ObjectContainer<>(false);
         byte[] tmpData = new byte[Math.max(BlockListHeader.length(), BlockInfo.length())];
 
         journalStream.seek(start);
@@ -260,24 +260,22 @@ class HFSPlusJournal extends Journal {
 
             curBytesRead += curReserved.length;
 
-            LinkedList<byte[]> curBlockDataList = new LinkedList<byte[]>();
-            for (Iterator<BlockInfo> it = curBlockInfoList.iterator(); it.hasNext(); ) {
-                final BlockInfo bi = it.next();
-
-                if (curBlockDataList.size() < 1) {
+            LinkedList<byte[]> curBlockDataList = new LinkedList<>();
+            for (BlockInfo bi : curBlockInfoList) {
+                if (curBlockDataList.isEmpty()) {
                     // Skip first BlockInfo because it's not actually
                     // referencing any data.
                     curBlockDataList.add(new byte[0]);
                     continue;
                 }
 
-                final int bsize = bi.getRawBsize();
+                int bsize = bi.getRawBsize();
 
                 if (bsize > Integer.MAX_VALUE) {
                     throw new RuntimeException("'int' overflow in 'bsize' (" + bi.getBsize() + ").");
                 }
 
-                final byte[] data = new byte[bsize];
+                byte[] data = new byte[bsize];
                 i = wrappedReadFully(journalStream, i, data, wrappedAround);
 
                 curBytesRead += data.length;
@@ -286,21 +284,21 @@ class HFSPlusJournal extends Journal {
             }
 
             BlockList curBlockList = new BlockList(curHeader,
-                    curBlockInfoList.toArray(new BlockInfo[curBlockInfoList.size()]),
+                    curBlockInfoList.toArray(BlockInfo[]::new),
                     curReserved,
                     curBlockDataList.toArray(new byte[curBlockDataList.size()][]));
             curBlockListList.add(curBlockList);
 
             if (curBlockList.getBlockInfo(0).getNext() == 0) {
-                pendingTransactionList.add(new Transaction(curBlockListList.toArray(new BlockList[curBlockListList.size()])));
+                pendingTransactionList.add(new Transaction(curBlockListList.toArray(BlockList[]::new)));
                 curBlockListList.clear();
             }
         }
 
-        if (curBlockListList.size() != 0) {
-            pendingTransactionList.add(new Transaction(curBlockListList.toArray(new BlockList[curBlockListList.size()])));
+        if (!curBlockListList.isEmpty()) {
+            pendingTransactionList.add(new Transaction(curBlockListList.toArray(BlockList[]::new)));
         }
 
-        return pendingTransactionList.toArray(new Transaction[pendingTransactionList.size()]);
+        return pendingTransactionList.toArray(Transaction[]::new);
     }
 }

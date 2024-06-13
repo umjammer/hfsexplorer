@@ -17,6 +17,9 @@
 
 package org.catacombae.storage.fs.hfsplus;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.hfs.HFSVolume;
 import org.catacombae.hfs.plus.HFSPlusVolume;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
@@ -31,11 +34,15 @@ import org.catacombae.storage.io.DataLocator;
 import org.catacombae.util.IOUtil;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
+
+    private static final Logger logger = getLogger(HFSPlusFileSystemHandler.class.getName());
 
     private static final String FILE_HARD_LINK_DIR = "\u0000\u0000\u0000\u0000HFS+ Private Data";
     private static final String FILE_HARD_LINK_PREFIX = "iNode";
@@ -58,11 +65,11 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
         super(vol, posixNames, sfmSubstitutions, doUnicodeFileNameComposition, hideProtected);
     }
 
+    @Override
     protected boolean shouldHide(CommonHFSCatalogLeafRecord rec) {
         // The only folder that contains hidden files is the root folder.
         CommonHFSCatalogNodeID parentID = rec.getKey().getParentID();
-        if (!parentID.equals(parentID.getReservedID(CommonHFSCatalogNodeID.
-                ReservedID.ROOT_FOLDER))) {
+        if (!parentID.equals(parentID.getReservedID(CommonHFSCatalogNodeID.ReservedID.ROOT_FOLDER))) {
             return false;
         }
 
@@ -82,14 +89,14 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
         return false;
     }
 
-    private String[] getHardFileLinkPath(int inodeNumber) {
+    private static String[] getHardFileLinkPath(int inodeNumber) {
         return new String[] {
                 FILE_HARD_LINK_DIR,
                 FILE_HARD_LINK_PREFIX + Util.unsign(inodeNumber)
         };
     }
 
-    private String[] getHardDirectoryLinkPath(int inodeNumber) {
+    private static String[] getHardDirectoryLinkPath(int inodeNumber) {
         return new String[] {
                 DIRECTORY_HARD_LINK_DIR,
                 DIRECTORY_HARD_LINK_PREFIX + Util.unsign(inodeNumber)
@@ -105,7 +112,7 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
             if (iNode != null) {
                 return createFSFile(fileRecord, iNode);
             } else {
-                System.err.println("Looking up file iNode " + fileRecord.getData().getHardLinkInode() +
+                logger.log(Level.DEBUG, "Looking up file iNode " + fileRecord.getData().getHardLinkInode() +
                         " (" + fileRecord.getKey().getParentID().toLong() +
                         ":\"" + getProperNodeName(fileRecord) + "\") FAILED!");
 
@@ -116,7 +123,7 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
             if (iNode != null) {
                 return createFSFolder(fileRecord, iNode);
             } else {
-                System.err.println("Looking up directory iNode " + fileRecord.getData().getHardLinkInode() +
+                logger.log(Level.DEBUG, "Looking up directory iNode " + fileRecord.getData().getHardLinkInode() +
                         " (" + fileRecord.getKey().getParentID().toLong() +
                         ":\"" + getProperNodeName(fileRecord) + "\") FAILED!");
 
@@ -160,6 +167,7 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
         }
     }
 
+    @Override
     protected Long getLinkCount(CommonHFSCatalogFileRecord fr) {
         if (fr.getData().isHardFileLink()) {
             int inodeNumber = fr.getData().getHardLinkInode();
@@ -176,6 +184,7 @@ public class HFSPlusFileSystemHandler extends HFSCommonFileSystemHandler {
         }
     }
 
+    @Override
     protected String[] getAbsoluteLinkPath(String[] path, int pathLength, CommonHFSCatalogFileRecord rec) {
         String[] absPath;
 

@@ -71,10 +71,12 @@ public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructEl
 
     public abstract CommonHFSCatalogNodeID getNextCatalogNodeID();
 
-    //public abstract long getCatalogFileSize();
+//    public abstract long getCatalogFileSize();
+
     public abstract CommonHFSForkData getCatalogFile();
 
-    //public abstract long getExtentsOverflowFileSize();
+//    public abstract long getExtentsOverflowFileSize();
+
     public abstract CommonHFSForkData getExtentsOverflowFile();
 
     /**
@@ -203,10 +205,12 @@ public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructEl
             return CommonHFSForkData.create(hdr.getStartupFile());
         }
 
+        @Override
         public void print(PrintStream err, String prefix) {
             hdr.print(err, prefix);
         }
 
+        @Override
         public void printFields(PrintStream err, String prefix) {
             hdr.printFields(err, prefix);
         }
@@ -221,6 +225,7 @@ public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructEl
             return 0;
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hdr.getStructElements();
         }
@@ -316,10 +321,12 @@ public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructEl
             return null;
         }
 
+        @Override
         public void print(PrintStream err, String prefix) {
             hdr.print(err, prefix);
         }
 
+        @Override
         public void printFields(PrintStream err, String prefix) {
             hdr.printFields(err, prefix);
         }
@@ -329,6 +336,7 @@ public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructEl
             return Util.unsign(hdr.getDrAlBlSt());
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hdr.getStructElements();
         }

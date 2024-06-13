@@ -19,7 +19,11 @@ package org.catacombae.hfsexplorer;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashSet;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -27,8 +31,9 @@ import java.util.HashSet;
  */
 public class FileNameTools {
 
-    private static final HashSet<String> reservedWindowsFilenames =
-            buildReservedWindowsFilenames();
+    private static final Logger logger = getLogger(FileNameTools.class.getName());
+
+    private static final HashSet<String> reservedWindowsFilenames = buildReservedWindowsFilenames();
 
     /**
      * This method should only return a non-null value when it's ABSOLUTELY SURE
@@ -48,20 +53,20 @@ public class FileNameTools {
 
         char[] filenameChars = filename.toCharArray();
 
-//        System.err.println("filenameChars before: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars before: " + new String(filenameChars));
         // Clean out all the usual suspects
         for (int i = 0; i < filenameChars.length; ++i) {
             int c = Util.unsign(filenameChars[i]);
 
             if (c < 32 || c == 127 || (c >= 0x80 && c <= 0x9F)) {// ASCII/ISO-8859 control characters
                 filenameChars[i] = substituteChar;
-//                System.err.println("'" + (char)c + "' (" + c + ") matches control character criteria.");
+//                logger.log(Level.DEBUG, "'" + (char)c + "' (" + c + ") matches control character criteria.");
             } else if (FileNameTools.isIllegalWindowsCharacter(c)) {
                 filenameChars[i] = substituteChar;
-//                System.err.println("'" + (char)c + "' (" + c + ") is an illegal Windows character.");
+//                logger.log(Level.DEBUG, "'" + (char)c + "' (" + c + ") is an illegal Windows character.");
             }
         }
-//        System.err.println("filenameChars middle: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars middle: " + new String(filenameChars));
 
         // Check for trailing dots and spaces
         for (int i = filenameChars.length - 1; i >= 0; --i) {
@@ -71,7 +76,7 @@ public class FileNameTools {
             else
                 break;
         }
-//        System.err.println("filenameChars after: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars after: " + new String(filenameChars));
 
         filename = new String(filenameChars);
 
@@ -123,7 +128,7 @@ public class FileNameTools {
     }
 
     public static String tryCreate(String filename, File outDir, boolean asDirectory) {
-        final String originalFilename = filename;
+        String originalFilename = filename;
         File f = new File(outDir, filename);
 
         // Deal with the situation where we already have a file by that name.
@@ -149,9 +154,9 @@ public class FileNameTools {
                 }
             }
         } catch (IOException e) {
-            System.err.println("IOException while trying to create \"" + f.getAbsolutePath() +
+            logger.log(Level.DEBUG, "IOException while trying to create \"" + f.getAbsolutePath() +
                     "\" as " + (asDirectory ? "directory" : "file") + ":");
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         return null;
     }
@@ -164,20 +169,10 @@ public class FileNameTools {
         if (c < 32)
             return true;
 
-        switch (c) {
-            case '/':
-            case '\\':
-            case ':':
-            case '*':
-            case '?':
-            case '"':
-            case '<':
-            case '>':
-            case '|':
-                return true;
-            default:
-                return false;
-        }
+        return switch (c) {
+            case '/', '\\', ':', '*', '?', '"', '<', '>', '|' -> true;
+            default -> false;
+        };
     }
 
     public static boolean isReservedWindowsFilename(String filename) {
@@ -199,7 +194,7 @@ public class FileNameTools {
     }
 
     private static HashSet<String> buildReservedWindowsFilenames() {
-        HashSet<String> result = new HashSet<String>();
+        HashSet<String> result = new HashSet<>();
         /*
          * <http://threebit.net/mail-archive/carbon-dev/msg01314.html>
          *

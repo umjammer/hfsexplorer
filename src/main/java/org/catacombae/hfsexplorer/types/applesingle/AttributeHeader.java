@@ -56,14 +56,14 @@ public class AttributeHeader implements StaticStruct, PrintableStruct {
     /** The appropriate value for the 'magic' field ("ATTR" in ASCII). */
     public static final int MAGIC = 0x41545452;
 
-    private int magic;
-    private int debugTag;
-    private int totalEnd;
-    private int dataStart;
-    private int dataLength;
+    private final int magic;
+    private final int debugTag;
+    private final int totalEnd;
+    private final int dataStart;
+    private final int dataLength;
     private final byte[] reserved = new byte[1 * 12];
-    private short flags;
-    private short numAttrs;
+    private final short flags;
+    private final short numAttrs;
 
     public AttributeHeader(byte[] data, int offset) {
         this.magic = Util.readIntBE(data, offset + 0);
@@ -92,6 +92,7 @@ public class AttributeHeader implements StaticStruct, PrintableStruct {
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return STRUCTSIZE;
     }
@@ -169,6 +170,7 @@ public class AttributeHeader implements StaticStruct, PrintableStruct {
         return this.numAttrs;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " magic: " + getMagic());
         ps.println(prefix + " debugTag: " + getDebugTag());
@@ -187,11 +189,13 @@ public class AttributeHeader implements StaticStruct, PrintableStruct {
         ps.println(prefix + " numAttrs: " + getNumAttrs());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "AttributeHeader:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -199,7 +203,7 @@ public class AttributeHeader implements StaticStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.magic);
         offset += 4;

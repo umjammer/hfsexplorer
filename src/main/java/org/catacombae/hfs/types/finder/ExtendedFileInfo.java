@@ -89,6 +89,7 @@ public class ExtendedFileInfo extends CommonExtendedFinderInfo
         super.printFields(ps, prefix);
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ExtendedFileInfo:");
         printFields(ps, prefix);

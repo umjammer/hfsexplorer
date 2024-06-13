@@ -17,9 +17,6 @@
 
 package org.catacombae.hfsexplorer.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import org.catacombae.csjc.structelements.FlagField;
 
 
@@ -29,15 +26,11 @@ import org.catacombae.csjc.structelements.FlagField;
 public class FlagViewPanel extends javax.swing.JPanel {
 
     /** Creates new form FlagViewPanel */
-    public FlagViewPanel(String label, final FlagField data) {
+    public FlagViewPanel(String label, FlagField data) {
         initComponents();
 
         if (false) {
-            flagBox.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                    flagBox.setSelected(data.getValueAsBoolean());
-                }
-            });
+            flagBox.addActionListener(e -> flagBox.setSelected(data.getValueAsBoolean()));
         } else
             flagBox.setEnabled(false);
 

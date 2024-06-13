@@ -46,9 +46,9 @@ public class ResourceName implements DynamicStruct, PrintableStruct {
     private final byte nameLength;
     private final byte[] name;
 
-    public ResourceName(SynchronizedReadableRandomAccess stream, final long offset) {
+    public ResourceName(SynchronizedReadableRandomAccess stream, long offset) {
 
-        final int nameLengthInt = stream.readFrom(offset);
+        int nameLengthInt = stream.readFrom(offset);
         if (nameLengthInt == -1) {
             throw new RuntimeException("Reached end of file while reading " +
                     "name length (1 byte) from offset " + offset + ".");
@@ -59,7 +59,7 @@ public class ResourceName implements DynamicStruct, PrintableStruct {
         nameLength = (byte) nameLengthInt;
 
         name = new byte[Util.unsign(nameLength)];
-        final int bytesRead = stream.readFrom(offset + 1, name);
+        int bytesRead = stream.readFrom(offset + 1, name);
         if (bytesRead != name.length) {
             throw new RuntimeException((bytesRead > 0 ? "Partial read" : "Could not read") + " " +
                             "from offset " + (offset + 1) + " while reading name " +
@@ -81,6 +81,7 @@ public class ResourceName implements DynamicStruct, PrintableStruct {
         return nameLength;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " nameLength: " + getNameLength());
         try {
@@ -90,11 +91,13 @@ public class ResourceName implements DynamicStruct, PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ResourceName:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         int offset = 0;
@@ -105,10 +108,12 @@ public class ResourceName implements DynamicStruct, PrintableStruct {
         return result;
     }
 
+    @Override
     public int maxSize() {
         return 255;
     }
 
+    @Override
     public int occupiedSize() {
         return 1 + name.length;
     }

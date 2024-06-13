@@ -166,16 +166,16 @@ public abstract class FileSystemHandlerFactory {
      */
     protected static CustomAttribute createCustomAttribute(AttributeType iType,
                                                            String iName, String iDescription, Object iDefaultValue) {
-//        System.err.println("createCustomAttribute(" + iType + ", " + iName + ", " + iDescription + ", " + iDefaultValue + "); invoked");
+//        logger.log(Level.DEBUG, "createCustomAttribute(" + iType + ", " + iName + ", " + iDescription + ", " + iDefaultValue + "); invoked");
         CustomAttribute createdCustomAttribute = new CustomAttribute(iType, iName, iDescription, iDefaultValue);
-//        System.err.println("Returning a custom attribute: " + createdCustomAttribute);
+//        logger.log(Level.DEBUG, "Returning a custom attribute: " + createdCustomAttribute);
         return createdCustomAttribute;
     }
 
-    public class Attributes {
+    public static class Attributes {
 
-        private final Map<StandardAttribute, Object> standardCreateAttributeMap = new HashMap<StandardAttribute, Object>();
-        private final Map<CustomAttribute, Object> customCreateAttributeMap = new HashMap<CustomAttribute, Object>();
+        private final Map<StandardAttribute, Object> standardCreateAttributeMap = new HashMap<>();
+        private final Map<CustomAttribute, Object> customCreateAttributeMap = new HashMap<>();
 
         private Attributes(StandardAttribute[] iSupportedStandardAttributes, CustomAttribute[] iSupportedCustomAttributes) {
             // Add the supported standard attributes to the list
@@ -237,7 +237,7 @@ public abstract class FileSystemHandlerFactory {
             setAttribute(attr, value, customCreateAttributeMap.get(attr));
         }
 
-        private final Boolean getBooleanAttribute(AttributeType type, Object value) {
+        private static Boolean getBooleanAttribute(AttributeType type, Object value) {
             if (type != AttributeType.BOOLEAN) {
                 throw new IllegalArgumentException("Tried to get BOOLEAN value from " + type + " type!");
             } else if (value == null) {
@@ -252,7 +252,7 @@ public abstract class FileSystemHandlerFactory {
             }
         }
 
-        private final Long getIntegerAttribute(AttributeType type, Object value) {
+        private static Long getIntegerAttribute(AttributeType type, Object value) {
             if (type != AttributeType.INTEGER) {
                 throw new IllegalArgumentException("Tried to get INTEGER value from " + type + " type!");
             } else if (value == null) {
@@ -269,7 +269,7 @@ public abstract class FileSystemHandlerFactory {
             }
         }
 
-        private final String getStringAttribute(AttributeType type, Object value) {
+        private static String getStringAttribute(AttributeType type, Object value) {
             if (type != AttributeType.STRING) {
                 throw new IllegalArgumentException("Tried to get STRING value from " + type + " type!");
             } else if (value == null) {
@@ -310,14 +310,14 @@ public abstract class FileSystemHandlerFactory {
      * This enum defines the valid attribute types that can be used to create
      * new custom attributes or change existing standard or custom attributes.
      */
-    public static enum AttributeType {
+    public enum AttributeType {
         BOOLEAN(Boolean.class),
         INTEGER(Byte.class, Short.class, Integer.class, Long.class),
         STRING(String.class);
 
-        private final Class[] valueSuperClasses;
+        private final Class<?>[] valueSuperClasses;
 
-        private AttributeType(Class... iValueSuperClasses) {
+        AttributeType(Class<?>... iValueSuperClasses) {
             this.valueSuperClasses = iValueSuperClasses;
         }
 
@@ -332,7 +332,7 @@ public abstract class FileSystemHandlerFactory {
          * @return whether or not the supplied value is valid for this type.
          */
         public boolean isValidValue(Object value) {
-            for (Class c : valueSuperClasses)
+            for (Class<?> c : valueSuperClasses)
                 if (c.isInstance(value))
                     return true;
             return false;
@@ -357,7 +357,7 @@ public abstract class FileSystemHandlerFactory {
         private final AttributeType type;
         private Object defaultValue;
 
-        private StandardAttribute(AttributeType iType, Object iDefaultValue) {
+        StandardAttribute(AttributeType iType, Object iDefaultValue) {
             this.type = iType;
 
             setDefaultValue(iDefaultValue);

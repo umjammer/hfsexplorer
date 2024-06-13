@@ -103,27 +103,27 @@ public abstract class AllocationFile {
      * @param oFreeBlocks (optional) variable where the algorithm stores the free block count.
      * @param oUsedBlocks (optional) variable where the algorithm stores the used block count.
      * @param stop        (optional) variable which can be set to abort the block counting process. Must
-     *                    initally be set to <code>false</code> or no work will be done whatsoever.
+     *                    initially be set to <code>false</code> or no work will be done whatsoever.
      * @return the total number of allocation blocks on the volume.
      */
     public long countBlocks(ObjectContainer<Long> oFreeBlocks, ObjectContainer<Long> oUsedBlocks, ObjectContainer<Boolean> stop) {
         CommonHFSVolumeHeader vh = parentView.getVolumeHeader();
         byte[] currentBlock = new byte[128 * 1024];
-        final long totalBlocks = vh.getTotalBlocks();
+        long totalBlocks = vh.getTotalBlocks();
         long blockCount = 0;
 //        long allocatedBlockCount = 0;
         long usedBlockCount = 0;
 //        int blockValue = (usedBlocks?0x1:0x0);
         if (stop == null)
-            stop = new ObjectContainer<Boolean>(false);
+            stop = new ObjectContainer<>(false);
 
-//        System.err.println("countBlocks(): totalBlocks=" + totalBlocks);
-//        System.err.println("countBlocks(): allocationFileStream.length()=" + allocationFileStream.length());
+//        logger.log(Level.DEBUG, "countBlocks(): totalBlocks=" + totalBlocks);
+//        logger.log(Level.DEBUG, "countBlocks(): allocationFileStream.length()=" + allocationFileStream.length());
         allocationFileStream.seek(0);
         while (blockCount < totalBlocks && !stop.o) {
-//            System.err.println("countBlocks():   blockCount=" + blockCount);
-//            System.err.println("countBlocks():   allocationFileStream.getFilePointer()=" + allocationFileStream.getFilePointer());
-//            System.err.println("countBlocks():   =" + );
+//            logger.log(Level.DEBUG, "countBlocks():   blockCount=" + blockCount);
+//            logger.log(Level.DEBUG, "countBlocks():   allocationFileStream.getFilePointer()=" + allocationFileStream.getFilePointer());
+//            logger.log(Level.DEBUG, "countBlocks():   =" + );
 
 //            System.out.println("countBlocks():   Reading a blob (" + currentBlock.length + " bytes)...");
             int bytesRead = allocationFileStream.read(currentBlock);
@@ -181,14 +181,14 @@ public abstract class AllocationFile {
      * @return an array of descriptors of the extents where the data region
      * can be stored on disk.
      */
-    public synchronized CommonHFSExtentDescriptor[] findFreeSpace(final long fileSize) {
+    public synchronized CommonHFSExtentDescriptor[] findFreeSpace(long fileSize) {
         if (fileSize < 0)
             throw new IllegalArgumentException("Negative file size: " + fileSize);
 
         CommonHFSVolumeHeader vh = parentView.getVolumeHeader();
-        final long blockSize = vh.getAllocationBlockSize();
-        final long totalBlocks = vh.getTotalBlocks();
-        final long blocksToAllocate = fileSize / blockSize + (fileSize % blockSize != 0 ? 1 : 0);
+        long blockSize = vh.getAllocationBlockSize();
+        long totalBlocks = vh.getTotalBlocks();
+        long blocksToAllocate = fileSize / blockSize + (fileSize % blockSize != 0 ? 1 : 0);
         long blocksLeft = blocksToAllocate;
 
         //
@@ -200,7 +200,7 @@ public abstract class AllocationFile {
         // Loop through the entire allocation file
         ByteRegion closestMatchAbove = new ByteRegion();
         ByteRegion closestMatchBelow = new ByteRegion();
-        LinkedList<ByteRegion> allocations = new LinkedList<ByteRegion>();
+        LinkedList<ByteRegion> allocations = new LinkedList<>();
 
         while (blocksLeft > 0) {
             if (closestMatchAbove == null)
@@ -287,7 +287,7 @@ public abstract class AllocationFile {
         allocationFileStream.close();
     }
 
-    private class ByteRegion {
+    private static class ByteRegion {
 
         public long offset;
         public long length;

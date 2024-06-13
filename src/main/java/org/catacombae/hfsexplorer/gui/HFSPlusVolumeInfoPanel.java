@@ -50,7 +50,7 @@ public class HFSPlusVolumeInfoPanel extends javax.swing.JPanel {
      * @param vh the structure containing the values to set.
      */
     public final void setFields(HFSPlusVolumeHeader vh) {
-        signatureField.setText("" + Util.toASCIIString(vh.getSignature()));
+        signatureField.setText(Util.toASCIIString(vh.getSignature()));
         versionField.setText("" + vh.getVersion());
 
         hardwareLockBox.setSelected(vh.getAttributeVolumeHardwareLock());
@@ -63,22 +63,21 @@ public class HFSPlusVolumeInfoPanel extends javax.swing.JPanel {
         journaledBox.setSelected(vh.getAttributeVolumeJournaled());
         softwareLockBox.setSelected(vh.getAttributeVolumeSoftwareLock());
 
-        lastMountedVersionField.setText("" +
-                Util.toASCIIString(vh.getLastMountedVersion()));
+        lastMountedVersionField.setText(Util.toASCIIString(vh.getLastMountedVersion()));
         journalInfoBlockField.setText("0x" +
                 Util.toHexStringBE(vh.getJournalInfoBlock()));
-        createDateField.setText("" + dti.format(vh.getCreateDateAsDate()));
-        modifyDateField.setText("" + dti.format(vh.getModifyDateAsDate()));
-        backupDateField.setText("" + dti.format(vh.getBackupDateAsDate()));
-        checkedDateField.setText("" + dti.format(vh.getCheckedDateAsDate()));
+        createDateField.setText(dti.format(vh.getCreateDateAsDate()));
+        modifyDateField.setText(dti.format(vh.getModifyDateAsDate()));
+        backupDateField.setText(dti.format(vh.getBackupDateAsDate()));
+        checkedDateField.setText(dti.format(vh.getCheckedDateAsDate()));
         fileCountField.setText("" + vh.getFileCount());
         folderCountField.setText("" + vh.getFolderCount());
-        blockSizeField.setText("" + vh.getBlockSize() + " bytes");
+        blockSizeField.setText(vh.getBlockSize() + " bytes");
         totalBlocksField.setText("" + vh.getTotalBlocks());
         freeBlocksField.setText("" + vh.getFreeBlocks());
         nextAllocationField.setText("" + vh.getNextAllocation());
-        rsrcClumpSizeField.setText("" + vh.getRsrcClumpSize() + " bytes");
-        dataClumpSizeField.setText("" + vh.getDataClumpSize() + " bytes");
+        rsrcClumpSizeField.setText(vh.getRsrcClumpSize() + " bytes");
+        dataClumpSizeField.setText(vh.getDataClumpSize() + " bytes");
         nextCatalogIDField.setText("" + vh.getNextCatalogID());
         writeCountField.setText("" + vh.getWriteCount());
         encodingsBitmapField.setText("0x" +

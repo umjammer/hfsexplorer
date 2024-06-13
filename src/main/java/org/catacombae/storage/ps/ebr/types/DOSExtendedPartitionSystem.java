@@ -36,11 +36,11 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
 
     public DOSExtendedPartitionSystem(ReadableRandomAccessStream llf, long extendedPartitionOffset,
                                       long extendedPartitionLength, int sectorSize) {
-//        System.err.println("creating a new DOSExtendedPartitionSystem with:");
-//        System.err.println("  extendedPartitionOffset=" + extendedPartitionOffset);
-//        System.err.println("  extendedPartitionLength=" + extendedPartitionLength);
-//        System.err.println("  sectorSize=" + sectorSize);
-        LinkedList<ExtendedBootRecord> recordList = new LinkedList<ExtendedBootRecord>();
+//        logger.log(Level.TRACE, "creating a new DOSExtendedPartitionSystem with:");
+//        logger.log(Level.TRACE, "  extendedPartitionOffset=" + extendedPartitionOffset);
+//        logger.log(Level.TRACE, "  extendedPartitionLength=" + extendedPartitionLength);
+//        logger.log(Level.TRACE, "  sectorSize=" + sectorSize);
+        LinkedList<ExtendedBootRecord> recordList = new LinkedList<>();
         byte[] block = new byte[sectorSize];
         long seekLocation = extendedPartitionOffset;
         if (seekLocation > extendedPartitionOffset + extendedPartitionLength)
@@ -50,7 +50,7 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
         ExtendedBootRecord ebr = new ExtendedBootRecord(block, 0, extendedPartitionOffset, seekLocation, sectorSize);
         recordList.addLast(ebr);
         int i = 0;
-//        System.err.println("ebr[" + i++ + "]:");
+//        logger.log(Level.TRACE, "ebr[" + i++ + "]:");
 //        ebr.print(System.err, " ");
         while (ebr.getSecondEntry().getLBAPartitionLength() != 0 || ebr.getSecondEntry().getLBAFirstSector() != 0) {
             seekLocation = ebr.getSecondEntry().getStartOffset();
@@ -60,13 +60,14 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
             llf.readFully(block);
             ebr = new ExtendedBootRecord(block, 0, extendedPartitionOffset, seekLocation, sectorSize);
             recordList.addLast(ebr);
-//            System.err.println("ebr[" + i++ + "]:");
+//            logger.log(Level.TRACE, "ebr[" + i++ + "]:");
 //            ebr.print(System.err, " ");
         }
 
-        this.extendedBootRecords = recordList.toArray(new ExtendedBootRecord[recordList.size()]);
+        this.extendedBootRecords = recordList.toArray(ExtendedBootRecord[]::new);
     }
 
+    @Override
     public boolean isValid() {
         for (ExtendedBootRecord ebr : extendedBootRecords) {
             if (!ebr.isValid())
@@ -75,19 +76,23 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
         return true;
     }
 
+    @Override
     public int getPartitionCount() {
         return extendedBootRecords.length;
     }
 
+    @Override
     public int getUsedPartitionCount() {
         // There shouldn't be any superfluous entries as it would be meaningless
         return getPartitionCount();
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
         return extendedBootRecords[index].getFirstEntry();
     }
 
+    @Override
     public Partition[] getPartitionEntries() {
         Partition[] result = new Partition[extendedBootRecords.length];
         for (int i = 0; i < result.length; ++i) {
@@ -96,18 +101,22 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
         return result;
     }
 
+    @Override
     public Partition[] getUsedPartitionEntries() {
         return getPartitionEntries();
     }
 
+    @Override
     public String getLongName() {
         return "DOS Extended";
     }
 
+    @Override
     public String getShortName() {
         return "EBR";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " extendedBootRecords:");
         for (int i = 0; i < extendedBootRecords.length; ++i) {
@@ -116,6 +125,7 @@ public class DOSExtendedPartitionSystem implements PartitionSystem {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + this.getClass().getSimpleName() + ":");
         printFields(ps, prefix);

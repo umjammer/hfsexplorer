@@ -37,61 +37,61 @@ import org.catacombae.util.Util.Pair;
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class ExtentsInfoPanel
-        extends BTreeInfoPanel<CommonHFSExtentLeafRecord, ExtentsOverflowFile> {
+public class ExtentsInfoPanel extends BTreeInfoPanel<CommonHFSExtentLeafRecord, ExtentsOverflowFile> {
 
     /** Creates new form CatalogInfoPanel */
-    public ExtentsInfoPanel(final HFSVolume fsView) {
+    public ExtentsInfoPanel(HFSVolume fsView) {
         super(fsView.getExtentsOverflowFile());
     }
 
+    @Override
     protected String getRootNodeName() {
         return "Extents overflow root";
     }
 
+    @Override
     protected String getHeaderText() {
         return "View of the extent overflow file's B*-tree:";
     }
 
+    @Override
     protected void createCustomPanels(List<Pair<JPanel, String>> panelsList) {
-        /* No custom panels are implemented for the extents overflow file. */
+        // No custom panels are implemented for the extents overflow file.
     }
 
-    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
+    @Override
+    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode<?> node,
                               ExtentsOverflowFile extentsOverflowFile) {
         if (node instanceof CommonHFSExtentIndexNode) {
             List<CommonBTIndexRecord<CommonHFSExtentKey>> recs = ((CommonHFSExtentIndexNode) node).getBTRecords();
             for (CommonBTIndexRecord<CommonHFSExtentKey> rec : recs) {
 
-                final long nodeNumber = rec.getIndex();
-                final CommonBTNode curNode =
-                        extentsOverflowFile.getNode(nodeNumber);
+                long nodeNumber = rec.getIndex();
+                CommonBTNode<?> curNode = extentsOverflowFile.getNode(nodeNumber);
                 CommonHFSExtentKey key = rec.getKey();
                 dmtn.add(new NoLeafMutableTreeNode(new BTNodeStorage(nodeNumber,
                         curNode, key.getFileID().toLong() + ":" +
                         key.getForkType() + ":" + key.getStartBlock())));
             }
-        } else if (node instanceof CommonHFSExtentLeafNode) {
-            CommonHFSExtentLeafNode leafNode = (CommonHFSExtentLeafNode) node;
+        } else if (node instanceof CommonHFSExtentLeafNode leafNode) {
             CommonHFSExtentLeafRecord[] recs = leafNode.getLeafRecords();
             int[] recordOffsets = leafNode.getRecordOffsets();
 
             for (int i = 0; i < recs.length; ++i) {
-                final CommonHFSExtentLeafRecord rec = recs[i];
+                CommonHFSExtentLeafRecord rec = recs[i];
                 CommonHFSExtentKey key = rec.getKey();
                 dmtn.add(new DefaultMutableTreeNode(new BTLeafStorage(i,
-                        recordOffsets[i],
-                        recordOffsets[i + 1] - recordOffsets[i], rec,
-                        key.getFileID().toLong() + ":" + key.getForkType() +
-                                ":" + key.getStartBlock())));
+                        recordOffsets[i], recordOffsets[i + 1] - recordOffsets[i], rec,
+                        key.getFileID().toLong() + ":" + key.getForkType() + ":" + key.getStartBlock())));
             }
         } else
             throw new RuntimeException("Invalid node type in tree: " + node);
     }
 
+    @Override
     protected boolean handleLeafRecord(BTLeafStorage leafStorage) {
-        /* No custom panels are implemented for the extents overflow file, so no
-         * special handling is needed for leaf records. */
+        // No custom panels are implemented for the extents overflow file, so no
+        // special handling is needed for leaf records.
         return false;
     }
 }

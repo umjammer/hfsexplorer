@@ -45,7 +45,6 @@ import org.catacombae.storage.io.ReadableStreamDataLocator;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.util.Util;
 import org.catacombae.util.Util.Pair;
-import vavi.util.win32.WAVE.data;
 
 
 /**
@@ -96,8 +95,8 @@ outer:
         }
 
         FileSystemHandler fsHandler = fact.createHandler(inputDataLocator);
-        final HFSVolume vol;
-        final boolean isHfsPlus;
+        HFSVolume vol;
+        boolean isHfsPlus;
         if (fsHandler instanceof HFSFileSystemHandler) {
             vol = ((HFSFileSystemHandler) fsHandler).getFSView();
             isHfsPlus = false;
@@ -113,15 +112,15 @@ outer:
 
         // HFS assumes 512 byte sectors, regardless of the actual physical
         // sector size.
-        final CommonHFSVolumeHeader volumeHeader = vol.getVolumeHeader();
+        CommonHFSVolumeHeader volumeHeader = vol.getVolumeHeader();
         final short sectorSize = 512;
-        final long allocationBlockSize = volumeHeader.getAllocationBlockSize();
-        final long sectorsPerAllocationBlock = allocationBlockSize / sectorSize;
-        final long allocationBlockStart = volumeHeader.getAllocationBlockStart();
-        final long allocationBlockCount = volumeHeader.getTotalBlocks();
-        SortedSet<Long> inUseSectors = new TreeSet<Long>();
-        final ReadableRandomAccessStream fsStream = vol.createFSStream();
-        final byte[] buffer = new byte[sectorSize];
+        long allocationBlockSize = volumeHeader.getAllocationBlockSize();
+        long sectorsPerAllocationBlock = allocationBlockSize / sectorSize;
+        long allocationBlockStart = volumeHeader.getAllocationBlockStart();
+        long allocationBlockCount = volumeHeader.getTotalBlocks();
+        SortedSet<Long> inUseSectors = new TreeSet<>();
+        ReadableRandomAccessStream fsStream = vol.createFSStream();
+        byte[] buffer = new byte[sectorSize];
 
         if ((allocationBlockSize % sectorSize) != 0) {
             throw new RuntimeException("Uneven block size: " + allocationBlockSize);
@@ -185,33 +184,33 @@ outer:
         }
 
         // Now proceed to gather the allocations connected to system files.
-        final LinkedList<Pair<CommonHFSForkData, ReservedID>> metadataForks = new LinkedList<Pair<CommonHFSForkData, ReservedID>>();
-        metadataForks.add(new Pair<CommonHFSForkData, ReservedID>(volumeHeader.getCatalogFile(), ReservedID.CATALOG_FILE));
-        metadataForks.add(new Pair<CommonHFSForkData, ReservedID>(volumeHeader.getExtentsOverflowFile(), ReservedID.EXTENTS_FILE));
-        metadataForks.add(new Pair<CommonHFSForkData, ReservedID>(volumeHeader.getAllocationFile(), ReservedID.ALLOCATION_FILE));
-        metadataForks.add(new Pair<CommonHFSForkData, ReservedID>(volumeHeader.getAttributesFile(), ReservedID.ATTRIBUTES_FILE));
-        metadataForks.add(new Pair<CommonHFSForkData, ReservedID>(volumeHeader.getStartupFile(), ReservedID.STARTUP_FILE));
+        LinkedList<Pair<CommonHFSForkData, ReservedID>> metadataForks = new LinkedList<>();
+        metadataForks.add(new Pair<>(volumeHeader.getCatalogFile(), ReservedID.CATALOG_FILE));
+        metadataForks.add(new Pair<>(volumeHeader.getExtentsOverflowFile(), ReservedID.EXTENTS_FILE));
+        metadataForks.add(new Pair<>(volumeHeader.getAllocationFile(), ReservedID.ALLOCATION_FILE));
+        metadataForks.add(new Pair<>(volumeHeader.getAttributesFile(), ReservedID.ATTRIBUTES_FILE));
+        metadataForks.add(new Pair<>(volumeHeader.getStartupFile(), ReservedID.STARTUP_FILE));
 
         for (Pair<CommonHFSForkData, ReservedID> curFork : metadataForks) {
-            final CommonHFSForkData curForkData = curFork.getA();
-            final ReservedID curId = curFork.getB();
+            CommonHFSForkData curForkData = curFork.getA();
+            ReservedID curId = curFork.getB();
 
             if (curForkData == null) {
                 continue;
             }
 
-            final CommonHFSCatalogNodeID nodeId;
+            CommonHFSCatalogNodeID nodeId;
             if (isHfsPlus) {
                 nodeId = CommonHFSCatalogNodeID.getHFSPlusReservedID(curId);
             } else {
                 nodeId = CommonHFSCatalogNodeID.getHFSReservedID(curId);
             }
 
-            final CommonHFSExtentDescriptor[] allExtents =
+            CommonHFSExtentDescriptor[] allExtents =
                     vol.getExtentsOverflowFile().getAllDataExtentDescriptors(nodeId, curForkData);
             for (CommonHFSExtentDescriptor curExtent : allExtents) {
-                final long startSector = allocationBlockStart + curExtent.getStartBlock() * sectorsPerAllocationBlock;
-                final long endSector = startSector + curExtent.getBlockCount() * sectorsPerAllocationBlock;
+                long startSector = allocationBlockStart + curExtent.getStartBlock() * sectorsPerAllocationBlock;
+                long endSector = startSector + curExtent.getBlockCount() * sectorsPerAllocationBlock;
                 for (long i = startSector; i < endSector; ++i) {
                     inUseSectors.add(i);
                 }
@@ -227,19 +226,19 @@ outer:
         //   instance compressed files rely on extended attributes.)
 
         // Mark all the components of the journal 'in use'.
-        final Journal journal = vol.getJournal();
+        Journal journal = vol.getJournal();
         if (isHfsPlus && journal != null) {
             // Mark journal info block 'in use'.
-            final long journalInfoBlockSector = allocationBlockStart +
+            long journalInfoBlockSector = allocationBlockStart +
                     ((CommonHFSVolumeHeader.HFSPlusImplementation)
                             volumeHeader).getJournalInfoBlock() * sectorsPerAllocationBlock;
             inUseSectors.add(journalInfoBlockSector);
 
-            final JournalInfoBlock jib = vol.getJournal().getJournalInfoBlock();
+            JournalInfoBlock jib = vol.getJournal().getJournalInfoBlock();
 
             // Mark journal 'in use'.
-            final long journalStartSector = jib.getRawOffset() / sectorSize;
-            final long journalLastSector = (jib.getRawOffset() + jib.getRawSize() - 1) / sectorSize;
+            long journalStartSector = jib.getRawOffset() / sectorSize;
+            long journalLastSector = (jib.getRawOffset() + jib.getRawSize() - 1) / sectorSize;
 
             for (long i = journalStartSector; i <= journalLastSector; ++i) {
                 inUseSectors.add(i);
@@ -249,11 +248,11 @@ outer:
         // TODO: Mark all symlink targets 'in use'.
 
         // We have gathered all allocations. Time to dump the data.
-        final byte[] zeroBuffer = new byte[sectorSize];
+        byte[] zeroBuffer = new byte[sectorSize];
 
         Util.zero(zeroBuffer);
         for (long i = 0; i < sectorCount; ++i) {
-            final byte[] curBuffer;
+            byte[] curBuffer;
 
             if (inUseSectors.contains(i)) {
                 fsStream.seek(i * sectorSize);

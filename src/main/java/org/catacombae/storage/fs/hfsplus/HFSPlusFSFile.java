@@ -17,7 +17,8 @@
 
 package org.catacombae.storage.fs.hfsplus;
 
-import java.util.Iterator;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,8 +30,8 @@ import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.fs.FSFork;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSFile;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandler;
-import org.catacombae.util.Util;
-import vavi.util.win32.WAVE.data;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -38,12 +39,7 @@ import vavi.util.win32.WAVE.data;
  */
 public class HFSPlusFSFile extends HFSCommonFSFile {
 
-    private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
-            "org.catacombae.debug",
-            "org.catacombae.storage.debug",
-            "org.catacombae.storage.fs.debug",
-            "org.catacombae.storage.fs.hfsplus.debug",
-            "org.catacombae.storage.fs.hfsplus." + HFSPlusFSFile.class.getSimpleName() + ".debug");
+    private static final Logger logger = getLogger(HFSPlusFSFile.class.getName());
 
     private FSFork dataFork = null;
 
@@ -59,36 +55,28 @@ public class HFSPlusFSFile extends HFSCommonFSFile {
 
     @Override
     protected void fillAttributeForks(List<FSFork> forkList) {
-        LinkedList<FSFork> attributeForkList = new LinkedList<FSFork>();
+        LinkedList<FSFork> attributeForkList = new LinkedList<>();
         super.fillAttributeForks(attributeForkList);
 
-        final boolean isCompressed = getDataFork() instanceof HFSPlusCompressedDataFork;
+        boolean isCompressed = getDataFork() instanceof HFSPlusCompressedDataFork;
 
-        Iterator<FSFork> it = attributeForkList.iterator();
-        while (it.hasNext()) {
-            FSFork curFork = it.next();
-            if (isCompressed && curFork.hasXattrName() && curFork.getXattrName().equals("com.apple.decmpfs")) {
-                it.remove();
-            }
-        }
+        attributeForkList.removeIf(curFork -> isCompressed && curFork.hasXattrName() && curFork.getXattrName().equals("com.apple.decmpfs"));
 
         forkList.addAll(attributeForkList);
     }
 
     @Override
     protected FSFork getDataFork() {
-        if (DEBUG) {
-            System.err.println("getDataFork(): Entering...");
-        }
+        logger.log(Level.DEBUG, "getDataFork(): Entering...");
 
         if (dataFork == null) {
-            final CommonHFSCatalogFile catalogFile = fileRecord.getData();
+            CommonHFSCatalogFile catalogFile = fileRecord.getData();
             if (!catalogFile.getPermissions().getOwnerCompressedFlag()) {
                 // Definitely not compressed since the compressed flag is not
                 // set.
                 dataFork = super.getDataFork();
             } else {
-                LinkedList<FSFork> attributeForkList = new LinkedList<FSFork>();
+                LinkedList<FSFork> attributeForkList = new LinkedList<>();
 
                 // Note: Need to call super's implementation because this class
                 //       overrides fillAttributeForks to call back into
@@ -97,10 +85,8 @@ public class HFSPlusFSFile extends HFSCommonFSFile {
                 super.fillAttributeForks(attributeForkList);
 
                 for (FSFork f : attributeForkList) {
-                    if (DEBUG) {
-                        System.err.println("getDataFork: Checking out attribute fork " + f + (f.hasXattrName() ?
-                                " with xattr name \"" + f.getXattrName() + "\"" : "") + ".");
-                    }
+                    logger.log(Level.DEBUG, "getDataFork: Checking out attribute fork " + f + (f.hasXattrName() ?
+                            " with xattr name \"" + f.getXattrName() + "\"" : "") + ".");
 
                     if (f.hasXattrName() && f.getXattrName().equals("com.apple.decmpfs")) {
                         byte[] headerData = new byte[DecmpfsHeader.STRUCTSIZE];
@@ -159,10 +145,9 @@ public class HFSPlusFSFile extends HFSCommonFSFile {
 
     @Override
     protected FSFork getResourceFork() {
-        final FSFork f = getDataFork();
+        FSFork f = getDataFork();
 
-        if (f instanceof HFSPlusCompressedDataFork) {
-            final HFSPlusCompressedDataFork compressedFork = (HFSPlusCompressedDataFork) f;
+        if (f instanceof HFSPlusCompressedDataFork compressedFork) {
 
             if (compressedFork.isUsingResourceFork()) {
                 // Hide compressed data in resource fork. If there are other

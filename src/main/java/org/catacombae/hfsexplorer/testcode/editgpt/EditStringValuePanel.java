@@ -52,11 +52,7 @@ public class EditStringValuePanel extends javax.swing.JPanel {
 
         lockedCheckbox.setSelected(true);
         lockedCheckbox.setText("Lock");
-        lockedCheckbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                lockedCheckboxActionPerformed(evt);
-            }
-        });
+        lockedCheckbox.addActionListener(this::lockedCheckboxActionPerformed);
 
         descriptionLabel.setText("jLabel1");
 

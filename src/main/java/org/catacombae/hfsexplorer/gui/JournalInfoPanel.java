@@ -21,6 +21,9 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import java.nio.charset.StandardCharsets;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -35,20 +38,24 @@ import org.catacombae.hfs.types.hfsplus.JournalHeader;
 import org.catacombae.hfs.types.hfsplus.JournalInfoBlock;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class JournalInfoPanel extends JPanel {
 
-    private JTabbedPane tabbedPane;
-    private JPanel contentsPanel;
-    private JournalInfoBlockPanel infoBlockPanel;
+    private static final Logger logger = getLogger(JournalInfoPanel.class.getName());
+
+    private final JTabbedPane tabbedPane;
+    private final JPanel contentsPanel;
+    private final JournalInfoBlockPanel infoBlockPanel;
     private StructViewPanel journalHeaderPanel;
     private JComponent journalContentsPanel;
-    private JPanel noJournalPanel;
-    private JLabel noJournalLabel;
-    private CardLayout layout;
+    private final JPanel noJournalPanel;
+    private final JLabel noJournalLabel;
+    private final CardLayout layout;
 
     public JournalInfoPanel(Journal journal) {
         tabbedPane = new JTabbedPane();
@@ -73,7 +80,7 @@ public class JournalInfoPanel extends JPanel {
         add(tabbedPane, "B");
         layout.show(this, "A");
 
-        //pack();
+//        pack();
         _setFields(journal);
     }
 
@@ -90,7 +97,7 @@ public class JournalInfoPanel extends JPanel {
 
         infoBlockPanel.setFields(infoBlock);
 
-        final JournalHeader journalHeader = journal.getJournalHeader();
+        JournalHeader journalHeader = journal.getJournalHeader();
         if (journalHeader == null) {
             if (infoBlock.getFlagJournalNeedInit()) {
                 noJournalLabel.setText("Journal not initialized.");
@@ -121,10 +128,10 @@ public class JournalInfoPanel extends JPanel {
         try {
             Transaction[] transactions = journal.getPendingTransactions();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PrintStream ps = new PrintStream(baos, false, "UTF-8");
+            PrintStream ps = new PrintStream(baos, false, StandardCharsets.UTF_8);
 
             for (int i = 0; i < transactions.length; ++i) {
-                final Transaction t = transactions[i];
+                Transaction t = transactions[i];
                 ps.println("Transaction " + i + ":");
                 for (int j = 0; j < t.blockLists.length; ++j) {
                     ps.println(" blockLists[" + j + "]:");
@@ -136,7 +143,7 @@ public class JournalInfoPanel extends JPanel {
             ps.close();
 
             JTextArea transactionsTextArea =
-                    new JTextArea(new String(baos.toByteArray(), "UTF-8"));
+                    new JTextArea(baos.toString(StandardCharsets.UTF_8));
 
             baos.close();
 
@@ -145,7 +152,7 @@ public class JournalInfoPanel extends JPanel {
             tabbedPane.insertTab("Transactions", null, journalContentsPanel,
                     "The journal's pending transactions.", 2);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         layout.show(this, "B");

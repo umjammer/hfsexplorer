@@ -18,22 +18,34 @@
 package org.catacombae.hfsexplorer.gui;
 
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Set;
-import javax.swing.JOptionPane;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.catacombae.io.InputStreamReadable;
 import org.catacombae.io.Readable;
+
+import static java.lang.System.getLogger;
+import static javax.swing.JOptionPane.showMessageDialog;
+import static org.jdesktop.layout.GroupLayout.BASELINE;
+import static org.jdesktop.layout.GroupLayout.DEFAULT_SIZE;
+import static org.jdesktop.layout.GroupLayout.LEADING;
+import static org.jdesktop.layout.GroupLayout.PREFERRED_SIZE;
+import static org.jdesktop.layout.LayoutStyle.RELATED;
 
 
 /**
@@ -41,8 +53,9 @@ import org.catacombae.io.Readable;
  */
 public class DisplayTextFilePanel extends javax.swing.JPanel {
 
-    private static final String[] sortingPrefixes =
-            new String[] {"US-ASCII", "UTF-8", "ISO-8859", "UTF", "IBM4", "IBM8", "IBM"};
+    private static final Logger logger = getLogger(DisplayTextFilePanel.class.getName());
+
+    private static final String[] sortingPrefixes = {"US-ASCII", "UTF-8", "ISO-8859", "UTF", "IBM4", "IBM8", "IBM"};
     private byte[] fileData = new byte[] {0};
     private final Frame parentFrame;
     private final String baseTitle;
@@ -56,7 +69,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
      * Creates new form DisplayTextFilePanel. Supplying a parent frame will lead to the frame's
      * title changing to reflect the currently displayed file.
      */
-    public DisplayTextFilePanel(final Frame parentFrame) {
+    public DisplayTextFilePanel(Frame parentFrame) {
         this.parentFrame = parentFrame;
 
         if (parentFrame != null)
@@ -72,8 +85,8 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
         textPaneScroller.getHorizontalScrollBar().setMaximum(Integer.MAX_VALUE);
 
         Set<String> keySet = Charset.availableCharsets().keySet();
-        ArrayList<String> charsets = new ArrayList<String>(keySet);
-        LinkedList<String> listItems = new LinkedList<String>();
+        ArrayList<String> charsets = new ArrayList<>(keySet);
+        LinkedList<String> listItems = new LinkedList<>();
         for (String prefix : sortingPrefixes) {
             for (int i = 0; i < charsets.size(); ) {
                 String curCharset = charsets.get(i);
@@ -84,8 +97,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
                     ++i;
             }
         }
-        for (String curCharset : charsets)
-            listItems.add(curCharset);
+        listItems.addAll(charsets);
 
         encodingBox.removeAllItems();
         for (String curItem : listItems)
@@ -93,37 +105,26 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
         if (encodingBox.getItemCount() > 0)
             encodingBox.setSelectedIndex(0);
 
-        encodingBox.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                refreshView();
-            }
-
-        });
+        encodingBox.addActionListener(e -> refreshView());
     }
 
-    /*
-    public void addFileDropListener() {
-        new FileDrop(textPaneScroller, new FileDrop.Listener() {
-            public void filesDropped(java.io.File[] files) {
-                // handle file drop
-                if(files.length == 1) {
-                    if(files[0].isFile()) {
-                        loadFile(files[0]);
-
-                    }
-                    else
-                        JOptionPane.showMessageDialog(DisplayTextFilePanel.this, "You can only view files.",
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                }
-                else if(files.length > 1) {
-                    JOptionPane.showMessageDialog(DisplayTextFilePanel.this, "You can only view one file at a time.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }   // end filesDropped
-            }); // end FileDrop.Listener
-    }
-    */
+//    public void addFileDropListener() {
+//        new FileDrop(textPaneScroller, new FileDrop.Listener() {
+//            public void filesDropped(java.io.File[] files) {
+//                // handle file drop
+//                if (files.length == 1) {
+//                    if (files[0].isFile()) {
+//                        loadFile(files[0]);
+//                    } else
+//                        JOptionPane.showMessageDialog(DisplayTextFilePanel.this, "You can only view files.",
+//                                "Error", JOptionPane.ERROR_MESSAGE);
+//                } else if (files.length > 1) {
+//                    JOptionPane.showMessageDialog(DisplayTextFilePanel.this, "You can only view one file at a time.",
+//                            "Error", JOptionPane.ERROR_MESSAGE);
+//                }
+//            }
+//        });
+//    }
 
     public void loadFile(File file) {
         if (file.length() < Integer.MAX_VALUE) {
@@ -134,11 +135,11 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
                 if (parentFrame != null)
                     parentFrame.setTitle(baseTitle + " - [" + file.getName() + "]");
             } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
+                logger.log(Level.ERROR, e.getMessage(), e);
+                showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
             }
         } else
-            JOptionPane.showMessageDialog(this, "File too large for memory address space! (" +
+            showMessageDialog(this, "File too large for memory address space! (" +
                     file.length() + "bytes)");
     }
 
@@ -159,36 +160,31 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
             baos = null;
 
             refreshView();
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    int vMin = textPaneScroller.getVerticalScrollBar().getMinimum();
-                    int hMin = textPaneScroller.getHorizontalScrollBar().getMinimum();
-                    textPaneScroller.getVerticalScrollBar().setValue(vMin);
-                    textPaneScroller.getHorizontalScrollBar().setValue(hMin);
-                }
+            SwingUtilities.invokeLater(() -> {
+                int vMin = textPaneScroller.getVerticalScrollBar().getMinimum();
+                int hMin = textPaneScroller.getHorizontalScrollBar().getMinimum();
+                textPaneScroller.getVerticalScrollBar().setValue(vMin);
+                textPaneScroller.getHorizontalScrollBar().setValue(hMin);
             });
 
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
+            logger.log(Level.ERROR, e.getMessage(), e);
+            showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
         }
     }
 
     private void refreshView() {
         try {
-            final int vValue = textPaneScroller.getVerticalScrollBar().getValue();
-            final int hValue = textPaneScroller.getHorizontalScrollBar().getValue();
+            int vValue = textPaneScroller.getVerticalScrollBar().getValue();
+            int hValue = textPaneScroller.getHorizontalScrollBar().getValue();
             textPane.setText(new String(fileData, getSelectedEncoding()));
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    textPaneScroller.getVerticalScrollBar().setValue(vValue);
-                    textPaneScroller.getHorizontalScrollBar().setValue(hValue);
-                }
+            SwingUtilities.invokeLater(() -> {
+                textPaneScroller.getVerticalScrollBar().setValue(vValue);
+                textPaneScroller.getHorizontalScrollBar().setValue(hValue);
             });
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Exception while decoding file data:\n  " + e +
-                    "\"");
+            logger.log(Level.ERROR, e.getMessage(), e);
+            showMessageDialog(this, "Exception while decoding file data:\n  " + e + "\"");
         }
     }
 
@@ -206,10 +202,10 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        textPaneScroller = new javax.swing.JScrollPane();
-        textPane = new javax.swing.JTextArea();
-        encodingLabel = new javax.swing.JLabel();
-        encodingBox = new javax.swing.JComboBox();
+        textPaneScroller = new JScrollPane();
+        textPane = new JTextArea();
+        encodingLabel = new JLabel();
+        encodingBox = new JComboBox<>();
 
         textPane.setColumns(20);
         textPane.setEditable(false);
@@ -218,37 +214,36 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
 
         encodingLabel.setText("Encoding:");
 
-        encodingBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] {"Item 1", "Item 2", "Item 3", "Item 4"}));
+        encodingBox.setModel(new DefaultComboBoxModel<>(new String[] {"Item 1", "Item 2", "Item 3", "Item 4"}));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                layout.createParallelGroup(LEADING)
                         .add(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .add(encodingLabel)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .addPreferredGap(RELATED)
                                 .add(encodingBox, 0, 650, Short.MAX_VALUE)
                                 .addContainerGap())
-                        .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 721, Short.MAX_VALUE)
+                        .add(textPaneScroller, DEFAULT_SIZE, 721, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                layout.createParallelGroup(LEADING)
                         .add(layout.createSequentialGroup()
                                 .addContainerGap()
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(layout.createParallelGroup(BASELINE)
                                         .add(encodingLabel)
-                                        .add(encodingBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE))
+                                        .add(encodingBox, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+                                .addPreferredGap(RELATED)
+                                .add(textPaneScroller, DEFAULT_SIZE, 445, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox encodingBox;
-    private javax.swing.JLabel encodingLabel;
-    private javax.swing.JTextArea textPane;
-    private javax.swing.JScrollPane textPaneScroller;
+    private JComboBox<String> encodingBox;
+    private JLabel encodingLabel;
+    private JTextArea textPane;
+    private JScrollPane textPaneScroller;
     // End of variables declaration//GEN-END:variables
 }

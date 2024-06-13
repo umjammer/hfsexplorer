@@ -98,10 +98,12 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return 248;
     }
 
+    @Override
     public short getRecordType() {
         return Util.readShortBE(recordType);
     }
 
+    @Override
     public short getFlags() {
         return Util.readShortBE(flags);
     }
@@ -114,26 +116,32 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return fileID;
     }
 
+    @Override
     public int getCreateDate() {
         return Util.readIntBE(createDate);
     }
 
+    @Override
     public int getContentModDate() {
         return Util.readIntBE(contentModDate);
     }
 
+    @Override
     public int getAttributeModDate() {
         return Util.readIntBE(attributeModDate);
     }
 
+    @Override
     public int getAccessDate() {
         return Util.readIntBE(accessDate);
     }
 
+    @Override
     public int getBackupDate() {
         return Util.readIntBE(backupDate);
     }
 
+    @Override
     public HFSPlusBSDInfo getPermissions() {
         return permissions;
     }
@@ -146,6 +154,7 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return finderInfo;
     }
 
+    @Override
     public int getTextEncoding() {
         return Util.readIntBE(textEncoding);
     }
@@ -205,26 +214,32 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return (getFlags() & kHFSHasDateAddedMask) != 0;
     }
 
+    @Override
     public Date getCreateDateAsDate() {
         return HFSPlusDate.gmtTimestampToDate(getCreateDate());
     }
 
+    @Override
     public Date getContentModDateAsDate() {
         return HFSPlusDate.gmtTimestampToDate(getContentModDate());
     }
 
+    @Override
     public Date getAttributeModDateAsDate() {
         return HFSPlusDate.gmtTimestampToDate(getAttributeModDate());
     }
 
+    @Override
     public Date getAccessDateAsDate() {
         return HFSPlusDate.gmtTimestampToDate(getAccessDate());
     }
 
+    @Override
     public Date getBackupDateAsDate() {
         return HFSPlusDate.gmtTimestampToDate(getBackupDate());
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusCatalogFile.class.getSimpleName());
 
@@ -254,6 +269,7 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return db.getResult();
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " recordType: " + getRecordType());
         ps.println(prefix + " flags: " + getFlags());
@@ -279,11 +295,13 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         getResourceFork().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusCatalogFile:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         byte[] tempData;
@@ -331,6 +349,7 @@ public class HFSPlusCatalogFile extends HFSPlusCatalogLeafRecordData implements 
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }

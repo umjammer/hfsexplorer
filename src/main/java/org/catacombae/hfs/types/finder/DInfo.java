@@ -84,6 +84,7 @@ public class DInfo implements PrintableStruct, StructElements {
         return Util.readShortBE(frView);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " frRect: ");
         getFrRect().print(ps, prefix + "  ");
@@ -93,6 +94,7 @@ public class DInfo implements PrintableStruct, StructElements {
         ps.println(prefix + " frView: " + getFrView());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "DInfo:");
         printFields(ps, prefix);
@@ -115,6 +117,7 @@ public class DInfo implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(DInfo.class.getSimpleName());
         db.add("frRect", frRect.getStructElements());

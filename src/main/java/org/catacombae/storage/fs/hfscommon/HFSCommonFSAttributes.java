@@ -126,8 +126,7 @@ class HFSCommonFSAttributes extends FSAttributes {
 
     @Override
     public boolean hasLinkCount() {
-        if (attributes instanceof CommonHFSCatalogFileRecord) {
-            CommonHFSCatalogFileRecord fr = (CommonHFSCatalogFileRecord) attributes;
+        if (attributes instanceof CommonHFSCatalogFileRecord fr) {
             if (fr.getData().isHardFileLink() /* || fr.getData().isHardDirectoryLink() */)
                 return true;
         }

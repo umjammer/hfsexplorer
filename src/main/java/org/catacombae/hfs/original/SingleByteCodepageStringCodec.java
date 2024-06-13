@@ -32,7 +32,7 @@ import org.catacombae.util.Util;
 public abstract class SingleByteCodepageStringCodec implements StringCodec {
 
     private final char[] codepageData;
-    private final HashMap<Character, Byte> unicodeToCodepageMap = new HashMap<Character, Byte>();
+    private final HashMap<Character, Byte> unicodeToCodepageMap = new HashMap<>();
 
     protected SingleByteCodepageStringCodec(char[] codepageData) {
         if (codepageData.length != 256) {
@@ -46,10 +46,12 @@ public abstract class SingleByteCodepageStringCodec implements StringCodec {
         }
     }
 
+    @Override
     public String decode(byte[] data) {
         return decode(data, 0, data.length);
     }
 
+    @Override
     public String decode(byte[] data, int off, int len) {
         StringBuilder sb = new StringBuilder();
 
@@ -60,10 +62,12 @@ public abstract class SingleByteCodepageStringCodec implements StringCodec {
         return sb.toString();
     }
 
+    @Override
     public byte[] encode(String str) {
         return encode(str, 0, str.length());
     }
 
+    @Override
     public byte[] encode(String str, int off, int len) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 

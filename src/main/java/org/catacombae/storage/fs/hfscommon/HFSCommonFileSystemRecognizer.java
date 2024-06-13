@@ -17,10 +17,15 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.io.AbstractFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -31,12 +36,14 @@ import org.catacombae.util.Util;
  */
 public class HFSCommonFileSystemRecognizer {
 
+    private static final Logger logger = getLogger(HFSCommonFileSystemRecognizer.class.getName());
+
     private static final short SIGNATURE_MFS = (short) 0xD2D7; // Extreme legacy... won't be used
     private static final short SIGNATURE_HFS = (short) 0x4244; // ASCII: 'BD' Legacy...
     private static final short SIGNATURE_HFS_PLUS = (short) 0x482B; // ASCII: 'H+'
     private static final short SIGNATURE_HFSX = (short) 0x4858; // ASCII: 'HX'
 
-    public static enum FileSystemType {
+    public enum FileSystemType {
         MFS, HFS, HFS_PLUS, HFS_WRAPPED_HFS_PLUS, HFSX, UNKNOWN
     }
 
@@ -84,19 +91,19 @@ public class HFSCommonFileSystemRecognizer {
                     return FileSystemType.UNKNOWN;
             }
         } catch (RuntimeIOException e) {
-            final String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
+            String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
                             (" at " + ((AbstractFileStream) bitstream).getOpenPath());
-            System.err.println("Error while detecting file system" + streamString + ": " + e.getIOCause().getMessage());
+            logger.log(Level.DEBUG, "Error while detecting file system" + streamString + ": " + e.getIOCause().getMessage());
             if (!(bitstream instanceof AbstractFileStream)) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
             return FileSystemType.UNKNOWN;
         } catch (Exception e) {
-            final String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
+            String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
                             (" at " + ((AbstractFileStream) bitstream).getOpenPath());
-            System.err.println("Exception while detecting file system" + streamString + ": " + e);
-            e.printStackTrace();
+            logger.log(Level.DEBUG, "Exception while detecting file system" + streamString + ": " + e);
+            logger.log(Level.ERROR, e.getMessage(), e);
             return FileSystemType.UNKNOWN;
         }
     }

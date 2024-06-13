@@ -87,6 +87,7 @@ public class Rect implements PrintableStruct, StructElements {
         return "(" + getTop() + "," + getLeft() + "," + getBottom() + "," + getRight() + ")";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " top: " + getTop());
         ps.println(prefix + " left: " + getLeft());
@@ -94,6 +95,7 @@ public class Rect implements PrintableStruct, StructElements {
         ps.println(prefix + " right: " + getRight());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "Rect:");
         printFields(ps, prefix);
@@ -114,6 +116,7 @@ public class Rect implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(Rect.class.getSimpleName());
 

@@ -46,7 +46,7 @@ public abstract class CommonHFSExtentIndexNode extends CommonBTKeyedNode<CommonB
 
         @Override
         protected CommonBTIndexRecord<CommonHFSExtentKey> createBTRecord(int recordNumber, byte[] data, int offset, int length) {
-            final CommonHFSExtentKey key = CommonHFSExtentKey.create(new ExtKeyRec(data, offset));
+            CommonHFSExtentKey key = CommonHFSExtentKey.create(new ExtKeyRec(data, offset));
 
             return CommonBTIndexRecord.createHFS(key, data, offset);
         }
@@ -60,7 +60,7 @@ public abstract class CommonHFSExtentIndexNode extends CommonBTKeyedNode<CommonB
 
         @Override
         protected CommonBTIndexRecord<CommonHFSExtentKey> createBTRecord(int recordNumber, byte[] data, int offset, int length) {
-            final CommonHFSExtentKey key = CommonHFSExtentKey.create(new HFSPlusExtentKey(data, offset));
+            CommonHFSExtentKey key = CommonHFSExtentKey.create(new HFSPlusExtentKey(data, offset));
 
             return CommonBTIndexRecord.createHFSPlus(key, data, offset);
         }

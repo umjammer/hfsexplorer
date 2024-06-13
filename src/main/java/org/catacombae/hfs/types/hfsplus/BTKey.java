@@ -31,6 +31,7 @@ public abstract class BTKey implements Comparable<BTKey>, PrintableStruct {
 
     public abstract byte[] getBytes();
 
+    @Override
     public int compareTo(BTKey btk) {
         byte[] thisData = getBytes();
         byte[] thatData = btk.getBytes();
@@ -43,11 +44,6 @@ public abstract class BTKey implements Comparable<BTKey>, PrintableStruct {
             else if (a > b)
                 return 1;
         }
-        if (thisData.length < thatData.length)
-            return -1;
-        else if (thisData.length > thatData.length)
-            return 1;
-        else
-            return 0;
+        return Integer.compare(thisData.length, thatData.length);
     }
 }

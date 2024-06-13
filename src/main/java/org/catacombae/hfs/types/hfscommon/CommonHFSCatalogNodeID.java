@@ -154,33 +154,19 @@ public abstract class CommonHFSCatalogNodeID {
         }
 
         public static CommonHFSCatalogNodeID getReservedIDStatic(ReservedID id) {
-            switch (id) {
-                case ROOT_PARENT:
-                    return ROOT_PARENT_ID;
-                case ROOT_FOLDER:
-                    return ROOT_FOLDER_ID;
-                case EXTENTS_FILE:
-                    return EXTENTS_FILE_ID;
-                case CATALOG_FILE:
-                    return CATALOG_FILE_ID;
-                case BAD_BLOCKS_FILE:
-                    return BAD_BLOCKS_FILE_ID;
-                case ALLOCATION_FILE:
-                    return ALLOCATION_FILE_ID;
-                case STARTUP_FILE:
-                    return STARTUP_FILE_ID;
-                case ATTRIBUTES_FILE:
-                    return ATTRIBUTES_FILE_ID;
-                case REPAIR_CATALOG_FILE:
-                    return REPAIR_CATALOG_FILE_ID;
-                case BOGUS_EXTENT_FILE:
-                    return BOGUS_EXTENT_FILE_ID;
-                case FIRST_USER_CATALOG_NODE_ID:
-                    return FIRST_USER_CATALOG_NODE_ID;
-                default:
-                    throw new RuntimeException("Unknown reserved id: " + id +
-                            "!");
-            }
+            return switch (id) {
+                case ROOT_PARENT -> ROOT_PARENT_ID;
+                case ROOT_FOLDER -> ROOT_FOLDER_ID;
+                case EXTENTS_FILE -> EXTENTS_FILE_ID;
+                case CATALOG_FILE -> CATALOG_FILE_ID;
+                case BAD_BLOCKS_FILE -> BAD_BLOCKS_FILE_ID;
+                case ALLOCATION_FILE -> ALLOCATION_FILE_ID;
+                case STARTUP_FILE -> STARTUP_FILE_ID;
+                case ATTRIBUTES_FILE -> ATTRIBUTES_FILE_ID;
+                case REPAIR_CATALOG_FILE -> REPAIR_CATALOG_FILE_ID;
+                case BOGUS_EXTENT_FILE -> BOGUS_EXTENT_FILE_ID;
+                case FIRST_USER_CATALOG_NODE_ID -> FIRST_USER_CATALOG_NODE_ID;
+            };
         }
 
         @Override
@@ -224,28 +210,16 @@ public abstract class CommonHFSCatalogNodeID {
         }
 
         public static CommonHFSCatalogNodeID getReservedIDStatic(ReservedID id) {
-            switch (id) {
-                case ROOT_PARENT:
-                    return ROOT_PARENT_ID;
-                case ROOT_FOLDER:
-                    return ROOT_FOLDER_ID;
-                case EXTENTS_FILE:
-                    return EXTENTS_FILE_ID;
-                case CATALOG_FILE:
-                    return CATALOG_FILE_ID;
-                case BAD_BLOCKS_FILE:
-                    return BAD_BLOCKS_FILE_ID;
-                case ALLOCATION_FILE:
-                case STARTUP_FILE:
-                case ATTRIBUTES_FILE:
-                case REPAIR_CATALOG_FILE:
-                case BOGUS_EXTENT_FILE:
-                    return null; // Not applicable for HFS.
-                case FIRST_USER_CATALOG_NODE_ID:
-                    return FIRST_USER_CATALOG_NODE_ID;
-                default:
-                    throw new RuntimeException("Unknown reserved id: " + id + "!");
-            }
+            return switch (id) {
+                case ROOT_PARENT -> ROOT_PARENT_ID;
+                case ROOT_FOLDER -> ROOT_FOLDER_ID;
+                case EXTENTS_FILE -> EXTENTS_FILE_ID;
+                case CATALOG_FILE -> CATALOG_FILE_ID;
+                case BAD_BLOCKS_FILE -> BAD_BLOCKS_FILE_ID;
+                case ALLOCATION_FILE, STARTUP_FILE, ATTRIBUTES_FILE, REPAIR_CATALOG_FILE, BOGUS_EXTENT_FILE ->
+                        null; // Not applicable for HFS.
+                case FIRST_USER_CATALOG_NODE_ID -> FIRST_USER_CATALOG_NODE_ID;
+            };
         }
 
         @Override

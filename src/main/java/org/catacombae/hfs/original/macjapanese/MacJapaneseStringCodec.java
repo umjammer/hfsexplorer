@@ -18,15 +18,16 @@
 package org.catacombae.hfs.original.macjapanese;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.apache.tools.ant.types.resources.First;
 import org.catacombae.hfs.original.SingleByteCodepageStringCodec;
 import org.catacombae.hfs.original.StringCodec;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -36,11 +37,11 @@ import org.catacombae.util.Util;
  */
 public class MacJapaneseStringCodec implements StringCodec {
 
+    private static final Logger logger = getLogger(MacJapaneseStringCodec.class.getName());
+
     private static final HashMap<Short, String> macJapaneseToUnicodeMap;
 
     private static final HashMap<String, Short> unicodeToMacJapaneseMap;
-
-    private static final Logger log = Logger.getLogger(MacJapaneseStringCodec.class.getName());
 
     private final SingleByteCodepageStringCodec fallbackCodec;
 
@@ -63,20 +64,22 @@ public class MacJapaneseStringCodec implements StringCodec {
         this(null);
     }
 
+    @Override
     public String decode(byte[] data) {
         return decode(data, 0, data.length);
     }
 
+    @Override
     public String decode(byte[] data, int off, int len) {
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < len; ) {
-            final byte firstByte = data[off + i];
-            final Byte secondByte = (i + 1 < len) ? data[off + i + 1] : null;
+            byte firstByte = data[off + i];
+            Byte secondByte = (i + 1 < len) ? data[off + i + 1] : null;
             short sequence = 0;
             String replacement = null;
 
-            log.fine("data[" + (off + i) + "]: 0x" + Util.toHexStringBE(firstByte));
+            logger.log(Level.DEBUG, "data[" + (off + i) + "]: 0x" + Util.toHexStringBE(firstByte));
 
             if (secondByte != null && (firstByte & 0xFF) >= 0xF0 &&
                     (firstByte & 0xFF) <= 0xFC && (secondByte & 0xFF) >= 0x40 &&
@@ -88,7 +91,7 @@ public class MacJapaneseStringCodec implements StringCodec {
                 // 0x40 (64), continues for 0x3D (61) entries, then skips over
                 // 0x43 (67) entries and resumes mapping at 0xF140, repeating
                 // this pattern until the end of the range at 0xFCFC. */
-                final char replacementChar =
+                char replacementChar =
                         (char) (0xE000 + ((firstByte & 0xFF) - 0xF0) * 0xBC +
                                 ((secondByte & 0xFF) - ((secondByte & 0xFF) >= 0x80 ? 0x41 : 0x40)));
 
@@ -108,7 +111,7 @@ public class MacJapaneseStringCodec implements StringCodec {
                                 (secondByte & 0xFF));
                 replacement = macJapaneseToUnicodeMap.get(sequence);
                 if (replacement != null) {
-                    log.fine("data[" + (off + i) + "]: " +
+                    logger.log(Level.DEBUG, "data[" + (off + i) + "]: " +
                             "0x" + Util.toHexStringBE(firstByte));
                     i += 2;
                 }
@@ -117,7 +120,7 @@ public class MacJapaneseStringCodec implements StringCodec {
             if (replacement == null) {
                 sequence = (short) (firstByte & 0xFF);
                 if (sequence < 0x20) {
-                    replacement = new String(new char[] {(char) sequence});
+                    replacement = String.valueOf((char) sequence);
                 } else {
                     replacement = macJapaneseToUnicodeMap.get(sequence);
                 }
@@ -129,7 +132,7 @@ public class MacJapaneseStringCodec implements StringCodec {
 
             if (replacement == null && fallbackCodec != null) {
                 sequence = (short) (firstByte & 0xFF);
-                log.fine("Querying fallback codec for missing replacement " +
+                logger.log(Level.DEBUG, "Querying fallback codec for missing replacement " +
                         "for 0x" + Util.toHexStringBE((byte) sequence) + "...");
                 replacement = fallbackCodec.decode(data, off + i - 1, 1);
 
@@ -144,7 +147,7 @@ public class MacJapaneseStringCodec implements StringCodec {
                         ((secondByte != null) ? Util.toHexStringBE(secondByte) : ""));
             }
 
-            if (log.isLoggable(Level.FINE)) {
+            if (logger.isLoggable(Level.DEBUG)) {
                 StringBuilder messageBuilder = new StringBuilder();
 
                 messageBuilder.append("Found replacement: 0x").append(Util.toHexStringBE(sequence)).append(" ->");
@@ -153,7 +156,7 @@ public class MacJapaneseStringCodec implements StringCodec {
                 }
                 messageBuilder.append(" (\"").append(replacement).append("\")");
 
-                log.fine(messageBuilder.toString());
+                logger.log(Level.DEBUG, messageBuilder.toString());
             }
 
             sb.append(replacement);
@@ -162,15 +165,17 @@ public class MacJapaneseStringCodec implements StringCodec {
         return sb.toString();
     }
 
+    @Override
     public byte[] encode(String str) {
         return encode(str, 0, str.length());
     }
 
+    @Override
     public byte[] encode(String str, int off, int len) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         for (int i = 0; i < len; ) {
-            final int remaining = len - i;
+            int remaining = len - i;
             char firstChar;
             Short replacement = null;
 
@@ -186,20 +191,20 @@ public class MacJapaneseStringCodec implements StringCodec {
                 // 0x40 (64), continues for 0x3D (61) entries, then skips over
                 // 0x43 (67) entries and resumes mapping at 0xF140, repeating
                 // this pattern until the end of the range at 0xFCFC. */
-                final int rangeIndex = firstChar - 0xE000;
+                int rangeIndex = firstChar - 0xE000;
 
                 // Which 'chunk' of the repeating pattern are we at? For every
                 // chunk we must add 0x44 to compensate for the gap between the
                 // chunks (0x43 bytes) and the 1-byte gap between 0x7E and 0x80
                 // (avoiding the 0x7F / DEL control character). */
-                final int rangeChunk = rangeIndex / 0xBC;
-                final int indexInChunk = rangeIndex % 0xBC;
+                int rangeChunk = rangeIndex / 0xBC;
+                int indexInChunk = rangeIndex % 0xBC;
 
-                log.finest("rangeIndex: " + rangeIndex);
-                log.finest("rangeChunk: " + rangeChunk);
-                log.finest("indexInChunk: " + indexInChunk);
+                logger.log(Level.TRACE, "rangeIndex: " + rangeIndex);
+                logger.log(Level.TRACE, "rangeChunk: " + rangeChunk);
+                logger.log(Level.TRACE, "indexInChunk: " + indexInChunk);
                 replacement = (short) ((0xF040 + rangeChunk * 0x44 + (indexInChunk > 0x3E ? 1 : 0) + rangeIndex) & 0xFFFF);
-                log.finest("replacement: 0x" + Util.toHexStringBE(replacement));
+                logger.log(Level.TRACE, "replacement: 0x" + Util.toHexStringBE(replacement));
                 ++i;
             } else {
                 for (int j = 5; j > 0; --j) {
@@ -244,12 +249,13 @@ public class MacJapaneseStringCodec implements StringCodec {
      *
      * @return the charset name as it was passed to the constructor.
      */
+    @Override
     public String getCharsetName() {
         return "MacJapanese";
     }
 
     static {
-        macJapaneseToUnicodeMap = new HashMap<Short, String>();
+        macJapaneseToUnicodeMap = new HashMap<>();
         for (int i = 0; i < MacJapaneseStringCodecData.mappingTable.length; ++i) {
             short key = (short) MacJapaneseStringCodecData.mappingTable[i][0];
             String value = new String(MacJapaneseStringCodecData.mappingTable[i],
@@ -271,7 +277,7 @@ public class MacJapaneseStringCodec implements StringCodec {
             macJapaneseToUnicodeMap.put(key, value);
         }
 
-        unicodeToMacJapaneseMap = new HashMap<String, Short>();
+        unicodeToMacJapaneseMap = new HashMap<>();
         for (Entry<Short, String> entry : macJapaneseToUnicodeMap.entrySet()) {
             unicodeToMacJapaneseMap.put(entry.getValue(), entry.getKey());
         }
@@ -285,13 +291,13 @@ public class MacJapaneseStringCodec implements StringCodec {
 
         MacJapaneseStringCodec c = new MacJapaneseStringCodec();
         for (int i = rangeFirst; i <= rangeEnd; ++i) {
-            final String original;
-            final byte[] encoded;
+            String original;
+            byte[] encoded;
 
             if (i != rangeEnd) {
                 original = Character.valueOf((char) i).toString();
                 encoded = c.encode(original);
-                log.fine("original: " + original);
+                logger.log(Level.DEBUG, "original: " + original);
             } else {
                 original = null;
                 encoded = null;
@@ -299,22 +305,22 @@ public class MacJapaneseStringCodec implements StringCodec {
 
             if (prevEncoded != null && (encoded == null || encoded.length != prevEncoded.length ||
                     encoded[encoded.length - 1] != prevEncoded[encoded.length - 1] + contiguous)) {
-                System.err.printf("0x");
+                logger.log(Level.DEBUG, "0x");
                 if (contiguous > 1) {
                     for (int j = 0; j < prevEncoded.length - 1; ++j) {
-                        System.err.printf("%02X", prevEncoded[j] & 0xFF);
+                        logger.log(Level.DEBUG, String.format("%02X", prevEncoded[j] & 0xFF));
                     }
-                    System.err.printf("%02X-0x", prevEncoded[prevEncoded.length - 1] & 0xFF);
+                    logger.log(Level.DEBUG, String.format("%02X-0x", prevEncoded[prevEncoded.length - 1] & 0xFF));
                 }
                 for (int j = 0; j < prevEncoded.length - 1; ++j) {
-                    System.err.printf("%02X", prevEncoded[j] & 0xFF);
+                    logger.log(Level.DEBUG, String.format("%02X", prevEncoded[j] & 0xFF));
                 }
-                System.err.printf("%02X -> ", (prevEncoded[prevEncoded.length - 1] & 0xFF) + (contiguous - 1));
+                logger.log(Level.DEBUG, String.format("%02X -> ", (prevEncoded[prevEncoded.length - 1] & 0xFF) + (contiguous - 1)));
                 if (contiguous > 1) {
-                    System.err.printf("0x%04X-", i - contiguous);
+                    logger.log(Level.DEBUG, String.format("0x%04X-", i - contiguous));
                 }
-                System.err.printf("0x%04X", i - 1);
-                System.err.println();
+                logger.log(Level.DEBUG, String.format("0x%04X", i - 1));
+                logger.log(Level.DEBUG, "\n");
 
                 contiguous = 1;
             } else {
@@ -329,19 +335,19 @@ public class MacJapaneseStringCodec implements StringCodec {
                 break;
             }
 
-            final String decoded = c.decode(encoded);
+            String decoded = c.decode(encoded);
             if (!decoded.equals(original)) {
-                System.err.println("FAIL: Round-trip conversion does not yield identical result!");
-                System.err.print("      Original: \"" + original + "\" (");
+                logger.log(Level.DEBUG, "FAIL: Round-trip conversion does not yield identical result!");
+                logger.log(Level.DEBUG, "      Original: \"" + original + "\" (");
                 for (int j = 0; j < original.length(); ++j) {
-                    System.err.print((j != 0 ? " " : "") + Util.toHexStringBE(original.charAt(j)));
+                    logger.log(Level.DEBUG, (j != 0 ? " " : "") + Util.toHexStringBE(original.charAt(j)));
                 }
-                System.err.println(")");
-                System.err.print("      Round-trip: \"" + decoded + "\" (");
+                logger.log(Level.DEBUG, ")");
+                logger.log(Level.DEBUG, "      Round-trip: \"" + decoded + "\" (");
                 for (int j = 0; j < decoded.length(); ++j) {
-                    System.err.print((j != 0 ? " " : "") + Util.toHexStringBE(decoded.charAt(j)));
+                    logger.log(Level.DEBUG, (j != 0 ? " " : "") + Util.toHexStringBE(decoded.charAt(j)));
                 }
-                System.err.println(")");
+                logger.log(Level.DEBUG, ")");
                 return false;
             }
         }
@@ -352,14 +358,14 @@ public class MacJapaneseStringCodec implements StringCodec {
 //    public static void main(String[] args) {
 //        boolean b;
 //
-//        System.err.println("Testing Shift-JIS reserved range...");
+//        logger.log(Level.DEBUG, "Testing Shift-JIS reserved range...");
 //        try {
 //            b = testShiftJisReservedRange();
 //        } catch (Throwable t) {
 //            t.printStackTrace(System.err);
 //            b = false;
 //        }
-//        System.err.println("Testing Shift-JIS reserved range: " +
+//        logger.log(Level.DEBUG, "Testing Shift-JIS reserved range: " +
 //                (b ? "PASS" : "FAIL"));
 //
 //        System.exit(b ? 1 : 0);

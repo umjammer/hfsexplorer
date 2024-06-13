@@ -27,6 +27,7 @@ import org.catacombae.storage.ps.mbr.types.MBRPartitionTable;
  */
 public class MBRRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
             byte[] firstBlock = new byte[512];

@@ -71,10 +71,10 @@ public class ResourceMap implements PrintableStruct {
     private final List<Pair<ResourceType, ReferenceListEntry[]>> referenceList;
     private final List<Pair<ReferenceListEntry, ResourceName>> resourceNameList;
 
-    public ResourceMap(SynchronizedReadableRandomAccess stream, final long offset) {
+    public ResourceMap(SynchronizedReadableRandomAccess stream, long offset) {
         byte[] data = new byte[30];
 
-        final int bytesRead = stream.readFrom(offset, data);
+        int bytesRead = stream.readFrom(offset, data);
         if (bytesRead != data.length) {
             throw new RuntimeIOException("Error while reading the resource " +
                     "map header from offset " + offset + " (" +
@@ -93,8 +93,8 @@ public class ResourceMap implements PrintableStruct {
         logger.log(Level.DEBUG, "ResourceMap(): nameListOffset = " + getNameListOffset());
         logger.log(Level.DEBUG, "ResourceMap(): typeCount = " + getTypeCount());
 
-        final int resourceTypeListOffset = getTypeListOffset();
-        final int resourceNameListOffset = getNameListOffset();
+        int resourceTypeListOffset = getTypeListOffset();
+        int resourceNameListOffset = getNameListOffset();
 
         {
             long curOffset = offset + resourceTypeListOffset + 2; // +2 for typeCount, which is included in the offset
@@ -112,9 +112,8 @@ public class ResourceMap implements PrintableStruct {
         int numberOfRefListEntries = 0;
         {
             byte[] curListEntryData = new byte[ReferenceListEntry.length()];
-            referenceList = new ArrayList<Pair<ResourceType, ReferenceListEntry[]>>(resourceTypeList.length);
-            for (int i = 0; i < resourceTypeList.length; ++i) {
-                ResourceType curType = resourceTypeList[i];
+            referenceList = new ArrayList<>(resourceTypeList.length);
+            for (ResourceType curType : resourceTypeList) {
                 logger.log(Level.DEBUG, "Processing instances of type:" + curType);
 
                 ReferenceListEntry[] curList = new ReferenceListEntry[curType.getInstanceCount() + 1];
@@ -129,12 +128,12 @@ public class ResourceMap implements PrintableStruct {
                 }
 
                 numberOfRefListEntries += curList.length;
-                referenceList.add(new Pair<ResourceType, ReferenceListEntry[]>(curType, curList));
+                referenceList.add(new Pair<>(curType, curList));
             }
         }
 
         {
-            resourceNameList = new ArrayList<Pair<ReferenceListEntry, ResourceName>>(numberOfRefListEntries);
+            resourceNameList = new ArrayList<>(numberOfRefListEntries);
 
             for (Pair<ResourceType, ReferenceListEntry[]> p : referenceList) {
                 for (ReferenceListEntry e : p.getB()) {
@@ -142,7 +141,7 @@ public class ResourceMap implements PrintableStruct {
                     if (resNameOffset != -1) {
                         long nameOffset = offset + resourceNameListOffset + resNameOffset;
                         ResourceName resName = new ResourceName(stream, nameOffset);
-                        resourceNameList.add(new Pair<ReferenceListEntry, ResourceName>(e, resName));
+                        resourceNameList.add(new Pair<>(e, resName));
 
                         logger.log(Level.DEBUG, "Read ResourceName:" + resName);
                     }
@@ -215,11 +214,11 @@ public class ResourceMap implements PrintableStruct {
     }
 
     public List<Pair<ResourceType, ReferenceListEntry[]>> getReferenceList() {
-        return new ArrayList<Pair<ResourceType, ReferenceListEntry[]>>(referenceList);
+        return new ArrayList<>(referenceList);
     }
 
     public List<Pair<ReferenceListEntry, ResourceName>> getResourceNameList() {
-        return new ArrayList<Pair<ReferenceListEntry, ResourceName>>(resourceNameList);
+        return new ArrayList<>(resourceNameList);
     }
 
     /**
@@ -252,6 +251,7 @@ public class ResourceMap implements PrintableStruct {
         return null;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " reserved1: " + getReserved1());
         ps.println(prefix + " reserved2: " + getReserved2());
@@ -287,6 +287,7 @@ public class ResourceMap implements PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ResourceMap:");
         printFields(ps, prefix);

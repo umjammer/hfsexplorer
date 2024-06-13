@@ -28,6 +28,7 @@ import org.catacombae.storage.ps.PartitionSystemRecognizer;
  */
 public class APMRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
 //            ReadableRandomAccessStream llf = data.createReadOnlyFile();
@@ -68,7 +69,7 @@ public class APMRecognizer implements PartitionSystemRecognizer {
                 } else if (blockSize != 512) {
                     // We may have an APM configured with 512 byte block size
                     // even though the DDR says otherwise.
-                    final ApplePartitionMap backupApm = new ApplePartitionMap(fsStream, 512, 512);
+                    ApplePartitionMap backupApm = new ApplePartitionMap(fsStream, 512, 512);
                     if (backupApm.getUsedPartitionCount() > 0) {
                         return true;
                     }

@@ -17,10 +17,11 @@
 
 package org.catacombae.storage.ps.apm.types;
 
-import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableByteArrayStream;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.io.PrintStream;
 
@@ -28,18 +29,22 @@ import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.legacy.PartitionSystem;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ApplePartitionMap implements PartitionSystem {
 
+    private static final Logger logger = getLogger(ApplePartitionMap.class.getName());
+
     private final APMPartition[] partitions;
 
     public ApplePartitionMap(ReadableRandomAccessStream isoRaf, long pmOffset, int blockSize) {
         isoRaf.seek(pmOffset);
         byte[] currentBlock = new byte[blockSize];
-        ArrayList<APMPartition> partitionList = new ArrayList<APMPartition>();
+        ArrayList<APMPartition> partitionList = new ArrayList<>();
 
         // Redundant fields
         Short pmSig = null;
@@ -48,12 +53,12 @@ public class ApplePartitionMap implements PartitionSystem {
 //        long partitionIndex = 0;
 
         // Loop while we have data left in the file
-        while (((partitionList.size() == 0 && pmMapBlkCnt == null) ||
-                (partitionList.size() > 0 && partitionList.size() < pmMapBlkCnt))
+        while (((partitionList.isEmpty() && pmMapBlkCnt == null) ||
+                (!partitionList.isEmpty() && partitionList.size() < pmMapBlkCnt))
             /* && isoRaf.length() > isoRaf.getFilePointer() + currentBlock.length */) {
             isoRaf.readFully(currentBlock);
             APMPartition p = new APMPartition(currentBlock, 0, blockSize);
-//            System.err.println("Processing partition " + partitionIndex + ":");
+//            logger.log(Level.DEBUG, "Processing partition " + partitionIndex + ":");
 //            p.printFields(System.err, "  ");
             if (p.isValid()) {
                 short curPmSig = p.getPmSig();
@@ -75,7 +80,7 @@ public class ApplePartitionMap implements PartitionSystem {
 
                 partitionList.add(p);
             } else {
-                System.err.println("Erroneous partition:");
+                logger.log(Level.DEBUG, "Erroneous partition:");
                 p.printFields(System.err, "  ");
                 throw new RuntimeException("Encountered invalid partition map entry at index: " +
                         partitionList.size() + " pmMapBlkCnt=" + pmMapBlkCnt);
@@ -83,13 +88,14 @@ public class ApplePartitionMap implements PartitionSystem {
 
 //            ++partitionIndex;
         }
-        partitions = partitionList.toArray(new APMPartition[partitionList.size()]);
+        partitions = partitionList.toArray(APMPartition[]::new);
     }
 
     public ApplePartitionMap(byte[] data, int off, int blockSize) {
         this(new ReadableByteArrayStream(data, 0, data.length), off, blockSize);
     }
 
+    @Override
     public boolean isValid() {
         if (partitions.length > 0) {
             for (APMPartition p : partitions) {
@@ -101,10 +107,12 @@ public class ApplePartitionMap implements PartitionSystem {
             return false;
     }
 
+    @Override
     public int getPartitionCount() {
         return partitions.length;
     }
 
+    @Override
     public int getUsedPartitionCount() {
         return getPartitionCount();
     }
@@ -114,6 +122,7 @@ public class ApplePartitionMap implements PartitionSystem {
         return partitions[index];
     }
 
+    @Override
     public APMPartition[] getPartitionEntries() {
         APMPartition[] copy = new APMPartition[partitions.length];
         for (int i = 0; i < partitions.length; ++i)
@@ -121,6 +130,7 @@ public class ApplePartitionMap implements PartitionSystem {
         return copy;
     }
 
+    @Override
     public Partition[] getUsedPartitionEntries() {
         return getPartitionEntries();
     }
@@ -140,6 +150,7 @@ public class ApplePartitionMap implements PartitionSystem {
             return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         for (int i = 0; i < partitions.length; ++i) {
             ps.println(prefix + " partitions[" + i + "]:");
@@ -147,19 +158,23 @@ public class ApplePartitionMap implements PartitionSystem {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println("Apple Partition Map:");
         printFields(ps, prefix);
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
         return getAPMPartition(index);
     }
 
+    @Override
     public String getLongName() {
         return "Apple Partition Map";
     }
 
+    @Override
     public String getShortName() {
         return "APM";
     }

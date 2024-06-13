@@ -27,12 +27,11 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
  */
 public class HFSXFileSystemRecognizer implements FileSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
-        switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
-            case HFSX:
-                return true;
-            default:
-                return false;
-        }
+        return switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
+            case HFSX -> true;
+            default -> false;
+        };
     }
 }

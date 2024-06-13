@@ -28,7 +28,7 @@ import org.catacombae.io.ReadableRandomAccessStream;
  */
 public class ReadableStreamDataLocator extends DataLocator {
 
-    private SynchronizedReadableRandomAccessStream backingStream;
+    private final SynchronizedReadableRandomAccessStream backingStream;
     private boolean closed = false;
 
     public ReadableStreamDataLocator(ReadableRandomAccessStream sourceStream) {

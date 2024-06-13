@@ -68,7 +68,7 @@ public abstract class CommonHFSCatalogString {
 
     public static class HFSPlusImplementation extends CommonHFSCatalogString {
 
-        private HFSUniStr255 nodeName;
+        private final HFSUniStr255 nodeName;
 
         private HFSPlusImplementation(HFSUniStr255 nodeName) {
             this.nodeName = nodeName;

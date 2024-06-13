@@ -40,7 +40,7 @@ public class OSType implements PrintableStruct, StructElements {
      * 0   4     FourCharCode  osType
      */
 
-    private FourCharCode osType;
+    private final FourCharCode osType;
 
     public OSType(byte[] data, int offset) {
         osType = new FourCharCode(data, offset);
@@ -55,11 +55,13 @@ public class OSType implements PrintableStruct, StructElements {
         return osType.getFourCharCodeAsString();
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " osType: ");
         osType.print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "OSType:");
         printFields(ps, prefix);
@@ -69,6 +71,7 @@ public class OSType implements PrintableStruct, StructElements {
         return osType.getBytes();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(OSType.class.getSimpleName());
 

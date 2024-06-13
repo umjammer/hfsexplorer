@@ -28,18 +28,23 @@ public abstract class BasicExtractProgressMonitor extends NullProgressMonitor im
     protected BasicExtractProgressMonitor() {
     }
 
+    @Override
     public void updateTotalProgress(double fraction, String message) {
     }
 
+    @Override
     public void updateCurrentDir(String dirname) {
     }
 
+    @Override
     public void updateCurrentFile(String filename, long fileSize) {
     }
 
+    @Override
     public void setDataSize(long totalSize) {
     }
 
+    @Override
     public void updateCalculateDir(String dirname) {
     }
 }

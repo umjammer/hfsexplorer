@@ -29,7 +29,7 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
  */
 public class EBRHandler extends PartitionSystemHandler {
 
-    private DataLocator partitionData;
+    private final DataLocator partitionData;
 
     public EBRHandler(DataLocator partitionData) {
         this.partitionData = partitionData;

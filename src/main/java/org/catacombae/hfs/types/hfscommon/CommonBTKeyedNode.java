@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonBTKeyedNode<R extends CommonBTKeyedRecord>
+public abstract class CommonBTKeyedNode<R extends CommonBTKeyedRecord<?>>
         extends CommonBTNode<R> {
 
     protected CommonBTKeyedNode(byte[] data, int offset, int nodeSize, FSType type) {

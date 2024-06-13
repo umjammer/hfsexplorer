@@ -26,8 +26,8 @@ package org.catacombae.storage.fs;
  */
 public interface FSEntry {
 
-    public static enum Type {
-        FILE, FOLDER, SYMLINK, CHARACTER_DEVICE, BLOCK_DEVICE, FIFO, SOCKET;
+    enum Type {
+        FILE, FOLDER, SYMLINK, CHARACTER_DEVICE, BLOCK_DEVICE, FIFO, SOCKET
     }
 
     /**
@@ -36,11 +36,11 @@ public interface FSEntry {
      *
      * @return the attributes of this file system entry.
      */
-    public FSAttributes getAttributes();
+    FSAttributes getAttributes();
 
-    public String getName();
+    String getName();
 
-    //public abstract FSFolder getParent();
+//    FSFolder getParent();
 
     /**
      * Returns whether or not the entry as a whole is compressed on disk.
@@ -55,14 +55,14 @@ public interface FSEntry {
      *
      * @return whether or not the entry as a whole is compressed on disk.
      */
-    public abstract boolean isCompressed();
+    boolean isCompressed();
 
     /**
      * Returns all available forks for this file.
      *
      * @return all available forks for this file.
      */
-    public FSFork[] getAllForks();
+    FSFork[] getAllForks();
 
     /**
      * Returns the fork corresponding to a predefined fork type, if supported,
@@ -74,7 +74,7 @@ public interface FSEntry {
      * @param type the FSForkType corresponding to the requested fork.
      * @return the requested fork, if existent, or <code>null</code> otherwise.
      */
-    public FSFork getForkByType(FSForkType type);
+    FSFork getForkByType(FSForkType type);
 
     /**
      * Returns the length of the data of all of the file's forks put together.
@@ -83,5 +83,5 @@ public interface FSEntry {
      *
      * @return the length of the data of all of the file's forks put together.
      */
-    public long getCombinedLength();
+    long getCombinedLength();
 }

@@ -17,7 +17,6 @@
 
 package org.catacombae.hfsexplorer;
 
-import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.Window;
 import java.io.File;
@@ -92,7 +91,7 @@ public class Java6Util extends org.catacombae.util.Java6Util {
                     "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " + returnObject.getClass());
         }
 
-        return ((Boolean) returnObject).booleanValue();
+        return (Boolean) returnObject;
     }
 
     /**
@@ -185,7 +184,7 @@ public class Java6Util extends org.catacombae.util.Java6Util {
                     "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " + returnObject.getClass());
         }
 
-        return ((Boolean) returnObject).booleanValue();
+        return (Boolean) returnObject;
     }
 
     /**
@@ -241,7 +240,7 @@ public class Java6Util extends org.catacombae.util.Java6Util {
      * @param window the window that the icons should be applied to.
      */
     public static void setIconImages(ImageIcon[] icons, Window window) {
-        LinkedList<Image> iconImages = new LinkedList<Image>();
+        LinkedList<Image> iconImages = new LinkedList<>();
         for (ImageIcon ii : icons)
             iconImages.addLast(ii.getImage());
 
@@ -249,14 +248,10 @@ public class Java6Util extends org.catacombae.util.Java6Util {
             Class<? extends Window> c = window.getClass();
             Method m = c.getMethod("setIconImages", List.class);
             m.invoke(window, iconImages);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (NoSuchMethodException | IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
+            Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
             } else {
@@ -281,15 +276,13 @@ public class Java6Util extends org.catacombae.util.Java6Util {
                                     int defaultSortColumn, List<Comparator<?>> columnComparators) {
 
         try {
-            final Class<? extends Object> rowSorterClass =
-                    Class.forName("javax.swing.RowSorter");
-            final Class<? extends Object> tableRowSorterClass =
-                    Class.forName("javax.swing.table.TableRowSorter");
-            final Method tableRowSorterSetComparatorMethod =
+            Class<?> rowSorterClass = Class.forName("javax.swing.RowSorter");
+            Class<?> tableRowSorterClass = Class.forName("javax.swing.table.TableRowSorter");
+            Method tableRowSorterSetComparatorMethod =
                     tableRowSorterClass.getMethod("setComparator", int.class, Comparator.class);
-            final Method tableRowSorterToggleSortOrderMethod =
+            Method tableRowSorterToggleSortOrderMethod =
                     tableRowSorterClass.getMethod("toggleSortOrder", int.class);
-            final Object sorter = tableRowSorterClass.getConstructor(TableModel.class).newInstance(tableModel);
+            Object sorter = tableRowSorterClass.getConstructor(TableModel.class).newInstance(tableModel);
 
             int i = 0;
             for (Comparator<?> c : columnComparators) {
@@ -306,18 +299,11 @@ public class Java6Util extends org.catacombae.util.Java6Util {
             Class<? extends JTable> c = table.getClass();
             Method m = c.getMethod("setRowSorter", rowSorterClass);
             m.invoke(table, sorter);
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException | NoSuchMethodException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
+            Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
             } else {

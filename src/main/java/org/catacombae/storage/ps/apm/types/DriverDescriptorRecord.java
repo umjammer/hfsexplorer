@@ -21,11 +21,15 @@ import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.util.Util;
 
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import org.catacombae.io.RuntimeIOException;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -35,7 +39,10 @@ import org.catacombae.io.RuntimeIOException;
  */
 public class DriverDescriptorRecord {
 
+    private static final Logger logger = getLogger(DriverDescriptorRecord.class.getName());
+
     public static final short DDR_SIGNATURE = 0x4552;
+
     /*
      * struct DriverDescriptorRecord
      * size: >= 18 bytes
@@ -124,7 +131,7 @@ public class DriverDescriptorRecord {
         Util.arrayPutBE(this.sbBlkCount, 0, (int) blockCount);
         Util.arrayPutBE(this.sbDevType, 0, (short) 0);
         Util.arrayPutBE(this.sbDevId, 0, (short) 0);
-        Util.arrayPutBE(this.sbData, 0, (int) 0);
+        Util.arrayPutBE(this.sbData, 0, 0);
         Util.arrayPutBE(this.sbDrvrCount, 0, (short) 0);
         this.entries = new DriverDescriptorEntry[0];
         this.ddPad = new byte[blockSize - 18];
@@ -355,7 +362,7 @@ public class DriverDescriptorRecord {
             byte[] md5sum = MessageDigest.getInstance("MD5").digest(ddPad);
             ps.println(prefix + "  MD5: " + Util.byteArrayToHexString(md5sum));
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 

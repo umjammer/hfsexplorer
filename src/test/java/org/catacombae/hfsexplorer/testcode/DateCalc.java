@@ -39,7 +39,7 @@ public class DateCalc {
         System.out.println(usedTZ.useDaylightTime());
         Calendar c1 = Calendar.getInstance(usedTZ);
         c1.setTime(d);
-        c1.set(1904, 0, 1);
+        c1.set(1904, Calendar.JANUARY, 1);
         Calendar c2 = Calendar.getInstance(usedTZ);
         c2.setTime(d);
         System.out.println("c1: " + c1);

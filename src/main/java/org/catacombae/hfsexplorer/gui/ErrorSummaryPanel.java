@@ -19,8 +19,6 @@ package org.catacombae.hfsexplorer.gui;
 
 import java.awt.Dialog;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 import javax.swing.JDialog;
 
@@ -30,14 +28,10 @@ import javax.swing.JDialog;
  */
 public class ErrorSummaryPanel extends javax.swing.JPanel {
 
-    private ErrorSummaryPanel(final JDialog dialog, List<String> errorMessages) {
+    private ErrorSummaryPanel(JDialog dialog, List<String> errorMessages) {
         this(errorMessages);
 
-        closeButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                dialog.dispose();
-            }
-        });
+        closeButton.addActionListener(e -> dialog.dispose());
 
 
     }

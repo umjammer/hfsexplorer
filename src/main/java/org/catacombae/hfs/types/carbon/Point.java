@@ -71,11 +71,13 @@ public class Point implements PrintableStruct, StructElements {
         return "(" + getV() + "," + getH() + ")";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " v: " + getV());
         ps.println(prefix + " h: " + getH());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "Point:");
         printFields(ps, prefix);
@@ -91,6 +93,7 @@ public class Point implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(Point.class.getSimpleName());
 

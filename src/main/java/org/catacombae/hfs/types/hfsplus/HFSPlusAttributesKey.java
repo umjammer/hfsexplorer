@@ -56,11 +56,11 @@ public class HFSPlusAttributesKey extends BTKey
 
     private static final int kHFSMaxAttrNameLen = 127;
 
-    private short keyLength;
-    private short pad;
+    private final short keyLength;
+    private final short pad;
     private final HFSCatalogNodeID fileID;
-    private int startBlock;
-    private short attrNameLen;
+    private final int startBlock;
+    private final short attrNameLen;
     private final byte[] attrName;
 
     public HFSPlusAttributesKey(byte[] data, int offset) {
@@ -97,20 +97,24 @@ public class HFSPlusAttributesKey extends BTKey
         this.attrName = Util.readByteArrayBE(attrName);
     }
 
+    @Override
     public int length() {
         return occupiedSize();
     }
 
 
+    @Override
     public int maxSize() {
         return STATIC_SIZE + 2 * kHFSMaxAttrNameLen;
     }
 
+    @Override
     public int occupiedSize() {
         return STATIC_SIZE + 2 * getAttrNameLen();
     }
 
     /** key length (in bytes) */
+    @Override
     public final short getKeyLength() {
         return getRawKeyLength();
     }
@@ -164,6 +168,7 @@ public class HFSPlusAttributesKey extends BTKey
         return this.attrNameLen;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " keyLength: " + getKeyLength());
         ps.println(prefix + " pad: " + getPad());
@@ -174,11 +179,13 @@ public class HFSPlusAttributesKey extends BTKey
         ps.println(prefix + " attrName: \"" + new String(getAttrName()) + "\"");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusAttributesKey:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -200,15 +207,16 @@ public class HFSPlusAttributesKey extends BTKey
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
-        final Class thisClass = HFSPlusAttributesKey.class;
+        final Class<HFSPlusAttributesKey> thisClass = HFSPlusAttributesKey.class;
         DictionaryBuilder db = new DictionaryBuilder(thisClass.getSimpleName(), "HFS+ attributes key");
 
         try {
-            final Field keyLengthField = thisClass.getDeclaredField("keyLength");
-            final Field padField = thisClass.getDeclaredField("pad");
-            final Field startBlockField = thisClass.getDeclaredField("startBlock");
-            final Field attrNameLenField = thisClass.getDeclaredField("attrNameLen");
+            Field keyLengthField = thisClass.getDeclaredField("keyLength");
+            Field padField = thisClass.getDeclaredField("pad");
+            Field startBlockField = thisClass.getDeclaredField("startBlock");
+            Field attrNameLenField = thisClass.getDeclaredField("attrNameLen");
 
             keyLengthField.setAccessible(true);
             padField.setAccessible(true);

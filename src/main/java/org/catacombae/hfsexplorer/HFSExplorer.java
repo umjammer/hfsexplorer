@@ -22,23 +22,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import org.catacombae.hfs.io.ForkFilter;
-import org.catacombae.hfs.types.hfsplus.BTHeaderRec;
-import org.catacombae.hfs.types.hfsplus.BTNodeDescriptor;
-import org.catacombae.hfs.types.hfsplus.HFSCatalogNodeID;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogLeafNode;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogLeafRecord;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogLeafRecordData;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
-import org.catacombae.hfs.types.hfsplus.HFSPlusForkData;
-import org.catacombae.hfs.types.hfsplus.HFSPlusVolumeHeader;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
@@ -68,6 +57,8 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandler;
 import org.catacombae.hfs.HFSVolume;
 import org.catacombae.util.Util.Pair;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -75,27 +66,29 @@ import org.catacombae.util.Util.Pair;
  */
 public class HFSExplorer {
 
+    private static final Logger logger = getLogger(HFSExplorer.class.getName());
+
     public static final String VERSION = "2021.10.9";
-    public static final String COPYRIGHT = "Copyright \u00A9 Erik Larsson 2006-2021";
+    public static final String COPYRIGHT = "Copyright © Erik Larsson 2006-2021";
     public static final String[] NOTICES = {
             "This program is distributed under the GNU General Public License version 3.",
             "See <http://www.gnu.org/copyleft/gpl.html> for the details.",
             "",
             "Libraries used:",
             "    swing-layout <https://swing-layout.dev.java.net/>",
-            "        Copyright \u00A9 2005-2006 Sun Microsystems, Inc. Licensed under",
+            "        Copyright © 2005-2006 Sun Microsystems, Inc. Licensed under",
             "        the Lesser General Public License.",
             "        See <http://www.gnu.org/licenses/lgpl.html> for the details.",
             "    iHarder Base64 and FileDrop projects <http://iharder.sourceforge.net>",
             "        Public domain software.",
             "    Apache Ant bzip2 library <https://ant.apache.org/>",
-            "        Copyright \u00A9 the Apache Software Foundation (ASF). Licensed",
+            "        Copyright © the Apache Software Foundation (ASF). Licensed",
             "        under the Apache License, Version 2.0.",
             "        See <http://www.apache.org/licenses/LICENSE-2.0> for the details.",
     };
     public static final String WEB_SITE_URL = "https://catacombae.org/hfsexplorer";
 
-    public static BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+    public static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
     private static class Options {
 
@@ -103,20 +96,20 @@ public class HFSExplorer {
         public boolean verbose = false;
     }
 
-    private static enum Operation {
+    private enum Operation {
         BROWSE,
         FRAGCHECK,
         TEST,
         SYSTEMFILEINFO;
 
-        private final LinkedList<String> argsList = new LinkedList<String>();
+        private final LinkedList<String> argsList = new LinkedList<>();
 
         public void addArg(String argument) {
             argsList.add(argument);
         }
 
         public String[] getArgs() {
-            return argsList.toArray(new String[argsList.size()]);
+            return argsList.toArray(String[]::new);
         }
 
         public String getFilename() {
@@ -124,9 +117,9 @@ public class HFSExplorer {
         }
     }
 
-    private static Options options = new Options();
+    private static final Options options = new Options();
     private static Operation operation;
-    private static BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+    private static final BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
@@ -154,12 +147,12 @@ public class HFSExplorer {
             byte[] currentBlock = new byte[512];
             byte[] signature = new byte[2];
 //            APMPartition p = new APMPartition(isoRaf);
-            ArrayList<APMPartition> partitions = new ArrayList<APMPartition>();
+            ArrayList<APMPartition> partitions = new ArrayList<>();
             for (int i = 0; i < 20; ++i) {
                 isoRaf.readFully(currentBlock);
                 signature[0] = currentBlock[0];
                 signature[1] = currentBlock[1];
-                if (new String(signature, "ASCII").equals("PM")) {
+                if (new String(signature, StandardCharsets.US_ASCII).equals("PM")) {
                     print("Partition " + i + ": ");
                     APMPartition p = new APMPartition(currentBlock, 0, 0x200);
                     partitions.add(p);
@@ -179,8 +172,8 @@ public class HFSExplorer {
                 System.exit(0);
             }
             println("Parsing partition " + partNum + " (" + chosenPartition.getPmPartNameAsString().trim() + "/" + partitionType.trim() + ")");
-            offset = (chosenPartition.getPmPyPartStart() + chosenPartition.getPmLgDataStart()) * 0x200;
-            length = chosenPartition.getPmDataCnt() * 0x200;
+            offset = (chosenPartition.getPmPyPartStart() + chosenPartition.getPmLgDataStart()) * 0x200L;
+            length = chosenPartition.getPmDataCnt() * 0x200L;
         } else {
             offset = 0;
             length = isoRaf.length();
@@ -409,7 +402,7 @@ outer:
         }
 
         if (hfsType == null) {
-            System.err.println("No HFS file system found.");
+            logger.log(Level.DEBUG, "No HFS file system found.");
             System.exit(1);
         } else
             System.out.println("Detected a " + hfsType + " file system.");
@@ -429,8 +422,8 @@ outer:
         CommonHFSCatalogLeafRecord currentDir = rootRecord;
 //        HFSCatalogNodeID = new HFSCatalogNodeID(1);
 //        rootRecord.getFolderID();
-        LinkedList<String> pathStack = new LinkedList<String>();
-        LinkedList<CommonHFSCatalogLeafRecord> pathThread = new LinkedList<CommonHFSCatalogLeafRecord>();
+        LinkedList<String> pathStack = new LinkedList<>();
+        LinkedList<CommonHFSCatalogLeafRecord> pathThread = new LinkedList<>();
         pathStack.addLast("");
 
         while (true) {
@@ -440,15 +433,14 @@ outer:
                 currentPath.append(pathComponent);
                 currentPath.append("/");
             }
-            println("Listing files in \"" + currentPath.toString() + "\":");
+            println("Listing files in \"" + currentPath + "\":");
 
             boolean atLeastOneNonThreadEntryFound = false;
             CommonHFSCatalogLeafRecord[] recordsInDir = fsView.getCatalogFile().listRecords(currentDir);
 
             for (CommonHFSCatalogLeafRecord rec : recordsInDir) {
 
-                if (rec instanceof CommonHFSCatalogFileRecord) {
-                    CommonHFSCatalogFileRecord catFileRec = (CommonHFSCatalogFileRecord) rec;
+                if (rec instanceof CommonHFSCatalogFileRecord catFileRec) {
                     CommonHFSCatalogFile catFile = catFileRec.getData();
 
                     println("  [" + catFile.getFileID() + "] \"" + rec.getKey().getNodeName() + "\" (" +
@@ -456,16 +448,14 @@ outer:
 
                     if (!atLeastOneNonThreadEntryFound)
                         atLeastOneNonThreadEntryFound = true;
-                } else if (rec instanceof CommonHFSCatalogFolderRecord) {
-                    CommonHFSCatalogFolderRecord catFolderRec = (CommonHFSCatalogFolderRecord) rec;
+                } else if (rec instanceof CommonHFSCatalogFolderRecord catFolderRec) {
                     CommonHFSCatalogFolder catFolder = catFolderRec.getData();
 
                     println("  [" + catFolder.getFolderID() + "] \"" + catFolderRec.getKey().getNodeName() + "/\"");
 
                     if (!atLeastOneNonThreadEntryFound)
                         atLeastOneNonThreadEntryFound = true;
-                } else if (rec instanceof CommonHFSCatalogFolderThreadRecord) {
-                    CommonHFSCatalogFolderThreadRecord catThreadRec = (CommonHFSCatalogFolderThreadRecord) rec;
+                } else if (rec instanceof CommonHFSCatalogFolderThreadRecord catThreadRec) {
                     CommonHFSCatalogFolderThread catThread = catThreadRec.getData();
 
                     println("  [Folder Thread: [" + catThread.getParentID() + "] \"" + catThread.getNodeName() + "\"]");
@@ -475,8 +465,7 @@ outer:
                     else
                         println("WARNING: Found more than one folder thread in " + currentPath + "!");
 //                    println("  [" + catFolder.getFolderID() + "] <Folder Thread: [" + catThread.getParentID() + "] \"" + catThread.getNodeName() + "\"");
-                } else if (rec instanceof CommonHFSCatalogFileThreadRecord) {
-                    CommonHFSCatalogFileThreadRecord catThreadRec = (CommonHFSCatalogFileThreadRecord) rec;
+                } else if (rec instanceof CommonHFSCatalogFileThreadRecord catThreadRec) {
                     CommonHFSCatalogFileThread catThread = catThreadRec.getData();
 
                     println("  [File Thread: [" + catThread.getParentID() + "] \"" + catThread.getNodeName() + "\"]");
@@ -495,7 +484,7 @@ outer:
                 try {
                     input = stdIn.readLine().trim();
                 } catch (IOException ioe) {
-                    ioe.printStackTrace();
+                    logger.log(Level.ERROR, ioe.getMessage(), ioe);
                     return;
                 }
                 if (input.equalsIgnoreCase("?")) {
@@ -518,8 +507,7 @@ outer:
                         CommonHFSCatalogLeafRecord selectedFileRecord = null;
                         CommonHFSCatalogFile selectedFile = null;
                         for (CommonHFSCatalogLeafRecord rec : recordsInDir) {
-                            if (rec instanceof CommonHFSCatalogFileRecord) {
-                                CommonHFSCatalogFileRecord catFileRec = (CommonHFSCatalogFileRecord) rec;
+                            if (rec instanceof CommonHFSCatalogFileRecord catFileRec) {
                                 CommonHFSCatalogFile catFile = catFileRec.getData();
 
                                 if (catFile.getFileID().toLong() == nextID) {
@@ -542,7 +530,7 @@ outer:
                                 println("extracted " + bytesExtracted + " bytes.");
                                 dataOut.close();
                             } catch (IOException ioe) {
-                                ioe.printStackTrace();
+                                logger.log(Level.ERROR, ioe.getMessage(), ioe);
                                 try {
                                     dataOut.close();
                                 } catch (IOException ioe2) {
@@ -559,7 +547,7 @@ outer:
                                 println("extracted " + bytesExtracted + " bytes.");
                                 resourceOut.close();
                             } catch (IOException ioe) {
-                                ioe.printStackTrace();
+                                logger.log(Level.ERROR, ioe.getMessage(), ioe);
                                 try {
                                     dataOut.close();
                                 } catch (IOException ioe2) {
@@ -569,7 +557,7 @@ outer:
                         }
 
                     } catch (FileNotFoundException fnfe) {
-                        fnfe.printStackTrace();
+                        logger.log(Level.ERROR, fnfe.getMessage(), fnfe);
                     } catch (NumberFormatException nfe) {
 //                        nextID = -1;
                         println("Invalid input!");
@@ -582,8 +570,7 @@ outer:
                         CommonHFSCatalogLeafRecord selectedFileRecord = null;
                         for (CommonHFSCatalogLeafRecord rec : recordsInDir) {
 
-                            if (rec instanceof CommonHFSCatalogFileRecord) {
-                                CommonHFSCatalogFileRecord catFileRec = (CommonHFSCatalogFileRecord) rec;
+                            if (rec instanceof CommonHFSCatalogFileRecord catFileRec) {
                                 CommonHFSCatalogFile catFile = catFileRec.getData();
 
                                 if (catFile.getFileID().toLong() == nextID) {
@@ -612,9 +599,8 @@ outer:
                             CommonHFSCatalogLeafRecord nextDir = null;
                             for (CommonHFSCatalogLeafRecord rec : recordsInDir) {
 
-                                if (rec instanceof CommonHFSCatalogFolderRecord) {
+                                if (rec instanceof CommonHFSCatalogFolderRecord catFolderRec) {
 //                                    System.out.println(rec.getKey().getNodeName() + ".equals(" + input +")");
-                                    CommonHFSCatalogFolderRecord catFolderRec = (CommonHFSCatalogFolderRecord) rec;
                                     CommonHFSCatalogFolder catFolder = catFolderRec.getData();
 
                                     if (catFolder.getFolderID().toLong() == nextID) {
@@ -650,7 +636,7 @@ outer:
 //                                HFSPlusCatalogThread catThread = (HFSPlusCatalogThread) recData;
 //                                nextDir = fsView.getRecord(catThread.getParentID(), catThread.getNodeName());
 //                                if (nextDir == null)
-//                                    System.err.println("OCULD NOTT FIAAND DIDIIRR!!!");
+//                                    logger.log(Level.DEBUG, "OCULD NOTT FIAAND DIDIIRR!!!");
 //                            }
 //                        }
 //                        if (nextDir == null) {
@@ -667,9 +653,8 @@ outer:
                             CommonHFSCatalogLeafRecord nextDir = null;
                             for (CommonHFSCatalogLeafRecord rec : recordsInDir) {
 
-                                if (rec instanceof CommonHFSCatalogFolderRecord) {
-                                    CommonHFSCatalogFolderRecord folderRec = (CommonHFSCatalogFolderRecord) rec;
-//                                    System.out.println(rec.getKey().getNodeName() + ".equals(" + input +")");
+                                if (rec instanceof CommonHFSCatalogFolderRecord folderRec) {
+                                    //                                    System.out.println(rec.getKey().getNodeName() + ".equals(" + input +")");
                                     if (rec.getKey().getNodeName().toString().equals(input)) {
                                         nextDir = rec;
                                         break;
@@ -702,7 +687,7 @@ outer:
         println("Gathering information about the files on the volume...");
         final int numberOfFilesToDisplay = 10;
         ArrayList<Pair<CommonHFSCatalogLeafRecord, Integer>> mostFragmentedList =
-                new ArrayList<Pair<CommonHFSCatalogLeafRecord, Integer>>(numberOfFilesToDisplay + 1);
+                new ArrayList<>(numberOfFilesToDisplay + 1);
 
         // This is the deal:
         //   - Go to catalog file
@@ -735,7 +720,7 @@ outer:
         }
 
         if (hfsType == null) {
-            System.err.println("No HFS file system found.");
+            logger.log(Level.DEBUG, "No HFS file system found.");
             System.exit(1);
         } else
             System.out.println("Detected a " + hfsType + " file system.");
@@ -763,21 +748,21 @@ outer:
 
     private static void recursiveFragmentSearch(HFSVolume fsView, CommonHFSCatalogLeafRecord currentDir,
                                                 ArrayList<Pair<CommonHFSCatalogLeafRecord, Integer>> mostFragmentedList,
-                                                final int listMaxLength, final boolean verbose) {
+                                                int listMaxLength, boolean verbose) {
         for (CommonHFSCatalogLeafRecord rec : fsView.getCatalogFile().listRecords(currentDir)) {
             if (rec instanceof CommonHFSCatalogFileRecord) {
                 CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord) rec).getData();
 
                 CommonHFSExtentDescriptor[] descs = fsView.getExtentsOverflowFile().getAllDataExtentDescriptors(rec);
 
-                mostFragmentedList.add(new Pair<CommonHFSCatalogLeafRecord, Integer>(rec, descs.length));
+                mostFragmentedList.add(new Pair<>(rec, descs.length));
 
                 // Let the new item bubble up to its position in the list
                 for (int i = mostFragmentedList.size() - 1; i > 0; --i) {
                     Pair<CommonHFSCatalogLeafRecord, Integer> lower = mostFragmentedList.get(i);
                     Pair<CommonHFSCatalogLeafRecord, Integer> higher = mostFragmentedList.get(i - 1);
 
-                    if (lower.getB().intValue() > higher.getB().intValue()) {
+                    if (lower.getB() > higher.getB()) {
                         // Switch places.
                         mostFragmentedList.set(i - 1, lower);
                         mostFragmentedList.set(i, higher);
@@ -803,9 +788,9 @@ outer:
     private static void operationSystemFileInfo(
             Operation op, ReadableRandomAccessStream hfsFile, long fsOffset, long fsLength) {
 //        ReadableRandomAccessStream oldHfsFile = hfsFile;
-//        System.err.println("Opening hack UDIF file...");
+//        logger.log(Level.DEBUG, "Opening hack UDIF file...");
 //        hfsFile = new UDIFRandomAccessLLF("/Users/erik/documents.dmg");
-//        System.err.println("Opened.");
+//        logger.log(Level.DEBUG, "Opened.");
 
         DataLocator inputDataLocator = new ReadableStreamDataLocator(
                 new ReadableConcatenatedStream(hfsFile, fsOffset, fsLength));
@@ -830,7 +815,7 @@ outer:
         }
 
         if (hfsType == null) {
-            System.err.println("No HFS file system found.");
+            logger.log(Level.DEBUG, "No HFS file system found.");
             System.exit(1);
         } else
             System.out.println("Detected a " + hfsType + " file system.");
@@ -851,9 +836,7 @@ outer:
         CommonHFSForkData[] interestingFiles;
         String[] labels;
 
-        if (header instanceof CommonHFSVolumeHeader.HFSPlusImplementation) {
-            CommonHFSVolumeHeader.HFSPlusImplementation plusHeader =
-                    (CommonHFSVolumeHeader.HFSPlusImplementation) header;
+        if (header instanceof CommonHFSVolumeHeader.HFSPlusImplementation plusHeader) {
             ids = new ReservedID[] {
                     ReservedID.ALLOCATION_FILE,
                     ReservedID.EXTENTS_FILE,
@@ -945,7 +928,7 @@ outer:
         // 80:  <-------------------------------------------------------------------------------->
         println("hfsx - HFSExplorer Command Line Interface");
         println("Version " + VERSION);
-        println(COPYRIGHT.replaceAll("\u00A9", "(C)"));
+        println(COPYRIGHT.replaceAll("©", "(C)"));
         println();
         println("Utility to explore various aspects of an HFS/HFS+/HFSX filesystem.");
         println("usage: hfsx [common options] <verb> [verb options] <file/device>");
@@ -1020,7 +1003,7 @@ outer:
 //        else if (currentArg.equals("systemfileinfo"))
 //            operation = Operation.SYSTEMFILEINFO;
         else {
-            System.err.println("Unknown operation: " + currentArg);
+            logger.log(Level.DEBUG, "Unknown operation: " + currentArg);
             return false;
         }
 

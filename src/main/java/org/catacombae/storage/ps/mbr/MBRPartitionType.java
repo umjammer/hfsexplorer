@@ -18,6 +18,7 @@
 package org.catacombae.storage.ps.mbr;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import org.catacombae.storage.ps.PartitionType;
 
@@ -80,7 +81,7 @@ public enum MBRPartitionType {
     private final Byte mbrType;
     private final PartitionType enumType;
 
-    private MBRPartitionType(byte mbrType, PartitionType enumType) {
+    MBRPartitionType(byte mbrType, PartitionType enumType) {
         if (enumType == null)
             throw new IllegalArgumentException("enumType == null");
         this.mbrType = mbrType;
@@ -89,7 +90,7 @@ public enum MBRPartitionType {
         addReverseLookupReference(mbrType, this);
     }
 
-    private MBRPartitionType() {
+    MBRPartitionType() {
         this.mbrType = null;
         this.enumType = null;
     }
@@ -104,7 +105,7 @@ public enum MBRPartitionType {
 
     private static void addReverseLookupReference(byte b, MBRPartitionType t) {
         if (reverseLookupTable == null)
-            reverseLookupTable = new HashMap<Byte, MBRPartitionType>();
+            reverseLookupTable = new HashMap<>();
         reverseLookupTable.put(b, t);
     }
 
@@ -117,10 +118,7 @@ public enum MBRPartitionType {
      */
     public static MBRPartitionType fromMBRType(byte mbrType) {
         MBRPartitionType type = reverseLookupTable.get(mbrType);
-        if (type == null)
-            return UNKNOWN;
-        else
-            return type;
+        return Objects.requireNonNullElse(type, UNKNOWN);
     }
 }
 

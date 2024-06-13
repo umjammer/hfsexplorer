@@ -290,6 +290,7 @@ public class MacRomanStringCodec extends SingleByteCodepageStringCodec {
         super(mappingTable);
     }
 
+    @Override
     public String getCharsetName() {
         return "MacRoman";
     }

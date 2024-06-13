@@ -29,7 +29,7 @@ import org.catacombae.util.Util;
  */
 public class HFSPlusAttributesLeafNode extends BTLeafNode {
 
-    protected HFSPlusAttributesLeafRecord[] leafRecords;
+    protected final HFSPlusAttributesLeafRecord[] leafRecords;
 
     public HFSPlusAttributesLeafNode(byte[] data, int offset, int nodeSize) {
         this(data, offset, nodeSize, null);

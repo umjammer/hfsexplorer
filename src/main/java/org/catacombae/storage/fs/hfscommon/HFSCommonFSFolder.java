@@ -17,6 +17,8 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import java.util.Objects;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFolder;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFolderRecord;
@@ -64,35 +66,38 @@ public class HFSCommonFSFolder extends HFSCommonFSEntry implements FSFolder {
         if (iFolderRecord == null)
             throw new IllegalArgumentException("iFolderRecord must not be null!");
 
-        if (iHardLinkFileRecord != null)
-            this.keyRecord = iHardLinkFileRecord;
-        else
-            this.keyRecord = iFolderRecord;
+        this.keyRecord = Objects.requireNonNullElse(iHardLinkFileRecord, iFolderRecord);
         this.folderRecord = iFolderRecord;
 
         this.attributes = new HFSCommonFSAttributes(this, folderRecord.getData());
     }
 
+    @Override
     public String[] list() {
         return fsHandler.listNames(folderRecord);
     }
 
+    @Override
     public FSEntry[] listEntries() {
         return fsHandler.listFSEntries(folderRecord);
     }
 
+    @Override
     public FSEntry getChild(String name) {
         return fsHandler.getEntry(folderRecord, name);
     }
 
+    @Override
     public long getValence() {
         return folderRecord.getData().getValence();
     }
 
+    @Override
     public FSAttributes getAttributes() {
         return attributes;
     }
 
+    @Override
     public String getName() {
         return fsHandler.getProperNodeName(keyRecord);
     }
@@ -102,14 +107,17 @@ public class HFSCommonFSFolder extends HFSCommonFSEntry implements FSFolder {
 //        return fsHandler.lookupParentFolder(keyRecord);
 //    }
 
+    @Override
     public boolean isCompressed() {
         return false;
     }
 
+    @Override
     protected CommonHFSCatalogNodeID getCatalogNodeID() {
         return folderRecord.getData().getFolderID();
     }
 
+    @Override
     protected FSFork getResourceFork() {
         return null;
     }

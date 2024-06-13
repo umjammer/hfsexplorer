@@ -68,6 +68,7 @@ public class HFSPlusCatalogLeafRecord implements PrintableStruct {
         return recordData;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.printFields(ps, prefix + "  ");
@@ -75,6 +76,7 @@ public class HFSPlusCatalogLeafRecord implements PrintableStruct {
         recordData.printFields(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusCatalogLeafRecord:");
         printFields(ps, prefix);

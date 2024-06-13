@@ -27,8 +27,8 @@ import org.catacombae.util.Util;
  */
 public class HFSPlusExtentLeafNode extends BTLeafNode {
 
-    protected HFSPlusExtentLeafRecord[] leafRecords;
-    protected short[] leafRecordOffsets;
+    protected final HFSPlusExtentLeafRecord[] leafRecords;
+    protected final short[] leafRecordOffsets;
 
     public HFSPlusExtentLeafNode(byte[] data, int offset, int nodeSize) {
         super(data, offset, nodeSize);

@@ -39,12 +39,12 @@ public class FSEntryFileAccessor implements FileAccessor {
         this.e = e;
     }
 
+    @Override
     public FileAccessor[] listFiles() {
-        if (!(e instanceof FSFolder)) {
+        if (!(e instanceof FSFolder f)) {
             return null;
         }
 
-        FSFolder f = (FSFolder) e;
         FSEntry[] subEntries = f.listEntries();
         FileAccessor[] subAccessors = new FileAccessor[subEntries.length];
         for (int i = 0; i < subEntries.length; ++i) {
@@ -54,18 +54,22 @@ public class FSEntryFileAccessor implements FileAccessor {
         return subAccessors;
     }
 
+    @Override
     public boolean isFile() {
         return (e instanceof FSFile);
     }
 
+    @Override
     public boolean isDirectory() {
         return (e instanceof FSFolder);
     }
 
+    @Override
     public String getName() {
         return e.getName();
     }
 
+    @Override
     public String getAbsolutePath() {
         //
         // We don't actually have access to the full path, but it's only used
@@ -74,25 +78,26 @@ public class FSEntryFileAccessor implements FileAccessor {
         return getName();
     }
 
+    @Override
     public boolean exists() {
         return true;
     }
 
+    @Override
     public FileAccessor lookupChild(String name) {
-        if (!(e instanceof FSFolder)) {
+        if (!(e instanceof FSFolder f)) {
             return null;
         }
 
-        FSFolder f = (FSFolder) e;
         return new FSEntryFileAccessor(f.getChild(name));
     }
 
+    @Override
     public long length() {
-        if (!(e instanceof FSFile)) {
+        if (!(e instanceof FSFile f)) {
             return 0;
         }
 
-        FSFile f = (FSFile) e;
         FSFork mainFork = f.getMainFork();
         if (mainFork == null) {
             return 0;
@@ -101,27 +106,30 @@ public class FSEntryFileAccessor implements FileAccessor {
         return mainFork.getLength();
     }
 
+    @Override
     public ReadableRandomAccessStream createReadableStream() {
-        if (!(e instanceof FSFile)) {
+        if (!(e instanceof FSFile f)) {
             throw new RuntimeException("Can only create a stream for files.");
         }
 
-        FSFile f = (FSFile) e;
         FSFork mainFork = f.getMainFork();
         return mainFork.getReadableRandomAccessStream();
 
     }
 
+    @Override
     public void lock() {
         // Note: No-op now. Would be needed if we ever implemented write
         // support.
     }
 
+    @Override
     public void unlock() {
         // Note: No-op now. Would be needed if we ever implemented write
         // support.
     }
 
+    @Override
     public void close() {
         // Note: No-op now and possibly forever.
     }

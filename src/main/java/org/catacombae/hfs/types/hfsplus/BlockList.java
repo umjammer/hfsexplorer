@@ -57,7 +57,7 @@ public class BlockList implements DynamicStruct, PrintableStruct {
 
         this.bdata = new byte[this.header.getNumBlocks()][];
         for (int i = 0; i < binfo.length; ++i) {
-            final int bsize = binfo[i].getRawBsize();
+            int bsize = binfo[i].getRawBsize();
             if (bsize < 0) {
                 throw new RuntimeException("'int' overflow in 'bsize' (" + bsize + ").");
             }
@@ -68,10 +68,12 @@ public class BlockList implements DynamicStruct, PrintableStruct {
         }
     }
 
+    @Override
     public int maxSize() {
         return Integer.MAX_VALUE;
     }
 
+    @Override
     public int occupiedSize() {
         int occupiedSize = BlockListHeader.length() + binfo.length * BlockInfo.length() + reserved.length;
 
@@ -94,6 +96,7 @@ public class BlockList implements DynamicStruct, PrintableStruct {
         return binfo[index];
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " header: ");
         header.print(ps, prefix + "  ");
@@ -110,11 +113,13 @@ public class BlockList implements DynamicStruct, PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BlockList:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         getBytes(result, 0);
@@ -122,7 +127,7 @@ public class BlockList implements DynamicStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int originalOffset = offset;
+        int originalOffset = offset;
 
         offset += header.getBytes(result, offset);
         for (BlockInfo bi : binfo) {

@@ -50,9 +50,9 @@ public class DecmpfsHeader implements PrintableStruct {
 
     public static final int STRUCTSIZE = 16;
 
-    private int magic;
-    private int compressionType;
-    private long fileSize;
+    private final int magic;
+    private final int compressionType;
+    private final long fileSize;
 
     public DecmpfsHeader(byte[] data, int offset) {
         this.magic = Util.readIntBE(data, offset + 0);
@@ -103,12 +103,14 @@ public class DecmpfsHeader implements PrintableStruct {
         return Util.byteSwap(this.fileSize);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " magic: " + getMagic());
         ps.println(prefix + " compressionType: " + getCompressionType());
         ps.println(prefix + " fileSize: " + getFileSize());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "DecmpfsHeader:");
         printFields(ps, prefix);
@@ -121,7 +123,7 @@ public class DecmpfsHeader implements PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.magic);
         offset += 4;

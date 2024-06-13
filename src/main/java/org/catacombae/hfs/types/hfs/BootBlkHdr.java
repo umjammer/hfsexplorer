@@ -200,6 +200,7 @@ public class BootBlkHdr implements PrintableStruct {
         return Util.readIntBE(bbSysHeapFract);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " bbID: " + getBbID());
         ps.println(prefix + " bbEntry: " + getBbEntry());
@@ -222,6 +223,7 @@ public class BootBlkHdr implements PrintableStruct {
         ps.println(prefix + " bbSysHeapFract: " + getBbSysHeapFract());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BootBlkHdr:");
         printFields(ps, prefix);

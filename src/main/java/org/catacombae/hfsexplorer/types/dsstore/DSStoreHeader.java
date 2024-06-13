@@ -43,11 +43,11 @@ public class DSStoreHeader {
 
     public static final int STRUCTSIZE = 36;
 
-    private int alignment;
-    private int signature;
-    private int rootBlockOffset1;
-    private int rootBlockSize;
-    private int rootBlockOffset2;
+    private final int alignment;
+    private final int signature;
+    private final int rootBlockOffset1;
+    private final int rootBlockSize;
+    private final int rootBlockOffset2;
     private final byte[] unknown = new byte[4 * 4];
 
     public DSStoreHeader(byte[] data, int offset) {
@@ -161,7 +161,7 @@ public class DSStoreHeader {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.alignment);
         offset += 4;

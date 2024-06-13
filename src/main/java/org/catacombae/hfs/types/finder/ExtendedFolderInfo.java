@@ -91,6 +91,7 @@ public class ExtendedFolderInfo extends CommonExtendedFinderInfo {
         super.printFields(ps, prefix);
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ExtendedFolderInfo:");
         printFields(ps, prefix);

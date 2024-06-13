@@ -48,7 +48,7 @@ public abstract class CommonHFSCatalogIndexNode extends CommonBTKeyedNode<Common
 
         private final Internal i;
 
-        private class Internal extends CommonHFSCatalogIndexNode {
+        private static class Internal extends CommonHFSCatalogIndexNode {
 
             public Internal(byte[] data, int offset, int nodeSize) {
                 super(data, offset, nodeSize, FSType.HFS);
@@ -75,7 +75,7 @@ public abstract class CommonHFSCatalogIndexNode extends CommonBTKeyedNode<Common
 
         private final Internal i;
 
-        private class Internal extends CommonHFSCatalogIndexNode {
+        private static class Internal extends CommonHFSCatalogIndexNode {
 
             public Internal(byte[] data, int offset, int nodeSize) {
                 super(data, offset, nodeSize, FSType.HFS_PLUS);

@@ -52,11 +52,11 @@ public class AttributeEntry implements DynamicStruct, PrintableStruct {
     private static final long MAX_U32 = 0xFFFFFFFFL;
     private static final int MAX_U8 = 0xFF;
 
-    private int offset;
-    private int length;
-    private short flags;
-    private byte nameLength;
-    private byte[] name;
+    private final int offset;
+    private final int length;
+    private final short flags;
+    private final byte nameLength;
+    private final byte[] name;
 
     public AttributeEntry(byte[] data, int offset) {
         this.offset = Util.readIntBE(data, offset + 0);
@@ -89,10 +89,12 @@ public class AttributeEntry implements DynamicStruct, PrintableStruct {
         System.arraycopy(name, nameOffset, this.name, 0, nameLength);
     }
 
+    @Override
     public int occupiedSize() {
         return STATIC_STRUCTSIZE + getNameLength();
     }
 
+    @Override
     public int maxSize() {
         return STATIC_STRUCTSIZE + 255;
     }
@@ -146,6 +148,7 @@ public class AttributeEntry implements DynamicStruct, PrintableStruct {
         return this.nameLength;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " offset: " + getOffset());
         ps.println(prefix + " length: " + getLength());
@@ -155,11 +158,13 @@ public class AttributeEntry implements DynamicStruct, PrintableStruct {
                 Util.readString(getName(), 0, getNameLength() - 1, "UTF-8") + "\"");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "AttributeEntry:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         getBytes(result, 0);
@@ -167,7 +172,7 @@ public class AttributeEntry implements DynamicStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.offset);
         offset += 4;

@@ -125,6 +125,7 @@ public class CdrDirRec extends CatDataRec {
         return Util.readIntArrayBE(dirResrv);
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CdrDirRec.class.getSimpleName());
 
@@ -198,6 +199,7 @@ public class CdrDirRec extends CatDataRec {
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }

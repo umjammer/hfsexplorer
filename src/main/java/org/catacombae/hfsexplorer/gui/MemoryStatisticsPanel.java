@@ -17,14 +17,16 @@
 
 package org.catacombae.hfsexplorer.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -32,53 +34,44 @@ import org.catacombae.util.Util;
  */
 public class MemoryStatisticsPanel extends javax.swing.JPanel {
 
+    private static final Logger logger = getLogger(MemoryStatisticsPanel.class.getName());
+
     private final Object syncObj = new Object();
     private boolean abortThread = false;
 
     public MemoryStatisticsPanel() {
         initComponents();
 
-        runGcButton.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                Runtime.getRuntime().gc();
-            }
-
-        });
+        runGcButton.addActionListener(e -> Runtime.getRuntime().gc());
     }
 
     public void startThread() {
-        Runnable r = new Runnable() {
+        Runnable r = () -> {
+            Runtime rt = Runtime.getRuntime();
+            synchronized (syncObj) {
+                while (!abortThread) {
+                    long curMaxMem = rt.totalMemory();
+                    long maxMem = rt.maxMemory();
+                    long freeMem = rt.freeMemory();
+                    long allocatedMem = curMaxMem - freeMem;
 
-                public void run() {
-                Runtime rt = Runtime.getRuntime();
-                synchronized (syncObj) {
-                    while (!abortThread) {
-                        final long curMaxMem = rt.totalMemory();
-                        final long maxMem = rt.maxMemory();
-                        final long freeMem = rt.freeMemory();
-                        final long allocatedMem = curMaxMem - freeMem;
+                    SwingUtilities.invokeLater(() -> {
+                        allocatedMemoryField.setText(Util.addUnitSpaces("" + allocatedMem, 3) + " bytes");
+                        freeMemoryField.setText(Util.addUnitSpaces("" + freeMem, 3) + " bytes");
+                        currentMaxMemoryField.setText(Util.addUnitSpaces("" + curMaxMem, 3) + " bytes");
+                        maxMemoryField.setText(Util.addUnitSpaces("" + maxMem, 3) + " bytes");
+                    });
 
-                        SwingUtilities.invokeLater(new Runnable() {
-                                                public void run() {
-                                allocatedMemoryField.setText(Util.addUnitSpaces("" + allocatedMem, 3) + " bytes");
-                                freeMemoryField.setText(Util.addUnitSpaces("" + freeMem, 3) + " bytes");
-                                currentMaxMemoryField.setText(Util.addUnitSpaces("" + curMaxMem, 3) + " bytes");
-                                maxMemoryField.setText(Util.addUnitSpaces("" + maxMem, 3) + " bytes");
-                            }
-                        });
-
-                        try {
-                            syncObj.wait(500);
-                        } catch (InterruptedException ie) {
-                            ie.printStackTrace();
-                        }
+                    try {
+                        syncObj.wait(500);
+                    } catch (InterruptedException ie) {
+                        logger.log(Level.ERROR, ie.getMessage(), ie);
                     }
-                    syncObj.notify();
                 }
-
-                System.err.println("MemoryStatisticsPanel thread aborted.");
+                syncObj.notify();
             }
+
+            logger.log(Level.DEBUG, "MemoryStatisticsPanel thread aborted.");
         };
 
         synchronized (syncObj) {
@@ -93,7 +86,7 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
             try {
                 syncObj.wait();
             } catch (InterruptedException ie) {
-                ie.printStackTrace();
+                logger.log(Level.ERROR, ie.getMessage(), ie);
             }
         }
     }
@@ -107,10 +100,9 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
      * @return a JFrame enclosing a MemoryStatisticsPanel.
      */
     public static JFrame createMemoryStatisticsWindow() {
-        final HFSExplorerJFrame memoryStatisticsWindow =
-                new HFSExplorerJFrame("Memory statistics");
+        HFSExplorerJFrame memoryStatisticsWindow = new HFSExplorerJFrame("Memory statistics");
 
-        final MemoryStatisticsPanel msp = new MemoryStatisticsPanel();
+        MemoryStatisticsPanel msp = new MemoryStatisticsPanel();
         memoryStatisticsWindow.add(msp);
         memoryStatisticsWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         memoryStatisticsWindow.addWindowListener(new WindowAdapter() {
@@ -121,7 +113,7 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                //System.err.println("Window closing. Signaling any calculate process to stop.");
+//                logger.log(Level.DEBUG, "Window closing. Signaling any calculate process to stop.");
                 msp.stopThread();
                 memoryStatisticsWindow.dispose();
             }
@@ -139,7 +131,6 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -225,7 +216,6 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField allocatedMemoryField;
     private javax.swing.JTextField currentMaxMemoryField;
@@ -237,5 +227,4 @@ public class MemoryStatisticsPanel extends javax.swing.JPanel {
     private javax.swing.JTextField maxMemoryField;
     private javax.swing.JButton runGcButton;
     // End of variables declaration//GEN-END:variables
-
 }

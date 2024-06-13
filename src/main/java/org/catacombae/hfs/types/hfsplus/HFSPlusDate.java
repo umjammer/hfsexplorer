@@ -17,7 +17,6 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 

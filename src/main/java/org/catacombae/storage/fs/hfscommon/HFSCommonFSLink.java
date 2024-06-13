@@ -17,14 +17,18 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.fs.FSAttributes;
 import org.catacombae.storage.fs.FSEntry;
-import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSLink;
 import org.catacombae.util.IOUtil;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -32,13 +36,7 @@ import org.catacombae.util.Util;
  */
 public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
 
-    private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
-            "org.catacombae.debug",
-            "org.catacombae.storage.debug",
-            "org.catacombae.storage.fs.debug",
-            "org.catacombae.storage.fs.hfscommon.debug",
-            "org.catacombae.storage.fs.hfscommon." +
-                    HFSCommonFSLink.class.getSimpleName() + ".debug");
+    private static final Logger logger = getLogger(HFSCommonFSLink.class.getName());
 
     private final CommonHFSCatalogFileRecord linkRecord;
 
@@ -71,15 +69,16 @@ public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
 //        return HFSCommonFileSystemHandler.splitPOSIXUTF8Path(linkBytes);
 //    }
 
+    @Override
     public FSEntry getLinkTarget(String[] parentDir) {
 //        String prefix = parentFileSystem.globalPrefix;
 //        parentFileSystem.globalPrefix += "   ";
 //        try {
 //        parentFileSystem.log(prefix + "getLinkTarget(" + Util.concatenateStrings(parentDir, "/") + ");");
-//        System.err.println();
+//        logger.log(Level.DEBUG, );
         String posixPath = getLinkTargetPosixPath();
 //        parentFileSystem.log(prefix + "  getLinkTarget(): posixPath=\"" + posixPath + "\"");
-//        System.err.println("getLinkTarget(): " + linkRecord.getKey().getParentID().toLong() + ":\"" +
+//        logger.log(Level.DEBUG, "getLinkTarget(): " + linkRecord.getKey().getParentID().toLong() + ":\"" +
 //                fsHandler.getProperNodeName(linkRecord) + "\" getting true path for \"" + posixPath + "\"...");
         String[] targetPath = fsHandler.getTruePathFromPosixPath(posixPath, parentDir);
         FSEntry res;
@@ -88,41 +87,32 @@ public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
             res = fsHandler.getEntry(targetPath);
             if (res != null && res instanceof FSLink) {
 //                String[] targetParentDir = Util.arrayCopy(targetPath, 0, new String[targetPath.length-1], 0, targetPath.length-1);
-//                System.err.println("getLinkTarget(): trying to resolve inner link using link path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
+//                logger.log(Level.DEBUG, "getLinkTarget(): trying to resolve inner link using link path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
                 res = fsHandler.resolveLinks(targetPath, (FSLink) res);
                 if (res == null) {
-                    if (DEBUG) {
-                        System.err.println("\ngetLinkTarget(): Could not resolve inner link \"" +
-                                Util.concatenateStrings(targetPath, "/") + "\"");
-                    }
-                }
-            } else if (res == null) {
-                if (DEBUG) {
-                    System.err.println("\ngetLinkTarget(): Could not get entry for true path \"" +
+                    logger.log(Level.DEBUG, "\ngetLinkTarget(): Could not resolve inner link \"" +
                             Util.concatenateStrings(targetPath, "/") + "\"");
                 }
+            } else if (res == null) {
+                logger.log(Level.DEBUG, "\ngetLinkTarget(): Could not get entry for true path \"" +
+                        Util.concatenateStrings(targetPath, "/") + "\"");
             }
 
             if (res != null && res instanceof FSLink)
                 throw new RuntimeException("res still instanceof FSLink!");
         } else {
-            if (DEBUG) {
-                System.err.println("\ngetLinkTarget(): Could not get true path!");
-            }
+            logger.log(Level.DEBUG, "\ngetLinkTarget(): Could not get true path!");
 
             res = null;
         }
 
         if (res == null) {
-            if (DEBUG) {
-                System.err.println("getLinkTarget(): FAILED to get entry by posix path for link " +
-                        linkRecord.getKey().getParentID().toLong() + ":\"" +
-                        fsHandler.getProperNodeName(linkRecord) + "\":");
-                System.err.println("getLinkTarget():   posixPath=\"" + posixPath + "\"");
-                System.err.println("getLinkTarget():   parentDir=\"" +
-                        Util.concatenateStrings(parentDir, "/") + "\"");
-                System.err.println();
-            }
+            logger.log(Level.DEBUG, "getLinkTarget(): FAILED to get entry by posix path for link " +
+                    linkRecord.getKey().getParentID().toLong() + ":\"" +
+                    fsHandler.getProperNodeName(linkRecord) + "\":");
+            logger.log(Level.DEBUG, "getLinkTarget():   posixPath=\"" + posixPath + "\"");
+            logger.log(Level.DEBUG, "getLinkTarget():   parentDir=\"" +
+                    Util.concatenateStrings(parentDir, "/") + "\"");
         }
 
         return res;
@@ -132,10 +122,12 @@ public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
 //        }
     }
 
+    @Override
     public FSAttributes getAttributes() {
         return new HFSCommonFSAttributes(this, linkRecord.getData());
     }
 
+    @Override
     public String getName() {
         return fsHandler.getProperNodeName(linkRecord);
     }
@@ -149,6 +141,7 @@ public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
         return linkRecord;
     }
 
+    @Override
     public String getLinkTargetString() {
         return getLinkTargetPosixPath();
     }

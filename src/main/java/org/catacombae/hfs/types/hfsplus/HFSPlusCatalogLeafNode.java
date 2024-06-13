@@ -18,10 +18,14 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 import org.catacombae.hfs.HFSException;
 import org.catacombae.hfs.types.hfsx.HFSXCatalogLeafRecord;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -29,7 +33,9 @@ import org.catacombae.util.Util;
  */
 public class HFSPlusCatalogLeafNode extends BTLeafNode {
 
-    protected HFSPlusCatalogLeafRecord[] leafRecords;
+    private static final Logger logger = getLogger(HFSPlusCatalogLeafNode.class.getName());
+
+    protected final HFSPlusCatalogLeafRecord[] leafRecords;
 
     public HFSPlusCatalogLeafNode(byte[] data, int offset, int nodeSize) {
         this(data, offset, nodeSize, null);
@@ -46,14 +52,14 @@ public class HFSPlusCatalogLeafNode extends BTLeafNode {
         int previousOffset = 0;
         for (int i = 0; i < leafRecords.length; ++i) {
             int currentOffset = Util.unsign(offsets[i]);
-            if (currentOffset < nodeDescriptor.length() ||
+            if (currentOffset < BTNodeDescriptor.length() ||
                     currentOffset >= nodeSize || (i != 0 && currentOffset <= previousOffset)) {
-                System.err.println("Encountered invalid leaf record offset " +
+                logger.log(Level.DEBUG, "Encountered invalid leaf record offset " +
                         "for record " + (i + 1) + ": " + currentOffset + " " +
                         "(node size: " + nodeSize + " current offset: " +
                         currentOffset + ((i != 0) ?
                         (" previous offset: " + previousOffset) : "") + ")");
-                System.err.println("Skipping record...");
+                logger.log(Level.DEBUG, "Skipping record...");
                 leafRecords[i] = null;
             } else {
                 try {
@@ -63,10 +69,10 @@ public class HFSPlusCatalogLeafNode extends BTLeafNode {
                         leafRecords[i] = new HFSXCatalogLeafRecord(data, offset + currentOffset, catalogHeaderRec);
                     }
                 } catch (HFSException e) {
-                    System.err.println("Encountered invalid leaf record data " +
+                    logger.log(Level.DEBUG, "Encountered invalid leaf record data " +
                             "at record " + (i + 1) + "/" + leafRecords.length + ":");
-                    e.printStackTrace();
-                    System.err.println("Skipping record...");
+                    logger.log(Level.ERROR, e.getMessage(), e);
+                    logger.log(Level.DEBUG, "Skipping record...");
 
                     leafRecords[i] = null;
                 }

@@ -17,17 +17,19 @@
 
 package org.catacombae.storage.fs;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.catacombae.storage.fs.hfs.HFSFileSystemHandlerFactory;
 import org.catacombae.storage.fs.hfsplus.HFSPlusFileSystemHandlerFactory;
 import org.catacombae.storage.fs.hfsx.HFSXFileSystemHandlerFactory;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -45,6 +47,8 @@ public enum FileSystemMajorType {
     APPLE_UFS, APPLE_PRODOS, FAT12, FAT16, FAT32, EXFAT, NTFS, HPFS, EXT3,
     REISERFS, REISER4, XFS, JFS, ZFS, UNKNOWN;
 
+    private static final Logger logger = getLogger(FileSystemMajorType.class.getName());
+
 //    private static final Map<String, List<Class<? extends FileSystemHandlerFactory>>> DEFINED_FACTORIES;
 //
 //    static {
@@ -59,16 +63,16 @@ public enum FileSystemMajorType {
 //    public static Class[] getFactories(String fsType) {
 //        List<Class<? extends FileSystemHandlerFactory>> factoryList =
 //                DEFINED_FACTORIES.get(fsType);
-//        return factoryList.toArray(new Class[factoryList.size()]);
+//        return factoryList.toArray(Class[]::new);
 //    }
 
-    private final LinkedList<Class<? extends FileSystemHandlerFactory>> factoryClasses = new LinkedList<Class<? extends FileSystemHandlerFactory>>();
+    private final LinkedList<Class<? extends FileSystemHandlerFactory>> factoryClasses = new LinkedList<>();
 
     /**
      * Creates a FileSystemMajorType with no file system handler implementations
      * specified.
      */
-    private FileSystemMajorType() {
+    FileSystemMajorType() {
     }
 
     /**
@@ -78,7 +82,7 @@ public enum FileSystemMajorType {
      *
      * @param factoryClass
      */
-    private FileSystemMajorType(Class<? extends FileSystemHandlerFactory> factoryClass) {
+    FileSystemMajorType(Class<? extends FileSystemHandlerFactory> factoryClass) {
         this.factoryClasses.add(factoryClass);
     }
 
@@ -100,7 +104,7 @@ public enum FileSystemMajorType {
      * @return all registered factory classes for this type.
      */
     public List<Class<? extends FileSystemHandlerFactory>> getFactoryClasses() {
-        return new ArrayList<Class<? extends FileSystemHandlerFactory>>(factoryClasses);
+        return new ArrayList<>(factoryClasses);
     }
 
     /**
@@ -111,7 +115,7 @@ public enum FileSystemMajorType {
      * @return a newly created factory from the type's default factory class.
      */
     public FileSystemHandlerFactory createDefaultHandlerFactory() {
-        if (factoryClasses.size() == 0)
+        if (factoryClasses.isEmpty())
             return null;
         else {
             Class<? extends FileSystemHandlerFactory> factoryClass = factoryClasses.getFirst();
@@ -129,16 +133,9 @@ public enum FileSystemMajorType {
         try {
             Constructor<? extends FileSystemHandlerFactory> c = factoryClass.getConstructor();
             return c.newInstance();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException |
+                 InvocationTargetException e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         return null;
     }

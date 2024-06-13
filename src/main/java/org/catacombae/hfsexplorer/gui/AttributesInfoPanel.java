@@ -39,42 +39,45 @@ import org.catacombae.util.Util.Pair;
 public class AttributesInfoPanel extends BTreeInfoPanel<CommonHFSAttributesLeafRecord, AttributesFile> {
 
     /** Creates new form CatalogInfoPanel */
-    public AttributesInfoPanel(final AttributesFile attributesFile) {
+    public AttributesInfoPanel(AttributesFile attributesFile) {
         super(attributesFile);
     }
 
+    @Override
     protected String getRootNodeName() {
         return "Attributes root";
     }
 
+    @Override
     protected String getHeaderText() {
         return "View of the attributes file's B*-tree:";
     }
 
+    @Override
     protected void createCustomPanels(List<Pair<JPanel, String>> panelsList) {
-        /* No custom panels are implemented for the attributes file. */
+        // No custom panels are implemented for the attributes file.
     }
 
-    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node, AttributesFile attributesFile) {
+    @Override
+    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode<?> node, AttributesFile attributesFile) {
         if (node instanceof CommonHFSAttributesIndexNode) {
             List<CommonBTIndexRecord<CommonHFSAttributesKey>> recs = ((CommonHFSAttributesIndexNode) node).getBTRecords();
             for (CommonBTIndexRecord<CommonHFSAttributesKey> rec : recs) {
 
-                final long nodeNumber = rec.getIndex();
-                final CommonBTNode curNode = attributesFile.getNode(nodeNumber);
+                long nodeNumber = rec.getIndex();
+                CommonBTNode<?> curNode = attributesFile.getNode(nodeNumber);
                 CommonHFSAttributesKey key = rec.getKey();
                 dmtn.add(new NoLeafMutableTreeNode(new BTNodeStorage(nodeNumber,
                         curNode, key.getFileID().toLong() + ":" +
                         new String(key.getAttrName()) + ":" +
                         key.getStartBlock())));
             }
-        } else if (node instanceof CommonHFSAttributesLeafNode) {
-            CommonHFSAttributesLeafNode leafNode = (CommonHFSAttributesLeafNode) node;
+        } else if (node instanceof CommonHFSAttributesLeafNode leafNode) {
             CommonHFSAttributesLeafRecord[] recs = leafNode.getLeafRecords();
             int[] recordOffsets = leafNode.getRecordOffsets();
 
             for (int i = 0; i < recs.length; ++i) {
-                final CommonHFSAttributesLeafRecord rec = recs[i];
+                CommonHFSAttributesLeafRecord rec = recs[i];
                 CommonHFSAttributesKey key = rec.getKey();
                 dmtn.add(new DefaultMutableTreeNode(new BTLeafStorage(i,
                         recordOffsets[i],
@@ -86,6 +89,7 @@ public class AttributesInfoPanel extends BTreeInfoPanel<CommonHFSAttributesLeafR
             throw new RuntimeException("Invalid node type in tree: " + node);
     }
 
+    @Override
     protected boolean handleLeafRecord(BTLeafStorage leafStorage) {
         // No custom panels are implemented for the attributes file, so no
         // special handling is needed for leaf records.

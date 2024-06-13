@@ -34,6 +34,7 @@ public class LinkTargetPanel extends javax.swing.JPanel implements ChainedPanel 
         linkTargetField.setText(link.getLinkTargetString());
     }
 
+    @Override
     public void setChainedContents(Component c) {
         chainedContentsPanel.removeAll();
         chainedContentsPanel.add(c);

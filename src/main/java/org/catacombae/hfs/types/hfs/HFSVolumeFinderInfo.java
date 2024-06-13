@@ -76,6 +76,7 @@ public class HFSVolumeFinderInfo
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -164,6 +165,7 @@ public class HFSVolumeFinderInfo
         return this.volumeUUID;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " blessedSystemFolder: " + getBlessedSystemFolder());
         ps.println(prefix + " startupApplicationParentFolder: " + getStartupApplicationParentFolder());
@@ -174,11 +176,13 @@ public class HFSVolumeFinderInfo
         ps.println(prefix + " volumeUUID: " + getVolumeUUID());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSVolumeFinderInfo:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -186,7 +190,7 @@ public class HFSVolumeFinderInfo
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.blessedSystemFolder);
         offset += 4;
@@ -219,6 +223,7 @@ public class HFSVolumeFinderInfo
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db =
                 new DictionaryBuilder(MasterDirectoryBlock.class.

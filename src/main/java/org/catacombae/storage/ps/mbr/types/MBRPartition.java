@@ -74,14 +74,17 @@ public class MBRPartition implements Partition {
 
     // Defined in Partition
 
+    @Override
     public long getStartOffset() {
         return Util.unsign(getLBAFirstSector()) * sectorSize;
     }
 
+    @Override
     public long getLength() {
         return Util.unsign(getLBAPartitionLength()) * sectorSize;
     }
 
+    @Override
     public PartitionType getType() {
         return getPartitionTypeAsEnum().getGeneralType();
     }
@@ -160,6 +163,7 @@ public class MBRPartition implements Partition {
                 (mpt == null ? " [0x" + Util.toHexStringBE(getPartitionType()) + "]" : "") + ")";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " status: 0x" + Util.toHexStringBE(getStatus()));
         ps.println(prefix + " firstSector: 0x" + Util.byteArrayToHexString(getFirstSector()));
@@ -169,6 +173,7 @@ public class MBRPartition implements Partition {
         ps.println(prefix + " lbaPartitionLength: " + Util.unsign(getLBAPartitionLength()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + this.getClass().getSimpleName() + ":");
         printFields(ps, prefix);

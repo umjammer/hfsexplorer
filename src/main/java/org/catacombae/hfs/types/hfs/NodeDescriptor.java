@@ -18,6 +18,7 @@
 package org.catacombae.hfs.types.hfs;
 
 import java.io.PrintStream;
+import java.lang.System.Logger.Level;
 
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.util.Util;
@@ -57,7 +58,7 @@ public class NodeDescriptor implements PrintableStruct {
     private final byte[] ndResv2 = new byte[2];
 
     public NodeDescriptor(byte[] data, int offset) {
-        //System.err.println("NodeDescriptor(byte[" + data.length + "], " + offset + ");");
+//        logger.log(Level.DEBUG, "NodeDescriptor(byte[" + data.length + "], " + offset + ");");
         System.arraycopy(data, offset + 0, ndFLink, 0, 4);
         System.arraycopy(data, offset + 4, ndBLink, 0, 4);
         System.arraycopy(data, offset + 8, ndType, 0, 1);
@@ -100,6 +101,7 @@ public class NodeDescriptor implements PrintableStruct {
         return Util.readShortBE(ndResv2);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " ndFLink: " + getNdFLink());
         ps.println(prefix + " ndBLink: " + getNdBLink());
@@ -109,6 +111,7 @@ public class NodeDescriptor implements PrintableStruct {
         ps.println(prefix + " ndResv2: " + getNdResv2());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "NodeDescriptor:");
         printFields(ps, prefix);

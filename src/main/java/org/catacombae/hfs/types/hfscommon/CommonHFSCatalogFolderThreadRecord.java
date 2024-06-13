@@ -33,8 +33,8 @@ import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
 public class CommonHFSCatalogFolderThreadRecord extends CommonHFSCatalogThreadRecord<CommonHFSCatalogFolderThread>
         implements PrintableStruct {
 
-    private CommonHFSCatalogKey key;
-    private CommonHFSCatalogFolderThread data;
+    private final CommonHFSCatalogKey key;
+    private final CommonHFSCatalogFolderThread data;
 
     private CommonHFSCatalogFolderThreadRecord(CommonHFSCatalogKey key, CommonHFSCatalogFolderThread data) {
         this.key = key;
@@ -46,15 +46,18 @@ public class CommonHFSCatalogFolderThreadRecord extends CommonHFSCatalogThreadRe
         return key;
     }
 
+    @Override
     public CommonHFSCatalogFolderThread getData() {
         return data;
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolderThreadRecord.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "key:");
         key.print(ps, prefix + " ");
@@ -62,6 +65,7 @@ public class CommonHFSCatalogFolderThreadRecord extends CommonHFSCatalogThreadRe
         data.print(ps, prefix + " ");
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CommonHFSCatalogFolderThreadRecord.class.getSimpleName(),
                         "Folder thread record");

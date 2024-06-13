@@ -20,6 +20,8 @@ package org.catacombae.hfsexplorer.gui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JLabel;
@@ -28,8 +30,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -47,42 +47,43 @@ import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor;
 import org.catacombae.hfsexplorer.io.JTextAreaOutputStream;
 import org.catacombae.util.Util.Pair;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class BTreeInfoPanel
-        <R extends CommonBTLeafRecord, B extends BTreeFile>
-        extends javax.swing.JPanel {
+public abstract class BTreeInfoPanel<R extends CommonBTLeafRecord<?>, B extends BTreeFile> extends javax.swing.JPanel {
+
+    private static final Logger logger = getLogger(BTreeInfoPanel.class.getName());
 
     private static final int UNIT_INCREMENT = 10;
 
-    protected final String INDEX_NAME = "index";
-    protected final String LEAF_NAME = "leaf";
-    protected final String PRINT_FIELDS_AREA_NAME = "printfieldsarea";
-    protected final String ERROR_STRING_NAME = "error_string";
-    protected final String OTHER_NAME = "other";
-    protected final String STRUCT_VIEW_PANEL_NAME = "structview";
+    protected static final String INDEX_NAME = "index";
+    protected static final String LEAF_NAME = "leaf";
+    protected static final String PRINT_FIELDS_AREA_NAME = "printfieldsarea";
+    protected static final String ERROR_STRING_NAME = "error_string";
+    protected static final String OTHER_NAME = "other";
+    protected static final String STRUCT_VIEW_PANEL_NAME = "structview";
 
-    private final JLabel errorStringLabel =
-            new JLabel("Error while processing leaf record.",
-                    SwingConstants.CENTER);
+    private final JLabel errorStringLabel = new JLabel("Error while processing leaf record.", SwingConstants.CENTER);
     protected final JPanel leafPanel;
     protected final CardLayout clLeaf;
 
     /** Creates new form BTreeInfoPanel */
-    public BTreeInfoPanel(final B bTree) {
+    public BTreeInfoPanel(B bTree) {
 
         initComponents();
 
         descriptionLabel.setText(getHeaderText());
 
         // Populate the root
-        /*
-         * What we need is a method that gets us the children of the "current" node.
-         * A B-tree starts with a header node,
-         */
-        CommonBTNode iNode = bTree.getRootNode(); // Get root index node.
+
+        //
+        // What we need is a method that gets us the children of the "current" node.
+        // A B-tree starts with a header node,
+        //
+        CommonBTNode<?> iNode = bTree.getRootNode(); // Get root index node.
 
         if (iNode == null) {
             DefaultTreeModel model = new DefaultTreeModel(new NoLeafMutableTreeNode("<empty>"));
@@ -95,8 +96,7 @@ public abstract class BTreeInfoPanel
         }
 
         DefaultMutableTreeNode rootNode =
-                new NoLeafMutableTreeNode(new BTNodeStorage(
-                        bTree.getRootNodeNumber(), iNode, getRootNodeName()));
+                new NoLeafMutableTreeNode(new BTNodeStorage(bTree.getRootNodeNumber(), iNode, getRootNodeName()));
         expandNode(rootNode, iNode, bTree);
 
         DefaultTreeModel model = new DefaultTreeModel(rootNode);
@@ -104,16 +104,15 @@ public abstract class BTreeInfoPanel
 
         bTreeFileTree.addTreeWillExpandListener(new TreeWillExpandListener() {
 
-            public void treeWillExpand(TreeExpansionEvent e)
-                    throws ExpandVetoException {
+            @Override
+            public void treeWillExpand(TreeExpansionEvent e) throws ExpandVetoException {
 
                 TreePath tp = e.getPath();
                 Object obj = tp.getLastPathComponent();
-                if (obj instanceof DefaultMutableTreeNode) {
-                    DefaultMutableTreeNode dmtn = ((DefaultMutableTreeNode) obj);
+                if (obj instanceof DefaultMutableTreeNode dmtn) {
                     Object obj2 = dmtn.getUserObject();
                     if (obj2 instanceof BTNodeStorage) {
-                        CommonBTNode node = ((BTNodeStorage) obj2).getNode();
+                        CommonBTNode<?> node = ((BTNodeStorage) obj2).getNode();
                         expandNode(dmtn, node, bTree);
                     } else
                         throw new RuntimeException("Wrong user object type in expandable node!");
@@ -121,11 +120,12 @@ public abstract class BTreeInfoPanel
                     throw new RuntimeException("Wrong node type in tree!");
             }
 
+            @Override
             public void treeWillCollapse(TreeExpansionEvent e) {
             }
         });
 
-        final CardLayout clRoot = new CardLayout();
+        CardLayout clRoot = new CardLayout();
         leafPanel = new JPanel();
 
         clLeaf = new CardLayout();
@@ -134,142 +134,115 @@ public abstract class BTreeInfoPanel
         leafPanel.add(errorStringLabel, ERROR_STRING_NAME);
         leafPanel.add(new JLabel("INTERNAL ERROR!", SwingConstants.CENTER), OTHER_NAME);
 
-        final JScrollPane structViewPanelScroller = new JScrollPane();
+        JScrollPane structViewPanelScroller = new JScrollPane();
         structViewPanelScroller.getVerticalScrollBar().setUnitIncrement(UNIT_INCREMENT);
         structViewPanelScroller.getHorizontalScrollBar().setUnitIncrement(UNIT_INCREMENT);
         leafPanel.add(structViewPanelScroller, STRUCT_VIEW_PANEL_NAME);
 
-        LinkedList<Pair<JPanel, String>> customPanelsList =
-                new LinkedList<Pair<JPanel, String>>();
+        LinkedList<Pair<JPanel, String>> customPanelsList = new LinkedList<>();
         createCustomPanels(customPanelsList);
 
         for (Pair<JPanel, String> panel : customPanelsList) {
             JScrollPane customPanelScroller = new JScrollPane(panel.getA());
-            customPanelScroller.getVerticalScrollBar().setUnitIncrement(
-                    UNIT_INCREMENT);
-            customPanelScroller.getHorizontalScrollBar().setUnitIncrement(
-                    UNIT_INCREMENT);
+            customPanelScroller.getVerticalScrollBar().setUnitIncrement(UNIT_INCREMENT);
+            customPanelScroller.getHorizontalScrollBar().setUnitIncrement(UNIT_INCREMENT);
             leafPanel.add(customPanelScroller, panel.getB());
         }
 
-        final LeafInfoPanel printFieldsTextAreaHeader = new LeafInfoPanel();
-        final JTextArea printFieldsTextArea = new JTextArea(0, 0);
+        LeafInfoPanel printFieldsTextAreaHeader = new LeafInfoPanel();
+        JTextArea printFieldsTextArea = new JTextArea(0, 0);
         printFieldsTextArea.setEditable(false);
         printFieldsTextArea.setLineWrap(false);
         printFieldsTextArea.setOpaque(false);
-        final JPanel printFieldsTextAreaContainer =
-                new JPanel(new BorderLayout());
-        printFieldsTextAreaContainer.add(printFieldsTextAreaHeader,
-                BorderLayout.NORTH);
-        printFieldsTextAreaContainer.add(printFieldsTextArea,
-                BorderLayout.CENTER);
+        JPanel printFieldsTextAreaContainer = new JPanel(new BorderLayout());
+        printFieldsTextAreaContainer.add(printFieldsTextAreaHeader, BorderLayout.NORTH);
+        printFieldsTextAreaContainer.add(printFieldsTextArea, BorderLayout.CENTER);
 
-        JScrollPane printFieldsTextAreaScroller =
-                new JScrollPane(printFieldsTextAreaContainer);
+        JScrollPane printFieldsTextAreaScroller = new JScrollPane(printFieldsTextAreaContainer);
         printFieldsTextAreaScroller.getVerticalScrollBar().setUnitIncrement(UNIT_INCREMENT);
         printFieldsTextAreaScroller.getHorizontalScrollBar().setUnitIncrement(UNIT_INCREMENT);
         leafPanel.add(printFieldsTextAreaScroller, PRINT_FIELDS_AREA_NAME);
 
         infoPanel.setLayout(clRoot);
-        final JLabel indexNodeLabel = new JLabel("No selection.", SwingConstants.CENTER);
+        JLabel indexNodeLabel = new JLabel("No selection.", SwingConstants.CENTER);
         infoPanel.add(indexNodeLabel, INDEX_NAME);
         infoPanel.add(leafPanel, LEAF_NAME);
-        //infoScroller.setViewportView(infoPanel);
+//        infoScroller.setViewportView(infoPanel);
 
-        bTreeFileTree.addTreeSelectionListener(new TreeSelectionListener() {
-            public void valueChanged(TreeSelectionEvent te) {
-                //System.err.println("Tree selection");
-                Object o = te.getPath().getLastPathComponent();
-                if (o instanceof DefaultMutableTreeNode) {
-                    Object o2 = ((DefaultMutableTreeNode) o).getUserObject();
-                    if (o2 instanceof BTNodeStorage) {
-                        final BTNodeStorage nodeStorage = (BTNodeStorage) o2;
-                        final CommonBTNode btn = nodeStorage.getNode();
-                        CommonBTNodeDescriptor btnd = btn.getNodeDescriptor();
-                        switch (btnd.getNodeType()) {
-                            case INDEX:
-                                indexNodeLabel.setText("Index node " +
-                                        nodeStorage.getNodeNumber() + " " +
-                                        "with " +
-                                        btnd.getNumberOfRecords() + " " +
-                                        "records.");
-                                break;
-                            case LEAF:
-                                indexNodeLabel.setText("Leaf node " +
-                                        nodeStorage.getNodeNumber() + " with " +
-                                        btnd.getNumberOfRecords() + " " +
-                                        "records.");
-                                break;
-                            default:
-                                indexNodeLabel.setText("Unknown error!");
-                        }
-
-                        clRoot.show(infoPanel, INDEX_NAME);
-                    } else if (o2 instanceof BTLeafStorage) {
-                        final BTLeafStorage leafStorage = (BTLeafStorage) o2;
-                        final CommonBTLeafRecord rec = leafStorage.getRecord();
-
-                        if (handleLeafRecord(leafStorage)) ;
-                        else if (rec instanceof StructElements) {
-                            Dictionary dict = ((StructElements) rec).getStructElements();
-                            String label = dict.getTypeDescription();
-                            if (label == null)
-                                label = dict.getTypeName();
-
-                            final LeafInfoPanel leafInfoPanel =
-                                    new LeafInfoPanel();
-                            leafInfoPanel.setRecordNumber(
-                                    leafStorage.getRecordNumber());
-                            leafInfoPanel.setRecordOffset(
-                                    leafStorage.getRecordOffset());
-                            leafInfoPanel.setRecordSize(
-                                    leafStorage.getRecordSize());
-
-                            final JPanel containerPanel =
-                                    new JPanel(new BorderLayout());
-                            containerPanel.add(leafInfoPanel, BorderLayout.NORTH);
-                            containerPanel.add(
-                                    new StructViewPanel(label + ":", dict),
-                                    BorderLayout.CENTER);
-
-                            structViewPanelScroller.setViewportView(
-                                    containerPanel);
-                            clLeaf.show(leafPanel, STRUCT_VIEW_PANEL_NAME);
-                        } else if (rec instanceof PrintableStruct) {
-                            PrintStream ps = new PrintStream(new JTextAreaOutputStream(System.err, printFieldsTextArea));
-                            printFieldsTextAreaHeader.setRecordNumber(
-                                    leafStorage.getRecordNumber());
-                            printFieldsTextAreaHeader.setRecordOffset(
-                                    leafStorage.getRecordOffset());
-                            printFieldsTextAreaHeader.setRecordSize(
-                                    leafStorage.getRecordSize());
-                            printFieldsTextArea.setText("");
-                            ((PrintableStruct) rec).print(ps, "");
-                            ps.close();
-                            printFieldsTextArea.setCaretPosition(0);
-                            clLeaf.show(leafPanel, PRINT_FIELDS_AREA_NAME);
-
-                        } else {
-                            System.err.println("BTreeInfoPanel: Could not show record type " + rec.getClass());
-                            clLeaf.show(leafPanel, OTHER_NAME);
-                        }
-                        clRoot.show(infoPanel, LEAF_NAME);
-
-                    } else if (o2 instanceof String) {
-                        errorStringLabel.setText((String) o2);
-                        clLeaf.show(leafPanel, ERROR_STRING_NAME);
-                        clRoot.show(infoPanel, LEAF_NAME);
-                    } else {
-                        System.err.println("BTreeInfoPanel: Unexpected user " +
-                                "object type " + o2.getClass() + " for " +
-                                "selected tree node.");
-                        clLeaf.show(leafPanel, OTHER_NAME);
-                        clRoot.show(infoPanel, LEAF_NAME);
+        bTreeFileTree.addTreeSelectionListener(te -> {
+//            logger.log(Level.DEBUG, "Tree selection");
+            Object o = te.getPath().getLastPathComponent();
+            if (o instanceof DefaultMutableTreeNode) {
+                Object o2 = ((DefaultMutableTreeNode) o).getUserObject();
+                if (o2 instanceof BTNodeStorage nodeStorage) {
+                    CommonBTNode<?> btn = nodeStorage.getNode();
+                    CommonBTNodeDescriptor btnd = btn.getNodeDescriptor();
+                    switch (btnd.getNodeType()) {
+                        case INDEX:
+                            indexNodeLabel.setText("Index node " +
+                                    nodeStorage.getNodeNumber() + " " + "with " +
+                                    btnd.getNumberOfRecords() + " " + "records.");
+                            break;
+                        case LEAF:
+                            indexNodeLabel.setText("Leaf node " +
+                                    nodeStorage.getNodeNumber() + " with " +
+                                    btnd.getNumberOfRecords() + " " + "records.");
+                            break;
+                        default:
+                            indexNodeLabel.setText("Unknown error!");
                     }
-                } else
-                    System.err.println("WARNING: Unknown node type in " +
-                            "bTreeFileTree - " + o.getClass().toString());
-            }
+
+                    clRoot.show(infoPanel, INDEX_NAME);
+                } else if (o2 instanceof BTLeafStorage leafStorage) {
+                    CommonBTLeafRecord<?> rec = leafStorage.getRecord();
+
+                    if (handleLeafRecord(leafStorage)) ;
+                    else if (rec instanceof StructElements) {
+                        Dictionary dict = ((StructElements) rec).getStructElements();
+                        String label = dict.getTypeDescription();
+                        if (label == null)
+                            label = dict.getTypeName();
+
+                        LeafInfoPanel leafInfoPanel = new LeafInfoPanel();
+                        leafInfoPanel.setRecordNumber(leafStorage.getRecordNumber());
+                        leafInfoPanel.setRecordOffset(leafStorage.getRecordOffset());
+                        leafInfoPanel.setRecordSize(leafStorage.getRecordSize());
+
+                        JPanel containerPanel = new JPanel(new BorderLayout());
+                        containerPanel.add(leafInfoPanel, BorderLayout.NORTH);
+                        containerPanel.add(new StructViewPanel(label + ":", dict), BorderLayout.CENTER);
+
+                        structViewPanelScroller.setViewportView(containerPanel);
+                        clLeaf.show(leafPanel, STRUCT_VIEW_PANEL_NAME);
+                    } else if (rec instanceof PrintableStruct) {
+                        PrintStream ps = new PrintStream(new JTextAreaOutputStream(System.err, printFieldsTextArea));
+                        printFieldsTextAreaHeader.setRecordNumber(leafStorage.getRecordNumber());
+                        printFieldsTextAreaHeader.setRecordOffset(leafStorage.getRecordOffset());
+                        printFieldsTextAreaHeader.setRecordSize(leafStorage.getRecordSize());
+                        printFieldsTextArea.setText("");
+                        rec.print(ps, "");
+                        ps.close();
+                        printFieldsTextArea.setCaretPosition(0);
+                        clLeaf.show(leafPanel, PRINT_FIELDS_AREA_NAME);
+
+                    } else {
+                        logger.log(Level.DEBUG, "BTreeInfoPanel: Could not show record type " + rec.getClass());
+                        clLeaf.show(leafPanel, OTHER_NAME);
+                    }
+                    clRoot.show(infoPanel, LEAF_NAME);
+
+                } else if (o2 instanceof String) {
+                    errorStringLabel.setText((String) o2);
+                    clLeaf.show(leafPanel, ERROR_STRING_NAME);
+                    clRoot.show(infoPanel, LEAF_NAME);
+                } else {
+                    logger.log(Level.DEBUG, "BTreeInfoPanel: Unexpected user " +
+                            "object type " + o2.getClass() + " for " + "selected tree node.");
+                    clLeaf.show(leafPanel, OTHER_NAME);
+                    clRoot.show(infoPanel, LEAF_NAME);
+                }
+            } else
+                logger.log(Level.DEBUG, "WARNING: Unknown node type in " + "bTreeFileTree - " + o.getClass());
         });
     }
 
@@ -280,18 +253,17 @@ public abstract class BTreeInfoPanel
     protected abstract void createCustomPanels(
             List<Pair<JPanel, String>> customPanelsList);
 
-    protected abstract void expandNode(DefaultMutableTreeNode dmtn,
-                                       CommonBTNode node, B bTree);
+    protected abstract void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode<?> node, B bTree);
 
     protected abstract boolean handleLeafRecord(BTLeafStorage leafStorage);
 
     protected static class BTNodeStorage {
 
-        private long nodeNumber;
-        private CommonBTNode node;
-        private String text;
+        private final long nodeNumber;
+        private final CommonBTNode<?> node;
+        private final String text;
 
-        public BTNodeStorage(long nodeNumber, CommonBTNode node, String text) {
+        public BTNodeStorage(long nodeNumber, CommonBTNode<?> node, String text) {
             this.nodeNumber = nodeNumber;
             this.node = node;
             this.text = text;
@@ -301,7 +273,7 @@ public abstract class BTreeInfoPanel
             return nodeNumber;
         }
 
-        public CommonBTNode getNode() {
+        public CommonBTNode<?> getNode() {
             return node;
         }
 
@@ -316,11 +288,11 @@ public abstract class BTreeInfoPanel
         private final int recordNumber;
         private final int recordOffset;
         private final int recordSize;
-        private CommonBTLeafRecord rec;
-        private String text;
+        private final CommonBTLeafRecord<?> rec;
+        private final String text;
 
         public BTLeafStorage(int recordNumber, int recordOffset, int recordSize,
-                             CommonBTLeafRecord rec, String text) {
+                             CommonBTLeafRecord<?> rec, String text) {
             this.recordNumber = recordNumber;
             this.recordOffset = recordOffset;
             this.recordSize = recordSize;
@@ -340,7 +312,7 @@ public abstract class BTreeInfoPanel
             return recordSize;
         }
 
-        public CommonBTLeafRecord getRecord() {
+        public CommonBTLeafRecord<?> getRecord() {
             return rec;
         }
 

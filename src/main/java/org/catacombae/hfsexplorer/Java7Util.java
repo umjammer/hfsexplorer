@@ -21,13 +21,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -97,7 +90,7 @@ public class Java7Util {
         Object creationFileTimeObject;
         if (creationTime != null) {
             Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
-            creationFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(creationTime.getTime()));
+            creationFileTimeObject = fileTimefromMillisMethod.invoke(null, creationTime.getTime());
         } else {
             creationFileTimeObject = null;
         }
@@ -113,7 +106,7 @@ public class Java7Util {
         Object lastAccessFileTimeObject;
         if (lastAccessTime != null) {
             Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
-            lastAccessFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(lastAccessTime.getTime()));
+            lastAccessFileTimeObject = fileTimefromMillisMethod.invoke(null, lastAccessTime.getTime());
         } else {
             lastAccessFileTimeObject = null;
         }
@@ -129,7 +122,7 @@ public class Java7Util {
         Object lastModifiedFileTimeObject;
         if (lastModifiedTime != null) {
             Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
-            lastModifiedFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(lastModifiedTime.getTime()));
+            lastModifiedFileTimeObject = fileTimefromMillisMethod.invoke(null, lastModifiedTime.getTime());
         } else {
             lastModifiedFileTimeObject = null;
         }
@@ -141,7 +134,7 @@ public class Java7Util {
             basicFileAttributeViewSetTimesMethod.invoke(attrViewObject,
                     lastModifiedFileTimeObject, lastAccessFileTimeObject, creationFileTimeObject);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
+            Throwable cause = ex.getCause();
             if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
             } else if (cause instanceof NoSuchMethodException) {
@@ -204,7 +197,7 @@ public class Java7Util {
             return;
         }
 
-        HashSet<Object> perms = new HashSet<Object>();
+        HashSet<Object> perms = new HashSet<>();
 
         if (ownerRead) {
             Field curField = posixFilePermissionClass.getField("OWNER_READ");
@@ -267,7 +260,7 @@ public class Java7Util {
         try {
             posixFileAttributeViewSetPermissionMethod.invoke(attrViewObject, perms);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
+            Throwable cause = ex.getCause();
             if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
             } else if (cause instanceof NoSuchMethodException) {
@@ -318,13 +311,13 @@ public class Java7Util {
         try {
 //            Files.setAttribute(p, "unix:uid", Integer.valueOf(ownerId), LinkOption.NOFOLLOW_LINKS);
             filesSetAttributeMethod.invoke(null, pObject, "unix:uid",
-                    Integer.valueOf(ownerId), linkOptionsArray);
+                    ownerId, linkOptionsArray);
 
 //            Files.setAttribute(p, "unix:gid", Integer.valueOf(groupId), LinkOption.NOFOLLOW_LINKS);
             filesSetAttributeMethod.invoke(null, pObject, "unix:gid",
-                    Integer.valueOf(groupId), linkOptionsArray);
+                    groupId, linkOptionsArray);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
+            Throwable cause = ex.getCause();
             if (cause instanceof UnsupportedOperationException) {
                 // Do nothing. This is expected on non-UNIX platforms.
             } else if (cause instanceof ClassNotFoundException) {
@@ -378,7 +371,7 @@ public class Java7Util {
         try {
             filesCreateSymbolicLinkMethod.invoke(null, linkPathObject, targetPathObject, emptyFileAttributeArray);
         } catch (InvocationTargetException e) {
-            final Throwable cause = e.getCause();
+            Throwable cause = e.getCause();
             if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
             } else if (cause instanceof NoSuchMethodException) {

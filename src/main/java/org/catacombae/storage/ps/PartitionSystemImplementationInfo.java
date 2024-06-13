@@ -22,10 +22,10 @@ package org.catacombae.storage.ps;
  */
 public class PartitionSystemImplementationInfo {
 
-    private String partitionSystemName;
-    private String implementationName;
-    private String implementationVersion;
-    private String author;
+    private final String partitionSystemName;
+    private final String implementationName;
+    private final String implementationVersion;
+    private final String author;
 
     public PartitionSystemImplementationInfo(String partitionSystemName,
                                              String implementationName,

@@ -29,7 +29,7 @@ public class HFSPlusAttributesIndexNode extends BTIndexNode {
         super(data, offset, nodeSize);
 
         for (int i = 0; i < records.length; ++i) {
-            final int currentOffset = Util.unsign(offsets[i]);
+            int currentOffset = Util.unsign(offsets[i]);
             HFSPlusAttributesKey currentKey = new HFSPlusAttributesKey(data, offset + currentOffset);
 
             records[i] = new BTIndexRecord(currentKey, data, offset + currentOffset);

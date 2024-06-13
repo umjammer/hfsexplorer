@@ -165,7 +165,7 @@ public class MasterBootRecord {
         int num = 0;
         for (MBRPartition mp : getPartitions()) {
             if (mp.isValid()) ++num;
-            //else break; // we don't check the later ones
+//            else break; // we don't check the later ones
         }
         return num;
     }
@@ -174,7 +174,7 @@ public class MasterBootRecord {
         int num = 0;
         for (MBRPartition mp : getPartitions()) {
             if (mp.isUsed()) ++num;
-            //else break; // we don't check the later ones
+//            else break; // we don't check the later ones
         }
         return num;
     }
@@ -192,17 +192,14 @@ public class MasterBootRecord {
     }
 
     public MBRPartition[] getUsedPartitionEntries() {
-        final LinkedList<MBRPartition> tempList =
-                new LinkedList<MBRPartition>();
+        LinkedList<MBRPartition> tempList = new LinkedList<>();
 
-        tempList.clear();
         for (MBRPartition mp : getPartitions()) {
             if (mp.isUsed()) tempList.addLast(mp);
-            //else break; // we don't check the later ones
+//            else break; // we don't check the later ones
         }
-        return tempList.toArray(new MBRPartition[tempList.size()]);
+        return tempList.toArray(MBRPartition[]::new);
     }
-
 
     public byte[] getBytes() {
         byte[] result = new byte[512];
@@ -223,8 +220,8 @@ public class MasterBootRecord {
         i += optDiskSignature.length;
         System.arraycopy(reserved3, 0, result, i, reserved3.length);
         i += reserved3.length;
-        for (int j = 0; j < partitions.length; ++j) {
-            byte[] curData = partitions[j].getBytes();
+        for (MBRPartition partition : partitions) {
+            byte[] curData = partition.getBytes();
             System.arraycopy(curData, 0, result, i, curData.length);
             i += curData.length;
         }

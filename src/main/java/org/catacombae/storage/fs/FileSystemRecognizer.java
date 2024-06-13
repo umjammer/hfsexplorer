@@ -37,5 +37,5 @@ public interface FileSystemRecognizer {
      * @return <code>true</code> if a file system can be detected at the
      * specified offset in fsStream, and <code>false</code> otherwise.
      */
-    public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
+    boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
 }

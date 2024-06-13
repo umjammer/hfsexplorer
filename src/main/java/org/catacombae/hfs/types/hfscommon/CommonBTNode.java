@@ -38,7 +38,7 @@ public abstract class CommonBTNode<R extends CommonBTRecord> implements Printabl
 
     protected final InternalContainer ic;
 
-    protected static enum FSType {HFS, HFS_PLUS}
+    protected enum FSType {HFS, HFS_PLUS}
 
     protected CommonBTNode(byte[] data, int offset, int nodeSize, FSType type) {
         switch (type) {
@@ -77,11 +77,13 @@ public abstract class CommonBTNode<R extends CommonBTRecord> implements Printabl
 
     protected abstract R createBTRecord(int recordNumber, byte[] data, int offset, int length);
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CommonBTNode:");
         printFields(ps, prefix);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ic.printFields(ps, prefix);
     }
@@ -99,7 +101,7 @@ public abstract class CommonBTNode<R extends CommonBTRecord> implements Printabl
             for (int i = 0; i < offsets.length; ++i) {
                 offsets[i] = Util.readShortBE(data, offset + nodeSize - ((i + 1) * 2));
             }
-            ArrayList<R> tmpRecords = new ArrayList<R>(offsets.length - 1);
+            ArrayList<R> tmpRecords = new ArrayList<>(offsets.length - 1);
             for (int i = 0; i < offsets.length - 1; ++i) {
                 int len = offsets[i + 1] - offsets[i];
                 tmpRecords.add(createBTRecord(i, data, offset + offsets[i], len));

@@ -32,5 +32,5 @@ public interface ChainedPanel {
      *
      * @param c the chain-linked component.
      */
-    public void setChainedContents(Component c);
+    void setChainedContents(Component c);
 }

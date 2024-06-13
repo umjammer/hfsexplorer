@@ -18,6 +18,7 @@
 package org.catacombae.hfsexplorer.testcode;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeSet;
@@ -48,8 +49,9 @@ public class VisualizeUnicodeNormalization extends JFrame {
         Map<Character, char[]> table = unt.getDecompositionTable();
 
         StringBuilder sb = new StringBuilder();
-        Comparator<Map.Entry<Character, char[]>> cmp = new Comparator<Map.Entry<Character, char[]>>() {
+        Comparator<Map.Entry<Character, char[]>> cmp = new Comparator<>() {
 
+            @Override
             public int compare(Map.Entry<Character, char[]> o1, Map.Entry<Character, char[]> o2) {
                 return o1.getKey().compareTo(o2.getKey());
             }
@@ -59,16 +61,15 @@ public class VisualizeUnicodeNormalization extends JFrame {
                 return super.equals(obj);
             }
         };
-        TreeSet<Map.Entry<Character, char[]>> ts = new TreeSet<Map.Entry<Character, char[]>>(cmp);
-        for (Map.Entry<Character, char[]> ent : table.entrySet())
-            ts.add(ent);
+        TreeSet<Map.Entry<Character, char[]>> ts = new TreeSet<>(cmp);
+        ts.addAll(table.entrySet());
 //        ts.addAll(table.entrySet());
         for (Map.Entry<Character, char[]> ent : ts) {
             Character key = ent.getKey();
             char[] value = ent.getValue();
-            sb.append(Util.toHexStringBE(key.charValue()));
+            sb.append(Util.toHexStringBE(key));
             sb.append(": \" ");
-            sb.append(key.toString());
+            sb.append(key);
             sb.append(" \" -> \" ");
             sb.append(value[0]);
             for (int i = 1; i < value.length; ++i) {
@@ -77,7 +78,7 @@ public class VisualizeUnicodeNormalization extends JFrame {
             }
             sb.append(" \"");
             JLabel cur = new JLabel(sb.toString());
-            cur.setFont(new java.awt.Font("Monospaced", 0, 20));
+            cur.setFont(new java.awt.Font("Monospaced", Font.PLAIN, 20));
             mainPanel.add(cur);
             sb.setLength(0);
         }

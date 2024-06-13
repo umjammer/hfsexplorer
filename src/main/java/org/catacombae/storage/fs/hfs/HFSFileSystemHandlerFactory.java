@@ -45,10 +45,12 @@ public class HFSFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFacto
                     "The string encoding for filenames in the current HFS file system",
                     "MacRoman");
 
+    @Override
     public FileSystemCapability[] getCapabilities() {
         return HFSFileSystemHandler.getStaticCapabilities();
     }
 
+    @Override
     public FileSystemHandler createHandler(DataLocator data) {
         boolean useCaching = createAttributes.getBooleanAttribute(StandardAttribute.CACHING_ENABLED);
         boolean posixFilenames = createAttributes.getBooleanAttribute(posixFilenamesAttribute);
@@ -64,10 +66,12 @@ public class HFSFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFacto
         return new HFSFileSystemHandler(data, useCaching, posixFilenames, sfmSubstitutions, encoding);
     }
 
+    @Override
     public FileSystemHandlerInfo getHandlerInfo() {
         return handlerInfo;
     }
 
+    @Override
     public StandardAttribute[] getSupportedStandardAttributes() {
         // Set default values for standard attributes
         setStandardAttributeDefaultValue(StandardAttribute.CACHING_ENABLED, true);
@@ -77,8 +81,8 @@ public class HFSFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFacto
 
     @Override
     public CustomAttribute[] getSupportedCustomAttributes() {
-        final CustomAttribute[] superAttributes = super.getSupportedCustomAttributes();
-        final CustomAttribute[] result = new CustomAttribute[superAttributes.length + 1];
+        CustomAttribute[] superAttributes = super.getSupportedCustomAttributes();
+        CustomAttribute[] result = new CustomAttribute[superAttributes.length + 1];
 
         Util.arrayCopy(superAttributes, result);
         result[superAttributes.length + 0] = stringEncodingAttribute;

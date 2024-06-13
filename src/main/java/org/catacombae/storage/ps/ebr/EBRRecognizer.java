@@ -26,6 +26,7 @@ import org.catacombae.io.ReadableRandomAccessStream;
  */
 public class EBRRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
             EBRPartitionSystem ps = new EBRPartitionSystem(fsStream, offset, 512);

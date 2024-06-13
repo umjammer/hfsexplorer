@@ -153,49 +153,49 @@ public class JournalInfoBlockPanel extends javax.swing.JPanel {
 
         reservedLabel.setText("Reserved:");
 
-        deviceSignatureField0.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        deviceSignatureField0.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
         journalOffsetField.setText("0 bytes");
 
         journalSizeField.setText("0 bytes");
 
-        reservedField0.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField0.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        deviceSignatureField1.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        deviceSignatureField1.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        deviceSignatureField2.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        deviceSignatureField2.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        deviceSignatureField3.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        deviceSignatureField3.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField1.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField1.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField2.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField2.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField3.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField3.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField4.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField4.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField5.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField5.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField6.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField6.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField7.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField7.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField8.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField8.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField9.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField9.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField10.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField10.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField11.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField11.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField12.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField12.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField13.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField13.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField14.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField14.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
-        reservedField15.setText("\u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6 \u00d6\u00d6");
+        reservedField15.setText("ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ ÖÖ");
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);

@@ -19,9 +19,10 @@ package org.catacombae.hfsexplorer.tools;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 
-import org.apache.tools.ant.types.Description;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
@@ -45,11 +46,15 @@ import org.catacombae.storage.ps.apm.types.DriverDescriptorRecord;
 import org.catacombae.storage.ps.gpt.GPTHandler;
 import org.catacombae.storage.ps.mbr.MBRHandler;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class DumpFSInfo {
+
+    private static final Logger logger = getLogger(DumpFSInfo.class.getName());
 
     public static void main(String[] args) throws Throwable {
         try {
@@ -67,7 +72,7 @@ public class DumpFSInfo {
         } catch (Exception e) {
             GUIUtil.displayExceptionDialog(e, 25, null);
         } catch (Throwable t) {
-            t.printStackTrace();
+            logger.log(Level.ERROR, t.getMessage(), t);
             throw t;
         }
         System.exit(1);
@@ -104,7 +109,7 @@ public class DumpFSInfo {
             return;
         }
 
-        LinkedList<File> generatedFiles = new LinkedList<File>();
+        LinkedList<File> generatedFiles = new LinkedList<>();
         long fsOffset, fsLength;
         int partNum = -1;
 
@@ -120,10 +125,10 @@ public class DumpFSInfo {
             detectedType = null;
             partSys = null;
         } else {
-            String msg = "Multiple partition system types detected:";
+            StringBuilder msg = new StringBuilder("Multiple partition system types detected:");
             for (PartitionSystemType t : detectedTypes)
-                msg += " " + t;
-            throw new RuntimeException(msg);
+                msg.append(" ").append(t);
+            throw new RuntimeException(msg.toString());
         }
 
         if (partSys != null) {
@@ -134,13 +139,12 @@ public class DumpFSInfo {
                 try {
                     fsLength = fsFile.length();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.log(Level.ERROR, e.getMessage(), e);
                     fsLength = -1;
                 }
             } else {
                 // Dump partition system to file(s)
-                if (partSys instanceof APMHandler) {
-                    APMHandler apmHandler = (APMHandler) partSys;
+                if (partSys instanceof APMHandler apmHandler) {
                     File ddrFile = new File("fsdump-" + runTimestamp + "_ddr.dat");
                     FileOutputStream fos = new FileOutputStream(ddrFile);
                     DriverDescriptorRecord ddr = apmHandler.readDriverDescriptorRecord();
@@ -157,8 +161,7 @@ public class DumpFSInfo {
                     fos.write(apm.getData());
                     fos.close();
                     generatedFiles.add(apmFile);
-                } else if (partSys instanceof GPTHandler) {
-                    GPTHandler gptHandler = (GPTHandler) partSys;
+                } else if (partSys instanceof GPTHandler gptHandler) {
                     File mbrFile = new File("fsdump-" + runTimestamp + "_protectivembr.dat");
                     byte[] mbrData = new byte[512];
                     FileOutputStream fos = new FileOutputStream(mbrFile);
@@ -183,8 +186,7 @@ public class DumpFSInfo {
                     fos.write(gpt.getBackupTableBytes());
                     fos.close();
                     generatedFiles.add(gptEndFile);
-                } else if (partSys instanceof MBRHandler) {
-                    MBRHandler mbrHandler = (MBRHandler) partSys;
+                } else if (partSys instanceof MBRHandler mbrHandler) {
                     MBRPartitionTable mbr = mbrHandler.readPartitionTable();
 
                     File mbrFile = new File("fsdump-" + runTimestamp + "_mbr.dat");
@@ -217,8 +219,7 @@ public class DumpFSInfo {
                     }
                 }
 
-                if (selectedValue instanceof Partition) {
-                    Partition selectedPartition = (Partition) selectedValue;
+                if (selectedValue instanceof Partition selectedPartition) {
                     fsOffset = selectedPartition.getStartOffset();
                     fsLength = selectedPartition.getLength();
                 } else
@@ -229,7 +230,7 @@ public class DumpFSInfo {
             try {
                 fsLength = fsFile.length();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getMessage(), e);
                 fsLength = -1;
             }
         }
@@ -262,7 +263,7 @@ public class DumpFSInfo {
         sb.append(firstParent.getAbsolutePath());
         sb.append("\nThe following files were generated:\n    ");
         for (File f : generatedFiles)
-            sb.append(f.toString() + "\n    ");
+            sb.append(f.toString()).append("\n    ");
 
         JOptionPane.showMessageDialog(null, sb.toString(), "Result", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -278,7 +279,7 @@ public class DumpFSInfo {
 
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
             return false;
         }
     }

@@ -67,7 +67,7 @@ public class HFSOriginalVolume extends HFSVolume {
 
         super(hfsFile, cachingEnabled);
 
-        final MasterDirectoryBlock mdb = getHFSMasterDirectoryBlock();
+        MasterDirectoryBlock mdb = getHFSMasterDirectoryBlock();
         if (mdb.getDrSigWord() != MasterDirectoryBlock.SIGNATURE_HFS) {
             throw new RuntimeException("Invalid volume header signature (expected: 0x" +
                     Util.toHexStringBE(MasterDirectoryBlock.SIGNATURE_HFS) +
@@ -98,11 +98,12 @@ public class HFSOriginalVolume extends HFSVolume {
 
         ReadableConcatenatedStream volumeBitmapStream =
                 new ReadableConcatenatedStream(new ReadableRandomAccessSubstream(hfsFile),
-                        512 * Util.unsign(mdb.getDrVBMSt()), volumeBitmapSize);
+                        512L * Util.unsign(mdb.getDrVBMSt()), volumeBitmapSize);
 
         return new HFSOriginalAllocationFile(this, volumeBitmapStream);
     }
 
+    @Override
     public AllocationFile getAllocationFile() {
         return allocationFile;
     }
@@ -188,7 +189,7 @@ public class HFSOriginalVolume extends HFSVolume {
         }
 
         if (this.stringCodec == null) {
-            this.stringCodec = new MutableStringCodec<StringCodec>(codec);
+            this.stringCodec = new MutableStringCodec<>(codec);
         } else {
             this.stringCodec.setDecoder(codec);
         }
@@ -224,10 +225,12 @@ public class HFSOriginalVolume extends HFSVolume {
         super.close();
     }
 
+    @Override
     public CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData, int offset, int nodeSize) {
         return CommonBTHeaderNode.createHFS(currentNodeData, offset, nodeSize);
     }
 
+    @Override
     public CommonBTNodeDescriptor readNodeDescriptor(Readable rd) {
         byte[] data = new byte[NodeDescriptor.length()];
         rd.readFully(data);
@@ -235,6 +238,7 @@ public class HFSOriginalVolume extends HFSVolume {
         return createCommonBTNodeDescriptor(data, 0);
     }
 
+    @Override
     public CommonBTHeaderRecord readHeaderRecord(Readable rd) {
         byte[] data = new byte[BTHdrRec.length()];
         rd.readFully(data);
@@ -243,35 +247,43 @@ public class HFSOriginalVolume extends HFSVolume {
         return CommonBTHeaderRecord.create(bthr);
     }
 
+    @Override
     public CommonBTNodeDescriptor createCommonBTNodeDescriptor(byte[] currentNodeData, int i) {
-        final NodeDescriptor nd = new NodeDescriptor(currentNodeData, i);
+        NodeDescriptor nd = new NodeDescriptor(currentNodeData, i);
         return CommonBTNodeDescriptor.create(nd);
     }
 
+    @Override
     public CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data, int offset, int nodeSize) {
         return CommonHFSCatalogIndexNode.createHFS(data, offset, nodeSize);
     }
 
+    @Override
     public CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString) {
         return CommonHFSCatalogKey.create(new CatKeyRec((int) nodeID.toLong(), searchString.getStringBytes()));
     }
 
+    @Override
     public CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset, int nodeSize) {
         return CommonHFSCatalogLeafNode.createHFS(data, offset, nodeSize);
     }
 
+    @Override
     public CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data, int offset) {
         return CommonHFSCatalogLeafRecord.createHFS(data, offset, data.length - offset);
     }
 
+    @Override
     public CommonHFSExtentIndexNode createCommonHFSExtentIndexNode(byte[] currentNodeData, int i, int nodeSize) {
         return CommonHFSExtentIndexNode.createHFS(currentNodeData, i, nodeSize);
     }
 
+    @Override
     public CommonHFSExtentLeafNode createCommonHFSExtentLeafNode(byte[] currentNodeData, int i, int nodeSize) {
         return CommonHFSExtentLeafNode.createHFS(currentNodeData, i, nodeSize);
     }
 
+    @Override
     public CommonHFSExtentKey createCommonHFSExtentKey(
             CommonHFSForkType forkType, CommonHFSCatalogNodeID fileID, int startBlock) {
 
@@ -280,17 +292,10 @@ public class HFSOriginalVolume extends HFSVolume {
 
         short startBlockShort = (short) startBlock;
 
-        final byte forkTypeByte;
-        switch (forkType) {
-            case DATA_FORK:
-                forkTypeByte = ExtKeyRec.FORK_TYPE_DATA;
-                break;
-            case RESOURCE_FORK:
-                forkTypeByte = ExtKeyRec.FORK_TYPE_RESOURCE;
-                break;
-            default:
-                throw new RuntimeException("Invalid fork type");
-        }
+        byte forkTypeByte = switch (forkType) {
+            case DATA_FORK -> ExtKeyRec.FORK_TYPE_DATA;
+            case RESOURCE_FORK -> ExtKeyRec.FORK_TYPE_RESOURCE;
+        };
         ExtKeyRec key = new ExtKeyRec(forkTypeByte, (int) fileID.toLong(), startBlockShort);
         return CommonHFSExtentKey.create(key);
     }

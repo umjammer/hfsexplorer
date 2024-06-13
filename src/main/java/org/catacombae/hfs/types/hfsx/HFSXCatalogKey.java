@@ -59,18 +59,16 @@ public class HFSXCatalogKey extends HFSPlusCatalogKey {
 
     @Override
     public int compareTo(BTKey btk) {
-        if (btk instanceof HFSPlusCatalogKey) {
-            HFSPlusCatalogKey catKey = (HFSPlusCatalogKey) btk;
+        if (btk instanceof HFSPlusCatalogKey catKey) {
             if (Util.unsign(getParentID().toInt()) == Util.unsign(catKey.getParentID().toInt())) {
-                switch (keyCompareType) {
-                    case BTHeaderRec.kHFSCaseFolding:
-                        return FastUnicodeCompare.compare(getNodeName().getUnicode(), catKey.getNodeName().getUnicode());
-                    case BTHeaderRec.kHFSBinaryCompare:
-                        return Util.unsignedArrayCompareLex(getNodeName().getUnicode(), catKey.getNodeName().getUnicode());
-                    default:
-                        throw new RuntimeException("Invalid value in file system structure! keyCompareType = " +
-                                keyCompareType);
-                }
+                return switch (keyCompareType) {
+                    case BTHeaderRec.kHFSCaseFolding ->
+                            FastUnicodeCompare.compare(getNodeName().getUnicode(), catKey.getNodeName().getUnicode());
+                    case BTHeaderRec.kHFSBinaryCompare ->
+                            Util.unsignedArrayCompareLex(getNodeName().getUnicode(), catKey.getNodeName().getUnicode());
+                    default -> throw new RuntimeException("Invalid value in file system structure! keyCompareType = " +
+                            keyCompareType);
+                };
             } else return super.compareTo(btk);
         } else
             return super.compareTo(btk);

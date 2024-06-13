@@ -50,8 +50,8 @@ import org.catacombae.util.Util;
 public class ScanDecmpfs {
 
     public static void main(String[] args) {
-        final boolean verbose;
-        final String fsPath;
+        boolean verbose;
+        String fsPath;
 
         if (args.length == 2 && args[0].equals("-v")) {
             verbose = true;
@@ -70,11 +70,10 @@ public class ScanDecmpfs {
             return;
         }
 
-        final ReadableRandomAccessStream fsStream =
-                ReadableWin32FileStream.isSystemSupported() ?
+        ReadableRandomAccessStream fsStream = ReadableWin32FileStream.isSystemSupported() ?
                         new ReadableWin32FileStream(fsPath) : new ReadableFileStream(fsPath);
 
-        final FileSystemHandlerFactory fsHandlerFactory;
+        FileSystemHandlerFactory fsHandlerFactory;
         switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, 0)) {
             case HFS_WRAPPED_HFS_PLUS:
             case HFS_PLUS:
@@ -89,28 +88,25 @@ public class ScanDecmpfs {
                 return;
         }
 
-        final FileSystemHandler fsHandlerGeneric =
-                fsHandlerFactory.createHandler(new ReadableStreamDataLocator(fsStream));
-        if (!(fsHandlerGeneric instanceof HFSPlusFileSystemHandler)) {
+        FileSystemHandler fsHandlerGeneric = fsHandlerFactory.createHandler(new ReadableStreamDataLocator(fsStream));
+        if (!(fsHandlerGeneric instanceof HFSPlusFileSystemHandler fsHandler)) {
             System.err.println("Unexpected: File system handler object is " +
                     "not of HFSPlusFileSystemHandler class (class: " + fsHandlerGeneric.getClass() + ").");
             System.exit(1);
             return;
         }
 
-        final HFSPlusFileSystemHandler fsHandler = (HFSPlusFileSystemHandler) fsHandlerGeneric;
-        final AttributesFile attributesFile = fsHandler.getFSView().getAttributesFile();
+        AttributesFile attributesFile = fsHandler.getFSView().getAttributesFile();
 
-        LinkedList<Long> nodeQueue = new LinkedList<Long>();
+        LinkedList<Long> nodeQueue = new LinkedList<>();
         nodeQueue.addLast(attributesFile.getRootNodeNumber());
 
         // Depth-first search for "com.apple.decmpfs" attribute records.
         while (!nodeQueue.isEmpty()) {
             long curNodeNumber = nodeQueue.removeFirst();
-            CommonBTNode curNode = attributesFile.getNode(curNodeNumber);
+            CommonBTNode<?> curNode = attributesFile.getNode(curNodeNumber);
 
-            if (curNode instanceof CommonHFSAttributesIndexNode) {
-                CommonHFSAttributesIndexNode indexNode = (CommonHFSAttributesIndexNode) curNode;
+            if (curNode instanceof CommonHFSAttributesIndexNode indexNode) {
 
                 List<CommonBTIndexRecord<CommonHFSAttributesKey>> records = indexNode.getBTKeyedRecords();
                 ListIterator<CommonBTIndexRecord<CommonHFSAttributesKey>> it = records.listIterator(records.size());
@@ -120,10 +116,9 @@ public class ScanDecmpfs {
                 while (it.hasPrevious()) {
                     nodeQueue.addFirst(it.previous().getIndex());
                 }
-            } else if (curNode instanceof CommonHFSAttributesLeafNode) {
-                final CommonHFSAttributesLeafNode leafNode = (CommonHFSAttributesLeafNode) curNode;
+            } else if (curNode instanceof CommonHFSAttributesLeafNode leafNode) {
                 for (CommonHFSAttributesLeafRecord rec : leafNode.getLeafRecords()) {
-                    final CommonHFSAttributesKey k = rec.getKey();
+                    CommonHFSAttributesKey k = rec.getKey();
                     if (!new String(k.getAttrName(), 0, k.getAttrNameLen()).equals("com.apple.decmpfs")) {
                         continue;
                     } else if (k.getStartBlock() != 0) {
@@ -133,7 +128,7 @@ public class ScanDecmpfs {
                         continue;
                     }
 
-                    final HFSPlusAttributesLeafRecordData data = rec.getRecordData();
+                    HFSPlusAttributesLeafRecordData data = rec.getRecordData();
                     if (!(data instanceof HFSPlusAttributesData)) {
                         System.err.println("[WARNING] " + k.getFileID().toLong() + " has " +
                                 "com.apple.decmpfs attribute without inline " +
@@ -141,7 +136,7 @@ public class ScanDecmpfs {
                         continue;
                     }
 
-                    final DecmpfsHeader header = new DecmpfsHeader(((HFSPlusAttributesData) data).getAttrData(), 0);
+                    DecmpfsHeader header = new DecmpfsHeader(((HFSPlusAttributesData) data).getAttrData(), 0);
                     if (header.getMagic() != DecmpfsHeader.MAGIC) {
                         System.err.println("[WARNING] " +
                                 k.getFileID().toLong() + " has " +
@@ -154,7 +149,7 @@ public class ScanDecmpfs {
                         continue;
                     }
 
-                    final StringBuilder pathBuilder;
+                    StringBuilder pathBuilder;
                     if (verbose) {
                         pathBuilder = new StringBuilder();
 
@@ -163,7 +158,7 @@ public class ScanDecmpfs {
                                 fsHandler.getFSView().getCatalogFile().getPathTo(k.getFileID())) {
                             // Skip name of root directory.
                             if (!firstComponent) {
-                                final char[] nodeName = fsHandler.getFSView().decodeString(
+                                char[] nodeName = fsHandler.getFSView().decodeString(
                                                 pathComponent.getKey().getNodeName()).toCharArray();
 
                                 for (int i = 0; i < nodeName.length; ++i) {
@@ -194,7 +189,7 @@ public class ScanDecmpfs {
                     System.out.println("CNID: " + k.getFileID().toLong() + " " +
                             "Type: " + header.getCompressionType() + " " +
                             "Size: " + header.getFileSize() +
-                            (pathBuilder != null ? " Path: " + pathBuilder.toString() : ""));
+                            (pathBuilder != null ? " Path: " + pathBuilder : ""));
                 }
             } else {
                 System.err.println("[WARNING] Unexpected attributes B-tree " +

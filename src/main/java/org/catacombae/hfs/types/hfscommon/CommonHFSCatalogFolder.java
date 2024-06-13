@@ -51,10 +51,12 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
     public abstract byte[] getBytes();
 
+    @Override
     public CommonHFSCatalogNodeID getCatalogNodeID() {
         return getFolderID();
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolder.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -62,13 +64,13 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
     public static class HFSPlusImplementation extends CommonHFSCatalogFolder {
 
-        private HFSPlusCatalogFolder data;
+        private final HFSPlusCatalogFolder data;
 
         public HFSPlusImplementation(HFSPlusCatalogFolder data) {
             this.data = data;
         }
 
-        //@Deprecated
+        @Deprecated
         public HFSPlusCatalogFolder getUnderlying() {
             return data;
         }
@@ -85,7 +87,7 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
         @Override
         public int length() {
-            return data.length();
+            return HFSPlusCatalogFolder.length();
         }
 
         @Override
@@ -93,91 +95,113 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
             return data.getBytes();
         }
 
+        @Override
         public short getRecordType() {
             return data.getRecordType();
         }
 
+        @Override
         public short getFlags() {
             return data.getFlags();
         }
 
+        @Override
         public int getCreateDate() {
             return data.getCreateDate();
         }
 
+        @Override
         public int getContentModDate() {
             return data.getContentModDate();
         }
 
+        @Override
         public int getAttributeModDate() {
             return data.getAttributeModDate();
         }
 
+        @Override
         public int getAccessDate() {
             return data.getAccessDate();
         }
 
+        @Override
         public int getBackupDate() {
             return data.getBackupDate();
         }
 
+        @Override
         public Date getCreateDateAsDate() {
             return data.getCreateDateAsDate();
         }
 
+        @Override
         public Date getContentModDateAsDate() {
             return data.getContentModDateAsDate();
         }
 
+        @Override
         public Date getAttributeModDateAsDate() {
             return data.getAttributeModDateAsDate();
         }
 
+        @Override
         public Date getAccessDateAsDate() {
             return data.getAccessDateAsDate();
         }
 
+        @Override
         public Date getBackupDateAsDate() {
             return data.getBackupDateAsDate();
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
 
+        @Override
         public boolean hasPermissions() {
             return true;
         }
 
+        @Override
         public HFSPlusBSDInfo getPermissions() {
             return data.getPermissions();
         }
 
+        @Override
         public boolean hasCreateDate() {
             return true;
         }
 
+        @Override
         public boolean hasContentModDate() {
             return true;
         }
 
+        @Override
         public boolean hasAttributeModDate() {
             return true;
         }
 
+        @Override
         public boolean hasAccessDate() {
             return true;
         }
 
+        @Override
         public boolean hasBackupDate() {
             return true;
         }
 
+        @Override
         public CommonHFSFinderInfo getFinderInfo() {
             return CommonHFSFinderInfo.create(data);
         }
@@ -185,7 +209,7 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
     public static class HFSImplementation extends CommonHFSCatalogFolder {
 
-        private CdrDirRec data;
+        private final CdrDirRec data;
 
         public HFSImplementation(CdrDirRec data) {
             this.data = data;
@@ -203,7 +227,7 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
         @Override
         public int length() {
-            return data.length();
+            return CdrDirRec.length();
         }
 
         @Override
@@ -212,91 +236,113 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
         }
 
 
+        @Override
         public short getRecordType() {
             return data.getCdrType();
         }
 
+        @Override
         public short getFlags() {
             return data.getDirFlags();
         }
 
+        @Override
         public int getCreateDate() {
             return data.getDirCrDat();
         }
 
+        @Override
         public int getContentModDate() {
             return data.getDirMdDat();
         }
 
+        @Override
         public int getAttributeModDate() {
             return data.getDirMdDat();
         }
 
+        @Override
         public int getAccessDate() {
             return data.getDirMdDat();
         }
 
+        @Override
         public int getBackupDate() {
             return data.getDirBkDat();
         }
 
+        @Override
         public Date getCreateDateAsDate() {
             return HFSDate.localTimestampToDate(getCreateDate());
         }
 
+        @Override
         public Date getContentModDateAsDate() {
             return HFSDate.localTimestampToDate(getContentModDate());
         }
 
+        @Override
         public Date getAttributeModDateAsDate() {
             return HFSDate.localTimestampToDate(getAttributeModDate());
         }
 
+        @Override
         public Date getAccessDateAsDate() {
             return HFSDate.localTimestampToDate(getAccessDate());
         }
 
+        @Override
         public Date getBackupDateAsDate() {
             return HFSDate.localTimestampToDate(getBackupDate());
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
 
+        @Override
         public boolean hasPermissions() {
             return false;
         }
 
+        @Override
         public HFSPlusBSDInfo getPermissions() {
             throw new UnsupportedOperationException("Not supported.");
         }
 
+        @Override
         public boolean hasAccessDate() {
             return false;
         }
 
+        @Override
         public boolean hasBackupDate() {
             return true;
         }
 
+        @Override
         public boolean hasCreateDate() {
             return true;
         }
 
+        @Override
         public boolean hasContentModDate() {
             return true;
         }
 
+        @Override
         public boolean hasAttributeModDate() {
             return false;
         }
 
+        @Override
         public CommonHFSFinderInfo getFinderInfo() {
             return CommonHFSFinderInfo.create(data);
         }

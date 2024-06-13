@@ -33,7 +33,7 @@ import org.catacombae.util.Util;
 public abstract class CommonBTHeaderRecord extends CommonBTRecord implements PrintableStruct, StructElements {
 
     public enum CompareType {
-        CASE_FOLDING, BINARY_COMPARE;
+        CASE_FOLDING, BINARY_COMPARE
     }
 
     public abstract int getTreeDepth();
@@ -56,14 +56,13 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
 
     public abstract CompareType getKeyCompareType();
 
+    @Override
     public abstract byte[] getBytes();
 
-    /*
-    public void print(PrintStream ps, String prefix) {
-        ps.println(prefix + getClass().getSimpleName() + ":");
-        printFields(ps, prefix + " ");
-    }
-    */
+//    public void print(PrintStream ps, String prefix) {
+//        ps.println(prefix + getClass().getSimpleName() + ":");
+//        printFields(ps, prefix + " ");
+//    }
 
     public static CommonBTHeaderRecord create(BTHeaderRec bthr) {
         return new HFSPlusImplementation(bthr);
@@ -75,7 +74,7 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
 
     public static class HFSPlusImplementation extends CommonBTHeaderRecord {
 
-        private BTHeaderRec bthr;
+        private final BTHeaderRec bthr;
 
         public HFSPlusImplementation(BTHeaderRec bthr) {
             this.bthr = bthr;
@@ -141,10 +140,12 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
             return bthr.getBytes();
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             bthr.print(ps, prefix);
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             bthr.printFields(ps, prefix);
         }
@@ -158,6 +159,7 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
             return bthr;
         }
 
+        @Override
         public Dictionary getStructElements() {
             return bthr.getStructElements();
         }
@@ -165,7 +167,7 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
 
     public static class HFSImplementation extends CommonBTHeaderRecord {
 
-        private BTHdrRec bthr;
+        private final BTHdrRec bthr;
 
         public HFSImplementation(BTHdrRec bthr) {
             this.bthr = bthr;
@@ -227,10 +229,12 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
             return bthr.getBytes();
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             bthr.print(ps, prefix);
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             bthr.printFields(ps, prefix);
         }
@@ -240,6 +244,7 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord implements Pri
             return BTHdrRec.length();
         }
 
+        @Override
         public Dictionary getStructElements() {
             return bthr.getStructElements();
         }

@@ -39,7 +39,7 @@ public class DSStoreTableOfContents implements DynamicStruct {
     public static final int MIN_STRUCTSIZE = 4;
     public static final int MAX_STRUCTSIZE = Integer.MAX_VALUE;
 
-    private int tocCount;
+    private final int tocCount;
     private final DSStoreTableOfContentsEntry[] tocEntries;
 
     public DSStoreTableOfContents(byte[] data, int offset) {
@@ -52,10 +52,12 @@ public class DSStoreTableOfContents implements DynamicStruct {
         }
     }
 
+    @Override
     public int maxSize() {
         return MAX_STRUCTSIZE;
     }
 
+    @Override
     public int occupiedSize() {
         int size = MIN_STRUCTSIZE;
         for (int i = 0; i < this.tocCount; ++i) {
@@ -97,6 +99,7 @@ public class DSStoreTableOfContents implements DynamicStruct {
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         getBytes(result, 0);
@@ -104,12 +107,12 @@ public class DSStoreTableOfContents implements DynamicStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.tocCount);
         offset += 4;
-        for (int _i = 0; _i < this.tocEntries.length; ++_i) {
-            offset += this.tocEntries[_i].getBytes(result, offset);
+        for (DSStoreTableOfContentsEntry tocEntry : this.tocEntries) {
+            offset += tocEntry.getBytes(result, offset);
         }
 
         return offset - startOffset;

@@ -94,10 +94,12 @@ public class GPTEntry implements Partition, StructElements {
     }
 
     // Defined in Partition
+    @Override
     public long getStartOffset() {
         return getStartingLBA() * blockSize;
     }
 
+    @Override
     public long getLength() {
         // NOTE: I think this is an appropriate length calculation. If we don't
         // add 1 to getEndingLBA() (which specifies the last sector LBA,
@@ -105,6 +107,7 @@ public class GPTEntry implements Partition, StructElements {
         return (getEndingLBA() + 1) * blockSize - getStartOffset();
     }
 
+    @Override
     public PartitionType getType() {
         return convertPartitionType(getPartitionTypeGUIDAsEnum());
     }
@@ -167,6 +170,7 @@ public class GPTEntry implements Partition, StructElements {
         return "\"" + getPartitionNameAsString() + "\" (" + getPartitionTypeGUIDAsEnum() + ")";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " partitionTypeGUID: " + getPartitionTypeGUID().toString() + " (" + getPartitionTypeGUIDAsEnum() + ")");
         ps.println(prefix + " uniquePartitionGUID: " + getUniquePartitionGUID().toString());
@@ -176,6 +180,7 @@ public class GPTEntry implements Partition, StructElements {
         ps.println(prefix + " partitionName: " + getPartitionNameAsString());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "GPTEntry:");
         printFields(ps, prefix);
@@ -202,8 +207,7 @@ public class GPTEntry implements Partition, StructElements {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof GPTEntry) {
-            GPTEntry gpte = (GPTEntry) obj;
+        if (obj instanceof GPTEntry gpte) {
             return Util.arraysEqual(getBytes(), gpte.getBytes());
             // Lazy man's method, generating new allocations and work for the GC. But it's convenient.
         } else
@@ -223,16 +227,14 @@ public class GPTEntry implements Partition, StructElements {
     }
 
     public static PartitionType convertPartitionType(GPTPartitionType gpt) {
-        switch (gpt) {
-            case PARTITION_TYPE_APPLE_HFS:
-                return PartitionType.APPLE_HFS_CONTAINER;
-            case PARTITION_TYPE_PRIMARY_PARTITION:
-                return PartitionType.NT_OS2_IFS;
-            default:
-                return PartitionType.UNKNOWN;
-        }
+        return switch (gpt) {
+            case PARTITION_TYPE_APPLE_HFS -> PartitionType.APPLE_HFS_CONTAINER;
+            case PARTITION_TYPE_PRIMARY_PARTITION -> PartitionType.NT_OS2_IFS;
+            default -> PartitionType.UNKNOWN;
+        };
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(GPTEntry.class.getSimpleName());
 

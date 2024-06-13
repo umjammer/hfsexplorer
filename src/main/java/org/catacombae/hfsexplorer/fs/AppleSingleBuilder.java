@@ -58,7 +58,7 @@ public class AppleSingleBuilder {
     /**
      * Type enumerating all valid file types for an AppleSingle file.
      */
-    public static enum FileType {
+    public enum FileType {
         /**
          * Indicates an AppleSingle file, containing both a data fork and a resource fork (and
          * optionally other attributes).
@@ -72,7 +72,7 @@ public class AppleSingleBuilder {
 
         private final int magic;
 
-        private FileType(int magic) {
+        FileType(int magic) {
             this.magic = magic;
         }
 
@@ -86,7 +86,7 @@ public class AppleSingleBuilder {
         }
     }
 
-    public static enum AppleSingleVersion {
+    public enum AppleSingleVersion {
         /** The AppleSingle format used in A/UX and possibly Mac OS Classic / early Mac OS X versions. */
         VERSION_1_0(0x00010000),
         /** The version used in Mac OS X Leopard and possibly earlier Mac OS X versions. */
@@ -94,7 +94,7 @@ public class AppleSingleBuilder {
 
         private final int versionNumber;
 
-        private AppleSingleVersion(int versionNumber) {
+        AppleSingleVersion(int versionNumber) {
             this.versionNumber = versionNumber;
         }
 
@@ -103,7 +103,7 @@ public class AppleSingleBuilder {
         }
     }
 
-    public static enum FileSystem {
+    public enum FileSystem {
         MACOS("Macintosh"),
         MACOS_X("Mac OS X"),
         PRODOS("ProDOS"),
@@ -113,7 +113,7 @@ public class AppleSingleBuilder {
 
         private final String identifier;
 
-        private FileSystem(String identifier) {
+        FileSystem(String identifier) {
             this.identifier = identifier;
         }
 
@@ -130,7 +130,7 @@ public class AppleSingleBuilder {
         }
     }
 
-    public static enum EntryType {
+    public enum EntryType {
         DATA_FORK(EntryDescriptor.ENTRY_ID_DATA),
         RESOURCE_FORK(EntryDescriptor.ENTRY_ID_RESOURCE),
         REAL_NAME(EntryDescriptor.ENTRY_ID_REALNAME),
@@ -142,7 +142,7 @@ public class AppleSingleBuilder {
 
         private final int typeNumber;
 
-        private EntryType(int typeNumber) {
+        EntryType(int typeNumber) {
             this.typeNumber = typeNumber;
         }
 
@@ -231,7 +231,7 @@ public class AppleSingleBuilder {
     private final FileType fileType;
     private final AppleSingleVersion version;
     private final FileSystem homeFileSystem;
-    private final LinkedList<Pair<EntryType, AppleSingleEntry>> entryList = new LinkedList<Pair<EntryType, AppleSingleEntry>>();
+    private final LinkedList<Pair<EntryType, AppleSingleEntry>> entryList = new LinkedList<>();
 
     public AppleSingleBuilder(FileType fileType, AppleSingleVersion version, FileSystem homeFileSystem) {
         if (fileType == null)
@@ -246,15 +246,15 @@ public class AppleSingleBuilder {
     }
 
     public void addDataFork(byte[] resourceForkData) {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(EntryType.DATA_FORK, new RawDataEntry(resourceForkData)));
+        entryList.add(new Pair<>(EntryType.DATA_FORK, new RawDataEntry(resourceForkData)));
     }
 
     public void addResourceFork(byte[] resourceForkData) {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(EntryType.RESOURCE_FORK, new RawDataEntry(resourceForkData)));
+        entryList.add(new Pair<>(EntryType.RESOURCE_FORK, new RawDataEntry(resourceForkData)));
     }
 
     public void addEmptyResourceFork() {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(EntryType.RESOURCE_FORK, new RawDataEntry(EMPTY_RESOURCE_FORK)));
+        entryList.add(new Pair<>(EntryType.RESOURCE_FORK, new RawDataEntry(EMPTY_RESOURCE_FORK)));
     }
 
     public void addFinderInfo(byte[] finderInfoData, List<Pair<String, byte[]>> extendedAttributeList) {
@@ -263,7 +263,7 @@ public class AppleSingleBuilder {
                     "length (expected: 32, actual: " + finderInfoData.length + ").");
         }
 
-        ArrayList<Pair<byte[], byte[]>> attributeDataList = new ArrayList<Pair<byte[], byte[]>>(extendedAttributeList.size());
+        ArrayList<Pair<byte[], byte[]>> attributeDataList = new ArrayList<>(extendedAttributeList.size());
 
         for (Pair<String, byte[]> extendedAttributePair : extendedAttributeList) {
             // Note: Is normalization necessary? Other substitutions?
@@ -285,10 +285,10 @@ public class AppleSingleBuilder {
                         "allowed: " + (128 * 1024) + ", actual: " + attributeData.length + ").");
             }
 
-            attributeDataList.add(new Pair<byte[], byte[]>(attributeNameUtf8, extendedAttributePair.getB()));
+            attributeDataList.add(new Pair<>(attributeNameUtf8, extendedAttributePair.getB()));
         }
 
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(EntryType.FINDER_INFO,
+        entryList.add(new Pair<>(EntryType.FINDER_INFO,
                 new FinderInfoEntry(finderInfoData, attributeDataList)));
     }
 
@@ -321,7 +321,7 @@ public class AppleSingleBuilder {
             pointer += headerData.length;
         }
 
-        final EntryDescriptor[] entryDescriptors = new EntryDescriptor[entryList.size()];
+        EntryDescriptor[] entryDescriptors = new EntryDescriptor[entryList.size()];
         int i = 0;
         int dataOffset = dataStartOffset;
         for (Pair<EntryType, AppleSingleEntry> p : entryList) {
@@ -350,9 +350,9 @@ public class AppleSingleBuilder {
 
         i = 0;
         for (Pair<AppleSingleBuilder.EntryType, AppleSingleEntry> p : entryList) {
-            final EntryDescriptor desc = entryDescriptors[i++];
-            final int entryOffset = desc.getEntryOffset();
-            final int entryLength = desc.getEntryLength();
+            EntryDescriptor desc = entryDescriptors[i++];
+            int entryOffset = desc.getEntryOffset();
+            int entryLength = desc.getEntryLength();
 
             if (pointer != entryOffset) {
                 throw new RuntimeException("Internal error: Miscalculation " +
@@ -360,10 +360,10 @@ public class AppleSingleBuilder {
                         entryOffset + ", actual: " + pointer + ").");
             }
 
-            final int entryDataLength = p.getB().getBytes(pointer, result, pointer);
+            int entryDataLength = p.getB().getBytes(pointer, result, pointer);
             pointer += entryDataLength;
 
-            final int entryPaddingLength = entryLength - entryDataLength;
+            int entryPaddingLength = entryLength - entryDataLength;
             if (entryPaddingLength != 0) {
                 // Fill trailing bytes in entry with zeroed data.
                 Arrays.fill(result, pointer, pointer + entryPaddingLength, (byte) 0);
@@ -371,7 +371,7 @@ public class AppleSingleBuilder {
             }
         }
 
-        final int trailingPaddingLength = result.length - pointer;
+        int trailingPaddingLength = result.length - pointer;
         if (trailingPaddingLength != 0) {
             // Fill trailing bytes in file with zeroed data.
             Arrays.fill(result, pointer, pointer + trailingPaddingLength, (byte) 0);
@@ -383,10 +383,10 @@ public class AppleSingleBuilder {
 
     public interface AppleSingleEntry {
 
-        public int getBytes(long fileOffset, byte[] data, int offset);
+        int getBytes(long fileOffset, byte[] data, int offset);
     }
 
-    public class RawDataEntry implements AppleSingleEntry {
+    public static class RawDataEntry implements AppleSingleEntry {
 
         private final byte[] rawData;
 
@@ -394,6 +394,7 @@ public class AppleSingleBuilder {
             this.rawData = rawData;
         }
 
+        @Override
         public int getBytes(long fileOffset, byte[] data, int offset) {
             if (data != null) {
                 System.arraycopy(rawData, 0, data, offset, rawData.length);
@@ -403,7 +404,7 @@ public class AppleSingleBuilder {
         }
     }
 
-    public class FinderInfoEntry implements AppleSingleEntry {
+    public static class FinderInfoEntry implements AppleSingleEntry {
 
         private final byte[] finderInfoData;
         private final ArrayList<Pair<byte[], byte[]>> attributeDataList;
@@ -413,6 +414,7 @@ public class AppleSingleBuilder {
             this.attributeDataList = attributeDataList;
         }
 
+        @Override
         public int getBytes(long fileOffset, byte[] data, int offset) {
             int finderInfoDataSize = 0;
 
@@ -439,17 +441,17 @@ public class AppleSingleBuilder {
                 // Calculate offsets of header and entries. This is non-trivial
                 // due to the requirement that entries are variable-sized and
                 // must be 4-byte aligned.
-                final int attributeHeaderOffset = offset + finderInfoDataSize;
+                int attributeHeaderOffset = offset + finderInfoDataSize;
                 finderInfoDataSize += AttributeHeader.STRUCTSIZE;
 
-                final int[] attributeEntryOffsets = data != null ? new int[attributeDataList.size()] : null;
+                int[] attributeEntryOffsets = data != null ? new int[attributeDataList.size()] : null;
                 int extendedAttributesDataSize = 0;
                 int i = 0;
                 for (Pair<byte[], byte[]> attributeData : attributeDataList) {
                     extendedAttributesDataSize += attributeData.getB().length;
 
                     // Align to 4-byte boundaries.
-                    final int remainder = (int) ((fileOffset + finderInfoDataSize) & 0x3);
+                    int remainder = (int) ((fileOffset + finderInfoDataSize) & 0x3);
                     if (remainder != 0) {
                         if (data != null) {
                             Arrays.fill(data, offset + finderInfoDataSize,
@@ -474,31 +476,31 @@ public class AppleSingleBuilder {
                             "beyond the first 64k of the file (ends at: " + (fileOffset + finderInfoDataSize) + ").");
                 }
 
-                final int extendedAttributesDataStart = (int) (fileOffset + finderInfoDataSize);
+                int extendedAttributesDataStart = (int) (fileOffset + finderInfoDataSize);
                 int curDataOffset = finderInfoDataSize;
 
                 // Write out attribute header.
                 if (data != null) {
-                    final AttributeHeader header = new AttributeHeader(0,
+                    AttributeHeader header = new AttributeHeader(0,
                             extendedAttributesDataStart + extendedAttributesDataSize,
                             extendedAttributesDataStart,
                             extendedAttributesDataSize,
                             (short) 0, (short) attributeDataList.size());
-                    final byte[] headerBytes = header.getBytes();
+                    byte[] headerBytes = header.getBytes();
                     System.arraycopy(headerBytes, 0, data, attributeHeaderOffset, headerBytes.length);
                 }
 
                 // Write out attribute entry headers and associated data.
                 i = 0;
                 for (Pair<byte[], byte[]> attributeData : attributeDataList) {
-                    final byte[] content = attributeData.getB();
+                    byte[] content = attributeData.getB();
 
                     if (data != null) {
-                        final byte[] name = attributeData.getA();
+                        byte[] name = attributeData.getA();
 
-                        final AttributeEntry entry = new AttributeEntry(
+                        AttributeEntry entry = new AttributeEntry(
                                 curDataOffset, content.length, (short) 0, name, 0, (short) name.length);
-                        final byte[] entryData = entry.getBytes();
+                        byte[] entryData = entry.getBytes();
 
                         /* Write out entry header. */
                         System.arraycopy(entryData, 0, data, attributeEntryOffsets[i++], entryData.length);

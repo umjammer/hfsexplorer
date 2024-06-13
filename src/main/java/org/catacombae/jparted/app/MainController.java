@@ -43,11 +43,11 @@ import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
  */
 public class MainController {
 
-    private MainWindow mainWindow;
-    private MainPanel mainPanel;
+    private final MainWindow mainWindow;
+    private final MainPanel mainPanel;
 
     // Model variables
-    LinkedList<PartitionSystemHandler> psHandlers = new LinkedList<PartitionSystemHandler>();
+    LinkedList<PartitionSystemHandler> psHandlers = new LinkedList<>();
 
     public MainController() {
         this.mainPanel = new MainPanel();
@@ -69,7 +69,7 @@ public class MainController {
 
     public void showMainWindow() {
         // Initialize
-        mainPanel.setPartitionSystemsBoxContents(new LinkedList<String>());
+        mainPanel.setPartitionSystemsBoxContents(new LinkedList<>());
         mainPanel.setPartitionSystemsBoxEnabled(false);
         mainPanel.setSynchronizeButtonEnabled(false);
 
@@ -83,8 +83,8 @@ public class MainController {
 
     private void loadPartitionSystem(DataLocator loc) {
 
-        LinkedList<PartitionSystemHandler> detectedPartitionSystems = new LinkedList<PartitionSystemHandler>();
-        LinkedList<String> detectedPartitionSystemDescriptions = new LinkedList<String>();
+        LinkedList<PartitionSystemHandler> detectedPartitionSystems = new LinkedList<>();
+        LinkedList<String> detectedPartitionSystemDescriptions = new LinkedList<>();
         for (PartitionSystemType curType : PartitionSystemType.values()) {
             if (curType.isTopLevelCapable()) {
                 PartitionSystemHandlerFactory fac = curType.createDefaultHandlerFactory();
@@ -96,7 +96,7 @@ public class MainController {
                         streamLength = stream.length();
                     } catch (Exception e) {
                     }
-                    //fac.createDetector(loc);
+//                    fac.createDetector(loc);
                     if (recognizer.detect(stream, 0, streamLength)) {
                         PartitionSystemHandler handler = fac.createHandler(loc);
                         detectedPartitionSystems.add(fac.createHandler(loc));
@@ -107,7 +107,7 @@ public class MainController {
             }
         }
 
-        if (detectedPartitionSystemDescriptions.size() > 0) {
+        if (!detectedPartitionSystemDescriptions.isEmpty()) {
             mainPanel.setPartitionSystemsBoxEnabled(true);
             mainPanel.setPartitionSystemsBoxContents(detectedPartitionSystemDescriptions);
         } else {
@@ -115,7 +115,7 @@ public class MainController {
         }
 
         mainPanel.clearPartitionList();
-        if (detectedPartitionSystems.size() > 0) {
+        if (!detectedPartitionSystems.isEmpty()) {
             PartitionSystemHandler handler = detectedPartitionSystems.getFirst();
             Partition[] partitions = handler.getPartitions();
             int i = 0;
@@ -137,6 +137,7 @@ public class MainController {
 
     private class LoadFileItemListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setMultiSelectionEnabled(false);
@@ -155,6 +156,7 @@ public class MainController {
 
     private class LoadPathItemListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
             String path = JOptionPane.showInputDialog(mainPanel, "Path:",
                     "Enter path to partition system",
@@ -178,6 +180,7 @@ public class MainController {
 
     private class ExitItemListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
             exitProgram();
         }
@@ -185,19 +188,22 @@ public class MainController {
 
     private class AboutItemListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
             JOptionPane.showMessageDialog(mainPanel, "jParted 0.1", "About", INFORMATION_MESSAGE);
         }
     }
 
-    private class PartitionSystemsBoxListener implements ActionListener {
+    private static class PartitionSystemsBoxListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
         }
     }
 
-    private class SynchronizeButtonListener implements ActionListener {
+    private static class SynchronizeButtonListener implements ActionListener {
 
+        @Override
         public void actionPerformed(ActionEvent evt) {
         }
     }

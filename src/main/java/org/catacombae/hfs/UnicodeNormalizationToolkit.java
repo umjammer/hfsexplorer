@@ -17,17 +17,18 @@
 
 package org.catacombae.hfs;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.CharBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * A class implementing a table for handling the decomposition of characters that's necessary when
@@ -39,6 +40,8 @@ import org.catacombae.util.Util;
  */
 public class UnicodeNormalizationToolkit {
 
+    private static final Logger logger = getLogger(UnicodeNormalizationToolkit.class.getName());
+
     /**
      * The maximum number of decomposed UTF-16 code units for each composed
      * UTF-16 code unit.
@@ -46,8 +49,8 @@ public class UnicodeNormalizationToolkit {
     private static final int MAX_DECOMPOSED_LENGTH = 4;
     private static final UnicodeNormalizationToolkit defaultInstance = new UnicodeNormalizationToolkit();
 
-    private Map<Character, char[]> decompositionTable;
-    private TrieNode compositionTrie;
+    private final Map<Character, char[]> decompositionTable;
+    private final TrieNode compositionTrie;
 
     /**
      * This class encapsulates code copied from http://unicode.org/reports/tr15/#Hangul in order
@@ -117,7 +120,7 @@ public class UnicodeNormalizationToolkit {
 
                         // make syllable of form LVT
 
-                        last += TIndex;
+                        last += (char) TIndex;
                         result.setCharAt(result.length() - 1, last); // reset last
                         continue; // discard ch
                     }
@@ -134,10 +137,10 @@ public class UnicodeNormalizationToolkit {
 
     private static class TrieNode {
 
-        private final HashMap<Character, TrieNode> childNodes = new HashMap<Character, TrieNode>();
+        private final HashMap<Character, TrieNode> childNodes = new HashMap<>();
         private char[] replacementSequence = null;
-        private char trig;
-        private long id;
+        private final char trig;
+        private final long id;
 
         public TrieNode(char trig) {
             this.trig = trig;
@@ -172,7 +175,7 @@ public class UnicodeNormalizationToolkit {
     }
 
     private UnicodeNormalizationToolkit() {
-        this(new HashMap<Character, char[]>());
+        this(new HashMap<>());
     }
 
     /** This method can be used in order to tune which Map implementation is used (default is HashMap). */
@@ -219,7 +222,7 @@ public class UnicodeNormalizationToolkit {
      * {@link java.lang.String}.
      */
     public String decompose(char c) {
-        final CharBuffer decomposedBuffer = CharBuffer.allocate(MAX_DECOMPOSED_LENGTH);
+        CharBuffer decomposedBuffer = CharBuffer.allocate(MAX_DECOMPOSED_LENGTH);
 
         decompose(c, decomposedBuffer);
 
@@ -234,7 +237,7 @@ public class UnicodeNormalizationToolkit {
      * returning the result as a {@link java.lang.String}.
      */
     public String decompose(char[] composedArray) {
-        final CharBuffer decomposedBuffer = CharBuffer.allocate(composedArray.length * MAX_DECOMPOSED_LENGTH);
+        CharBuffer decomposedBuffer = CharBuffer.allocate(composedArray.length * MAX_DECOMPOSED_LENGTH);
 
         for (char c : composedArray) {
             decompose(c, decomposedBuffer);
@@ -251,7 +254,7 @@ public class UnicodeNormalizationToolkit {
      * returning the result as a {@link java.lang.String}.
      */
     public String decompose(CharBuffer composedBuffer) {
-        final CharBuffer decomposedBuffer = CharBuffer.allocate(composedBuffer.length() * MAX_DECOMPOSED_LENGTH);
+        CharBuffer decomposedBuffer = CharBuffer.allocate(composedBuffer.length() * MAX_DECOMPOSED_LENGTH);
 
         while (composedBuffer.hasRemaining()) {
             decompose(composedBuffer.get(), decomposedBuffer);
@@ -263,11 +266,11 @@ public class UnicodeNormalizationToolkit {
     }
 
     public String compose(String decomposedString) {
-//        System.err.println("compose");
+//        logger.log(Level.DEBUG, "compose");
         StringBuilder sb = new StringBuilder();
-        LinkedList<TrieNode> matchSequence = new LinkedList<TrieNode>();
+        LinkedList<TrieNode> matchSequence = new LinkedList<>();
         for (int i = 0; i < decomposedString.length(); ++i) {
-            //System.err.println("i = " + i);
+//            logger.log(Level.DEBUG, "i = " + i);
             char[] replacementSequence = null;
             matchSequence.clear();
 
@@ -282,25 +285,25 @@ public class UnicodeNormalizationToolkit {
                     matchSequence.addFirst(tn);
                     ++charsRead;
                 }
-//                System.err.print(" -> 0x" + Util.toHexStringBE(nextChar));
+//                logger.log(Level.DEBUG, " -> 0x" + Util.toHexStringBE(nextChar));
             }
-//            System.err.println(" <BREAK>");
+//            logger.log(Level.DEBUG, " <BREAK>");
 
             // To find the longest matching substring, we must loop from the back of the match
             // sequence and find the first (last) TrieNode with a replacement sequence. We have
             // conveniently arranged the match sequence in a LIFO manner, so we just have to loop.
-//            System.err.print("  {read:" + charsRead + "}");
+//            logger.log(Level.DEBUG, "  {read:" + charsRead + "}");
             for (TrieNode cur : matchSequence) {
-//                System.err.print(cur.toString() + " > ");
+//                logger.log(Level.DEBUG, cur.toString() + " > ");
                 if (cur.getReplacementSequence() != null) {
-//                    System.err.println("<REPLACEMENT FOUND: " + Util.toHexStringBE(cur.getReplacementSequence()) + ">{read:" + charsRead + "}");
+//                    logger.log(Level.DEBUG, "<REPLACEMENT FOUND: " + Util.toHexStringBE(cur.getReplacementSequence()) + ">{read:" + charsRead + "}");
                     replacementSequence = cur.getReplacementSequence();
                     break;
                 } else
                     --charsRead;
             }
 //            if (replacementSequence == null)
-//                System.err.println("<NOTHING FOUND>{read:" + charsRead + "}");
+//                logger.log(Level.DEBUG, "<NOTHING FOUND>{read:" + charsRead + "}");
 
             if (replacementSequence != null) {
                 sb.append(replacementSequence);
@@ -316,22 +319,22 @@ public class UnicodeNormalizationToolkit {
     }
 
     /** Throws a RuntimeException if the trie contains non-leaf nodes with replacement sequences. */
-    private void checkTrie(TrieNode root) {
+    private static void checkTrie(TrieNode root) {
         checkTrie(root, "  ");
     }
 
-    private void checkTrie(TrieNode root, String prefix) {
+    private static void checkTrie(TrieNode root, String prefix) {
         Collection<TrieNode> children = root.getChildren();
 //        if (children.size() > 0 && root.getReplacementSequence() != null)
 //            throw new RuntimeException("Inconsistent trie.");
         if (root.getReplacementSequence() != null) {
-            System.err.print(prefix + root.toString()); // + " -> 0x" + Util.toHexStringBE(root.getReplacementSequence()));
-            if (children.size() > 0)
-                System.err.println(" <INCONSISTENCY!>");
+            logger.log(Level.DEBUG, prefix + root); // + " -> 0x" + Util.toHexStringBE(root.getReplacementSequence()));
+            if (!children.isEmpty())
+                logger.log(Level.DEBUG, " <INCONSISTENCY!>");
             else
-                System.err.println();
+                logger.log(Level.DEBUG, "\n");
         } else
-            System.err.println(prefix + root.toString());
+            logger.log(Level.DEBUG, prefix + root);
 
         for (TrieNode tn : children)
             checkTrie(tn, prefix + "  ");
@@ -360,7 +363,7 @@ public class UnicodeNormalizationToolkit {
 //    }
 
     private static TrieNode buildCompositionTrie(Map<Character, char[]> decompositionTable) {
-        final TrieNode rootNode = new TrieNode('\0');
+        TrieNode rootNode = new TrieNode('\0');
         for (Map.Entry<Character, char[]> entry : decompositionTable.entrySet()) {
             char key = entry.getKey();
             char[] value = entry.getValue();

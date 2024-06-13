@@ -83,15 +83,11 @@ public abstract class CommonBTHeaderNode extends CommonBTNode<CommonBTRecord> {
 
     @Override
     protected CommonBTRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
-        switch (recordNumber) {
-            case 0:
-                return createHeaderRecord(data, offset, length);
-            case 1:
-            case 2:
-                return new CommonBTGenericDataRecord(data, offset, length);
-            default:
-                throw new RuntimeException("Too many records for a header node!");
-        }
+        return switch (recordNumber) {
+            case 0 -> createHeaderRecord(data, offset, length);
+            case 1, 2 -> new CommonBTGenericDataRecord(data, offset, length);
+            default -> throw new RuntimeException("Too many records for a header node!");
+        };
     }
 
     protected abstract CommonBTHeaderRecord createHeaderRecord(byte[] data, int offset, int length);

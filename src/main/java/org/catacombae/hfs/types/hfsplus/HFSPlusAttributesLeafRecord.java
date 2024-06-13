@@ -67,19 +67,21 @@ public class HFSPlusAttributesLeafRecord implements AbstractStruct, PrintableStr
         return key.length() + recordData.size();
     }
 
+    @Override
     public byte[] getBytes() {
         // Inefficient, but not sure how to do it in any other way with the
         // primitive APIs that we currently have.
-        final byte[] keyBytes = key.getBytes();
-        final byte[] recordDataBytes = recordData.getBytes();
+        byte[] keyBytes = key.getBytes();
+        byte[] recordDataBytes = recordData.getBytes();
 
-        final byte[] result =
+        byte[] result =
                 new byte[keyBytes.length + recordDataBytes.length];
         Util.arrayCopy(keyBytes, result, 0);
         Util.arrayCopy(recordDataBytes, result, keyBytes.length);
         return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.printFields(ps, prefix + "  ");
@@ -87,11 +89,13 @@ public class HFSPlusAttributesLeafRecord implements AbstractStruct, PrintableStr
         recordData.printFields(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusAttributesLeafRecord:");
         printFields(ps, prefix);
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder("HFSPlusAttributesLeafRecord",
                 "HFS+ attributes file leaf record");

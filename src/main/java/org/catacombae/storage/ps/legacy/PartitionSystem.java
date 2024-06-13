@@ -33,14 +33,14 @@ public interface PartitionSystem {
      * Performs partition system specific validitity and/or sanity checks to
      * determine if the partition system is valid and correct.
      */
-    public boolean isValid();
+    boolean isValid();
 
     /**
      * Returns the number of partition entries represented in this partition system.
      *
      * @return the number of partition entries represented in this partition system.
      */
-    public int getPartitionCount();
+    int getPartitionCount();
 
     /**
      * Fetches the partition entry at index <code>index</code>.
@@ -50,21 +50,21 @@ public interface PartitionSystem {
      * @param index the requested index.
      * @return the requested Partition.
      */
-    public Partition getPartitionEntry(int index);
+    Partition getPartitionEntry(int index);
 
     /**
      * Returns all Partition entries represented in this partition system.
      *
      * @return all Partition entries represented in this partition system.
      */
-    public Partition[] getPartitionEntries();
+    Partition[] getPartitionEntries();
 
     /**
      * Returns the number of partition entries that contain partition data.
      *
      * @return the number of partition entries that contain partition data.
      */
-    public int getUsedPartitionCount();
+    int getUsedPartitionCount();
 
     /**
      * Sorts out those partition entries that contain valid partition data and
@@ -72,7 +72,7 @@ public interface PartitionSystem {
      *
      * @return an array of valid, usable partition entries.
      */
-    public Partition[] getUsedPartitionEntries();
+    Partition[] getUsedPartitionEntries();
 
     /**
      * Returns the long name of this partition system, for example "Master Boot
@@ -80,14 +80,14 @@ public interface PartitionSystem {
      *
      * @return the long name of this partition system.
      */
-    public String getLongName();
+    String getLongName();
 
     /**
      * Returns the short name of this partition system, for example "MBR".
      *
      * @return the short name of this partition system.
      */
-    public String getShortName();
+    String getShortName();
 
     /**
      * Prints the fields of this structure to the supplied
@@ -97,7 +97,7 @@ public interface PartitionSystem {
      * @param ps     the output <code>PrintStream</code>.
      * @param prefix the prefix to prepend to each line.
      */
-    public void printFields(PrintStream ps, String prefix);
+    void printFields(PrintStream ps, String prefix);
 
     /**
      * Prints the name and fields of this structure to the supplied
@@ -107,5 +107,5 @@ public interface PartitionSystem {
      * @param ps     the output <code>PrintStream</code>.
      * @param prefix the prefix to prepend to each line.
      */
-    public void print(PrintStream ps, String prefix);
+    void print(PrintStream ps, String prefix);
 }

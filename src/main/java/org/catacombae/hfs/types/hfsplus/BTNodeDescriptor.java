@@ -119,15 +119,17 @@ public class BTNodeDescriptor implements PrintableStruct {
         return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
-        ps.println(prefix + " fLink: " + getFLink() + "");
-        ps.println(prefix + " bLink: " + getBLink() + "");
+        ps.println(prefix + " fLink: " + getFLink());
+        ps.println(prefix + " bLink: " + getBLink());
         ps.println(prefix + " kind: " + getKind() + " (" + getKindAsString() + ")");
-        ps.println(prefix + " height: " + getHeight() + "");
-        ps.println(prefix + " numRecords: " + getNumRecords() + "");
-        ps.println(prefix + " reserved: 0x" + Util.toHexStringBE(getReserved()) + "");
+        ps.println(prefix + " height: " + getHeight());
+        ps.println(prefix + " numRecords: " + getNumRecords());
+        ps.println(prefix + " reserved: 0x" + Util.toHexStringBE(getReserved()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTNodeDescriptor:");
         printFields(ps, prefix);

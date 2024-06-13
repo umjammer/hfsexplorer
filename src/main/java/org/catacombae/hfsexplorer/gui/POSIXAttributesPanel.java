@@ -56,6 +56,7 @@ public class POSIXAttributesPanel extends javax.swing.JPanel implements ChainedP
         initComponents();
     }
 
+    @Override
     public void setChainedContents(Component c) {
         chainedContentsPanel.removeAll();
         chainedContentsPanel.add(c);
@@ -384,14 +385,12 @@ public class POSIXAttributesPanel extends javax.swing.JPanel implements ChainedP
     private javax.swing.JCheckBox userWriteBox;
     // End of variables declaration//GEN-END:variables
 
-    /*
-    public static void main(String[] args) {
-        JFrame jf = new JFrame("Test");
-        jf.add(new JScrollPane(new POSIXAttributesPanel()));
-        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        jf.pack();
-        jf.setLocationRelativeTo(null);
-        jf.setVisible(true);
-    }
-    */
+//    public static void main(String[] args) {
+//        JFrame jf = new JFrame("Test");
+//        jf.add(new JScrollPane(new POSIXAttributesPanel()));
+//        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//        jf.pack();
+//        jf.setLocationRelativeTo(null);
+//        jf.setVisible(true);
+//    }
 }

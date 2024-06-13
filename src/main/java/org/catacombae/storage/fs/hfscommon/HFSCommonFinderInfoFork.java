@@ -43,64 +43,79 @@ public class HFSCommonFinderInfoFork implements FSFork {
         this.finderInfo = finderInfo;
     }
 
+    @Override
     public FSForkType getType() {
         return FSForkType.MACOS_FINDERINFO;
     }
 
+    @Override
     public long getLength() {
         return 32;
     }
 
+    @Override
     public long getOccupiedSize() {
         return 32;
     }
 
+    @Override
     public boolean isWritable() {
         return false;
     }
 
+    @Override
     public boolean isTruncatable() {
         return false;
     }
 
+    @Override
     public boolean isCompressed() {
         return false;
     }
 
+    @Override
     public String getForkIdentifier() {
         return "FinderInfo";
     }
 
+    @Override
     public boolean hasXattrName() {
         return true;
     }
 
+    @Override
     public String getXattrName() {
         return "com.apple.FinderInfo";
     }
 
+    @Override
     public InputStream getInputStream() {
         return new ReadableRandomAccessInputStream(
                 new SynchronizedReadableRandomAccessStream(
                         getReadableRandomAccessStream()));
     }
 
+    @Override
     public ReadableRandomAccessStream getReadableRandomAccessStream() {
         return new ReadableByteArrayStream(finderInfo.getBytes());
     }
 
+    @Override
     public WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public OutputStream getOutputStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }

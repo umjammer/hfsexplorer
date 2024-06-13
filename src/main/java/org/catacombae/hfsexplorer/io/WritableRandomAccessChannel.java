@@ -27,5 +27,5 @@ import java.nio.channels.WritableByteChannel;
  */
 public interface WritableRandomAccessChannel extends RandomAccessChannel, WritableByteChannel {
 
-    public abstract FileChannel truncate(long size) throws IOException;
+    FileChannel truncate(long size) throws IOException;
 }

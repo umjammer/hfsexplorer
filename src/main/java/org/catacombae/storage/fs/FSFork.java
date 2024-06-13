@@ -35,14 +35,14 @@ public interface FSFork {
      *
      * @return the type of this fork (if any).
      */
-    public abstract FSForkType getType();
+    FSForkType getType();
 
     /**
      * Returns the length (in bytes) of this fork.
      *
      * @return the length (in bytes) of this fork.
      */
-    public abstract long getLength();
+    long getLength();
 
     /**
      * Returns the number of bytes that this fork occupies on disk. This may be
@@ -51,7 +51,7 @@ public interface FSFork {
      *
      * @return the number of bytes that this fork occupies on disk.
      */
-    public abstract long getOccupiedSize();
+    long getOccupiedSize();
 
     /**
      * Returns whether or not the underlying implementation allows writing to
@@ -64,7 +64,7 @@ public interface FSFork {
      * @return whether or not the underlying implementation allows writing to
      * this file.
      */
-    public abstract boolean isWritable();
+    boolean isWritable();
 
     /**
      * Returns whether or not the underlying implementation allows changing the
@@ -80,7 +80,7 @@ public interface FSFork {
      * @return whether or not the underlying implementation allows writing to
      * this file.
      */
-    public abstract boolean isTruncatable();
+    boolean isTruncatable();
 
     /**
      * Returns whether or not the fork is compressed on disk.
@@ -91,7 +91,7 @@ public interface FSFork {
      *
      * @return whether or not the fork is compressed on disk.
      */
-    public abstract boolean isCompressed();
+    boolean isCompressed();
 
     /**
      * Returns an identifier which distinguishes this fork from the other
@@ -108,7 +108,7 @@ public interface FSFork {
      * @return an identifier which distinguishes this fork from the other
      * available forks.
      */
-    public abstract String getForkIdentifier();
+    String getForkIdentifier();
 
     /**
      * Returns whether or not this fork can be mapped to a UNIX extended
@@ -117,7 +117,7 @@ public interface FSFork {
      * @return whether or not this fork can be mapped to a UNIX extended
      * attribute.
      */
-    public abstract boolean hasXattrName();
+    boolean hasXattrName();
 
     /**
      * Returns the UNIX 'xattr'-style name of this fork, if applicable, or
@@ -126,7 +126,7 @@ public interface FSFork {
      * @return the UNIX 'xattr'-style name of this fork if possible, or
      * <code>null</code> otherwise.
      */
-    public abstract String getXattrName();
+    String getXattrName();
 
     /**
      * Creates an input stream from which the file's contents can be read.
@@ -135,7 +135,7 @@ public interface FSFork {
      *
      * @return an input stream from which the file's contents can be read.
      */
-    public abstract InputStream getInputStream();
+    InputStream getInputStream();
 
     /**
      * Creates a ReadableRandomAccessStream with access to the fork's contents.
@@ -144,7 +144,7 @@ public interface FSFork {
      *
      * @return a ReadableRandomAccessStream with access to the fork's contents.
      */
-    public abstract ReadableRandomAccessStream getReadableRandomAccessStream();
+    ReadableRandomAccessStream getReadableRandomAccessStream();
 
     /**
      * Opens a WritableRandomAccessStream with access to the fork contents
@@ -155,7 +155,7 @@ public interface FSFork {
      *                                                 does not support writing to files. You can check this using
      *                                                 <code>isWritable()</code>.
      */
-    public abstract WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException;
+    WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException;
 
     /**
      * Opens a RandomAccessStream with access to the fork contents (optional
@@ -167,7 +167,7 @@ public interface FSFork {
      *                                                 does not support writing to files. You can check this using
      *                                                 <code>isWritable()</code>.
      */
-    public abstract RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException;
+    RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException;
 
     /**
      * Truncates the file to length 0 and opens a new output stream where you
@@ -178,7 +178,7 @@ public interface FSFork {
      *                                                 does not support writing to files or changing their size. You can check
      *                                                 this using <code>isTruncatable()</code>.
      */
-    public abstract OutputStream getOutputStream() throws UnsupportedOperationException;
+    OutputStream getOutputStream() throws UnsupportedOperationException;
 
     /**
      * Opens a read/write TruncatableRandomAccessStream with access to the fork
@@ -191,6 +191,6 @@ public interface FSFork {
      *                                                 does not support writing to files or changing their size. You can check
      *                                                 this using <code>isTruncatable()</code>.
      */
-    public abstract TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException;
+    TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException;
 
 }

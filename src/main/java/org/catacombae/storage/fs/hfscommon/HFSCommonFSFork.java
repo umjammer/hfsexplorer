@@ -57,17 +57,20 @@ public class HFSCommonFSFork implements FSFork {
         this.forkData = iForkData;
     }
 
+    @Override
     public FSForkType getType() {
         return type;
     }
 
+    @Override
     public long getLength() {
         return forkData.getLogicalSize();
     }
 
+    @Override
     public long getOccupiedSize() {
-        final long blockSize = parent.fsHandler.getFSView().getVolumeHeader().getAllocationBlockSize();
-        final long forkBlocks;
+        long blockSize = parent.fsHandler.getFSView().getVolumeHeader().getAllocationBlockSize();
+        long forkBlocks;
         if (forkData.hasTotalBlocks()) {
             forkBlocks = forkData.getTotalBlocks();
         } else {
@@ -77,61 +80,66 @@ public class HFSCommonFSFork implements FSFork {
         return forkBlocks * blockSize;
     }
 
+    @Override
     public boolean isWritable() {
         return false; // Will be implemented in the future
     }
 
+    @Override
     public boolean isTruncatable() {
         return false; // Will be implemented in the future
     }
 
+    @Override
     public boolean isCompressed() {
         return false;
     }
 
+    @Override
     public String getForkIdentifier() {
-        switch (type) {
-            case DATA:
-                return "Data fork";
-            case MACOS_RESOURCE:
-                return "Resource fork";
-            default:
-                throw new RuntimeException("INTERNAL ERROR: Incorrect fork type: " + type);
-        }
+        return switch (type) {
+            case DATA -> "Data fork";
+            case MACOS_RESOURCE -> "Resource fork";
+            default -> throw new RuntimeException("INTERNAL ERROR: Incorrect fork type: " + type);
+        };
     }
 
+    @Override
     public InputStream getInputStream() {
         return new ReadableRandomAccessInputStream(
                 new SynchronizedReadableRandomAccessStream(getReadableRandomAccessStream()));
     }
 
+    @Override
     public ReadableRandomAccessStream getReadableRandomAccessStream() {
-        switch (type) {
-            case DATA:
-                return parent.getReadableDataForkStream();
-            case MACOS_RESOURCE:
-                return parent.getReadableResourceForkStream();
-            default:
-                throw new RuntimeException("INTERNAL ERROR: Incorrect fork type: " + type);
-        }
+        return switch (type) {
+            case DATA -> parent.getReadableDataForkStream();
+            case MACOS_RESOURCE -> parent.getReadableResourceForkStream();
+            default -> throw new RuntimeException("INTERNAL ERROR: Incorrect fork type: " + type);
+        };
     }
 
+    @Override
     public WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public OutputStream getOutputStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public boolean hasXattrName() {
         if (type == FSForkType.MACOS_RESOURCE)
             return true;
@@ -139,6 +147,7 @@ public class HFSCommonFSFork implements FSFork {
             return false;
     }
 
+    @Override
     public String getXattrName() {
         if (type == FSForkType.MACOS_RESOURCE)
             return RESOURCE_XATTR_NAME;

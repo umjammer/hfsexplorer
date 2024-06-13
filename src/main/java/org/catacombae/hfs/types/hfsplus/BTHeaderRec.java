@@ -175,6 +175,7 @@ public class BTHeaderRec implements PrintableStruct, StructElements {
         return 106;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " treeDepth: " + getTreeDepth());
         ps.println(prefix + " rootNode: " + getRootNode());
@@ -193,6 +194,7 @@ public class BTHeaderRec implements PrintableStruct, StructElements {
         ps.println(prefix + " reserved3: " + getReserved3());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTHeaderRec:");
         printFields(ps, prefix);
@@ -236,6 +238,7 @@ public class BTHeaderRec implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(BTHeaderRec.class.getSimpleName());
 

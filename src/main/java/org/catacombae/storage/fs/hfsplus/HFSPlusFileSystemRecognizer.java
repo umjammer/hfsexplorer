@@ -27,13 +27,11 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
  */
 public class HFSPlusFileSystemRecognizer implements FileSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
-        switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
-            case HFS_PLUS:
-            case HFS_WRAPPED_HFS_PLUS:
-                return true;
-            default:
-                return false;
-        }
+        return switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
+            case HFS_PLUS, HFS_WRAPPED_HFS_PLUS -> true;
+            default -> false;
+        };
     }
 }

@@ -130,6 +130,7 @@ public class BTHdrRec implements PrintableStruct, StructElements {
         return Util.readByteArrayBE(bthResv);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " bthDepth: " + getBthDepth());
         ps.println(prefix + " bthRoot: " + getBthRoot());
@@ -143,6 +144,7 @@ public class BTHdrRec implements PrintableStruct, StructElements {
         ps.println(prefix + " bthResv: " + getBthResv());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTHdrRec:");
         printFields(ps, prefix);
@@ -174,6 +176,7 @@ public class BTHdrRec implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(BTHdrRec.class.getSimpleName());
 

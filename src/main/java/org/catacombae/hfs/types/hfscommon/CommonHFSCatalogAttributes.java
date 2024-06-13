@@ -39,21 +39,21 @@ public interface CommonHFSCatalogAttributes {
      *
      * @return the associated Catalog Node ID (File ID or Folder ID).
      */
-    public CommonHFSCatalogNodeID getCatalogNodeID();
+    CommonHFSCatalogNodeID getCatalogNodeID();
 
-    public short getRecordType();
+    short getRecordType();
 
-    public short getFlags();
+    short getFlags();
 
-    public int getCreateDate();
+    int getCreateDate();
 
-    public int getContentModDate();
+    int getContentModDate();
 
-    public int getAttributeModDate();
+    int getAttributeModDate();
 
-    public int getAccessDate();
+    int getAccessDate();
 
-    public int getBackupDate();
+    int getBackupDate();
 
 
     /**
@@ -63,7 +63,7 @@ public interface CommonHFSCatalogAttributes {
      * @return whether or not this attribute set has a defined value for the "entry created"
      * timestamp.
      */
-    public boolean hasCreateDate();
+    boolean hasCreateDate();
 
     /**
      * Returns whether or not this attribute set has a defined value for the "contents modified"
@@ -72,7 +72,7 @@ public interface CommonHFSCatalogAttributes {
      * @return whether or not this attribute set has a defined value for the "contents modified"
      * timestamp.
      */
-    public boolean hasContentModDate();
+    boolean hasContentModDate();
 
     /**
      * Returns whether or not this attribute set has a defined value for the "attributes modified"
@@ -81,7 +81,7 @@ public interface CommonHFSCatalogAttributes {
      * @return whether or not this attribute set has a defined value for the "attribtues modified"
      * timestamp.
      */
-    public boolean hasAttributeModDate();
+    boolean hasAttributeModDate();
 
     /**
      * Returns whether or not this attribute set has a defined value for the "entry last accessed"
@@ -90,7 +90,7 @@ public interface CommonHFSCatalogAttributes {
      * @return whether or not this attribute set has a defined value for the "entry last accessed"
      * timestamp.
      */
-    public boolean hasAccessDate();
+    boolean hasAccessDate();
 
     /**
      * Returns whether or not this attribute set has a defined value for the "entry last backuped"
@@ -99,27 +99,28 @@ public interface CommonHFSCatalogAttributes {
      * @return whether or not this attribute set has a defined value for the "entry last backuped"
      * timestamp.
      */
-    public boolean hasBackupDate();
+    boolean hasBackupDate();
 
     /**
      * Returns whether or not this object contains HFS+ permissions.
      *
      * @return whether or not this object contains HFS+ permissions.
      */
-    public boolean hasPermissions();
+    boolean hasPermissions();
 
-    public HFSPlusBSDInfo getPermissions();
-    //public int getTextEncoding();
+    HFSPlusBSDInfo getPermissions();
 
-    public CommonHFSFinderInfo getFinderInfo();
+//    int getTextEncoding();
 
-    public Date getCreateDateAsDate();
+    CommonHFSFinderInfo getFinderInfo();
 
-    public Date getContentModDateAsDate();
+    Date getCreateDateAsDate();
 
-    public Date getAttributeModDateAsDate();
+    Date getContentModDateAsDate();
 
-    public Date getAccessDateAsDate();
+    Date getAttributeModDateAsDate();
 
-    public Date getBackupDateAsDate();
+    Date getAccessDateAsDate();
+
+    Date getBackupDateAsDate();
 }

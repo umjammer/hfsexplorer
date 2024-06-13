@@ -315,6 +315,7 @@ public class MasterDirectoryBlock implements PrintableStruct, StructElements {
         return HFSDate.localTimestampToDate(getDrVolBkUp());
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " drSigWord: " + Util.unsign(getDrSigWord()) + " (\"" + Util.toASCIIString(getDrSigWord()) + "\")");
         ps.println(prefix + " drCrDate: " + Util.unsign(getDrCrDate()) + " (" + getDrCrDateAsDate() + ")");
@@ -352,6 +353,7 @@ public class MasterDirectoryBlock implements PrintableStruct, StructElements {
         getDrCTExtRec().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "MasterDirectoryBlock:");
         printFields(ps, prefix);
@@ -438,6 +440,7 @@ public class MasterDirectoryBlock implements PrintableStruct, StructElements {
         return db.getResult();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(MasterDirectoryBlock.class.getSimpleName());
 

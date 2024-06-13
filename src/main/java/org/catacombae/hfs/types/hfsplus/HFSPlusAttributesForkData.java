@@ -48,7 +48,7 @@ public class HFSPlusAttributesForkData extends HFSPlusAttributesLeafRecordData
 
     public static final int STRUCTSIZE = 88;
 
-    private int reserved;
+    private final int reserved;
     private final HFSPlusForkData theFork;
 
     public HFSPlusAttributesForkData(byte[] data, int offset) {
@@ -61,6 +61,7 @@ public class HFSPlusAttributesForkData extends HFSPlusAttributesLeafRecordData
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -80,6 +81,7 @@ public class HFSPlusAttributesForkData extends HFSPlusAttributesLeafRecordData
         return reserved;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " recordType: " + getRecordType());
         ps.println(prefix + " reserved: " + getReserved());
@@ -87,11 +89,13 @@ public class HFSPlusAttributesForkData extends HFSPlusAttributesLeafRecordData
         getTheFork().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusAttrForkData:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -110,11 +114,11 @@ public class HFSPlusAttributesForkData extends HFSPlusAttributesLeafRecordData
 
     @Override
     public Dictionary getStructElements() {
-        final Class thisClass = HFSPlusAttributesForkData.class;
+        final Class<HFSPlusAttributesForkData> thisClass = HFSPlusAttributesForkData.class;
         DictionaryBuilder db = new DictionaryBuilder(thisClass.getSimpleName(), "HFS+ attribute fork data");
 
         try {
-            final Field reservedField = thisClass.getDeclaredField("reserved");
+            Field reservedField = thisClass.getDeclaredField("reserved");
 
             reservedField.setAccessible(true);
 

@@ -22,7 +22,6 @@ import java.io.File;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
-import org.apache.tools.ant.types.Description;
 import org.catacombae.storage.ps.gpt.types.GUIDPartitionTable;
 import org.catacombae.storage.ps.gpt.types.MutableGUIDPartitionTable;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
@@ -37,8 +36,8 @@ import org.catacombae.io.ReadableRandomAccessStream;
 public class EditGPT extends javax.swing.JPanel {
 
     private GUIDPartitionTable originalGPT = null;
-    private MutableGUIDPartitionTable modifiedGPT = null;
-    private ContainerPanel containerPanel;
+    private final MutableGUIDPartitionTable modifiedGPT = null;
+    private final ContainerPanel containerPanel;
 
     /** Creates new form EditGPT */
     public EditGPT() {
@@ -56,7 +55,7 @@ public class EditGPT extends javax.swing.JPanel {
         else
             llf = new ReadableFileStream(f.getAbsolutePath());
 
-        final GUIDPartitionTable gpt = new GUIDPartitionTable(llf, 0);
+        GUIDPartitionTable gpt = new GUIDPartitionTable(llf, 0);
 
         setFields(gpt);
     }

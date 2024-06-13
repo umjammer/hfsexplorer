@@ -39,46 +39,34 @@ public class ExtractProgressPanel extends javax.swing.JPanel {
         progressBar.setMaximum(Integer.MAX_VALUE);
     }
 
-    public void updateCalculateDir(final String dirname) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                currentFilenameLabel.setText("Processing: " + dirname);
-                currentFilenameLabel.setToolTipText(dirname);
-            }
-        });
+    public void updateCalculateDir(String dirname) {
+        SwingUtilities.invokeLater(() -> {
+        currentFilenameLabel.setText("Processing: " + dirname);
+        currentFilenameLabel.setToolTipText(dirname);
+    });
     }
 
     /** <code>fraction</code> must be between 0 and 1. */
-    public void updateTotalProgress(final double fraction, final String message) {
+    public void updateTotalProgress(double fraction, String message) {
         // just to be sure no deadlocks arise...
-        SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                progressBar.setValue((int) (fraction * Integer.MAX_VALUE));
-                progressBar.setString((progressFormatter.format(100 * fraction) + "% (" + message + ")"));
-            }
-        });
+        SwingUtilities.invokeLater(() -> {
+        progressBar.setValue((int) (fraction * Integer.MAX_VALUE));
+        progressBar.setString((progressFormatter.format(100 * fraction) + "% (" + message + ")"));
+    });
     }
 
-    public void updateCurrentDir(final String dirname) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                currentFilenameLabel.setText("Extracting: " + dirname);
-                currentFilenameLabel.setToolTipText(dirname);
-            }
-        });
+    public void updateCurrentDir(String dirname) {
+        SwingUtilities.invokeLater(() -> {
+        currentFilenameLabel.setText("Extracting: " + dirname);
+        currentFilenameLabel.setToolTipText(dirname);
+    });
     }
 
-    public void updateCurrentFile(final String filename, final long fileSize) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                currentFilenameLabel.setText("Extracting: " + filename + " (" + SpeedUnitUtils.bytesToBinaryUnit(fileSize, fileSizeFormatter) + ")");
-                currentFilenameLabel.setToolTipText(filename);
-            }
-        });
+    public void updateCurrentFile(String filename, long fileSize) {
+        SwingUtilities.invokeLater(() -> {
+        currentFilenameLabel.setText("Extracting: " + filename + " (" + SpeedUnitUtils.bytesToBinaryUnit(fileSize, fileSizeFormatter) + ")");
+        currentFilenameLabel.setToolTipText(filename);
+    });
     }
 
     public void addShowSettingsButtonListener(ActionListener al) {

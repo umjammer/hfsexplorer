@@ -96,6 +96,7 @@ public class FileInfo extends CommonFinderInfo
         super.printFields(ps, prefix);
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FileInfo:");
         printFields(ps, prefix);

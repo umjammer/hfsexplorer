@@ -43,7 +43,7 @@ public class HFSPlusExtentRecord implements PrintableStruct {
         this(false, data, offset);
     }
 
-    private HFSPlusExtentRecord(final boolean mutable, byte[] data, int offset) {
+    private HFSPlusExtentRecord(boolean mutable, byte[] data, int offset) {
         for (int i = 0; i < array.length; ++i) {
             if (mutable)
                 array[i] = new HFSPlusExtentDescriptor.Mutable(data, offset + i * HFSPlusExtentDescriptor.getSize());
@@ -66,7 +66,7 @@ public class HFSPlusExtentRecord implements PrintableStruct {
     public int length() {
         int res = 0;
         for (HFSPlusExtentDescriptor desc : array)
-            res += desc.getSize();
+            res += HFSPlusExtentDescriptor.getSize();
         return res;
     }
 
@@ -88,10 +88,9 @@ public class HFSPlusExtentRecord implements PrintableStruct {
     }
 
     public void print(PrintStream ps, int pregap) {
-        String pregapString = "";
-        for (int i = 0; i < pregap; ++i)
-            pregapString += " ";
-        print(ps, pregapString);
+        StringBuilder pregapString = new StringBuilder();
+        pregapString.append(" ".repeat(Math.max(0, pregap)));
+        print(ps, pregapString.toString());
     }
 
     private void _printFields(PrintStream ps, String prefix) {
@@ -101,10 +100,12 @@ public class HFSPlusExtentRecord implements PrintableStruct {
         }
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         _printFields(ps, prefix + " ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusExtentRecord:");
         _printFields(ps, prefix + " ");

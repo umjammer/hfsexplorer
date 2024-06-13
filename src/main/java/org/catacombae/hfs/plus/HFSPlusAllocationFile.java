@@ -29,8 +29,8 @@ import org.catacombae.io.ReadableRandomAccessStream;
  */
 public class HFSPlusAllocationFile extends AllocationFile implements Limits {
 
-    private HFSPlusVolume hfsPlusParentView;
-    private ReadableRandomAccessStream allocationFile;
+    private final HFSPlusVolume hfsPlusParentView;
+    private final ReadableRandomAccessStream allocationFile;
 
     public HFSPlusAllocationFile(HFSPlusVolume parentView, ReadableRandomAccessStream allocationFile) {
         super(parentView, allocationFile);

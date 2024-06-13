@@ -49,8 +49,8 @@ public class PrintAPMPartitions {
 
         System.out.println("Length of file: " + llf.length());
 
-        final int blockSize = ddr.getSbBlkSize();
-        //final int blockSize = 512;
+        int blockSize = ddr.getSbBlkSize();
+//        final int blockSize = 512;
         ApplePartitionMap apm = new ApplePartitionMap(llf, blockSize, blockSize);
         apm.print(System.out, "");
 

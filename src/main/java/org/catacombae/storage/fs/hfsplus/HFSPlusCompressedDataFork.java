@@ -19,6 +19,8 @@ package org.catacombae.storage.fs.hfsplus;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -41,18 +43,15 @@ import org.catacombae.storage.fs.FSFork;
 import org.catacombae.storage.fs.FSForkType;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusCompressedDataFork implements FSFork {
 
-    private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
-            "org.catacombae.debug",
-            "org.catacombae.storage.debug",
-            "org.catacombae.storage.fs.debug",
-            "org.catacombae.storage.fs.hfsplus.debug",
-            "org.catacombae.storage.fs.hfsplus." + HFSPlusCompressedDataFork.class.getSimpleName() + ".debug");
+    private static final Logger logger = getLogger(HFSPlusCompressedDataFork.class.getName());
 
     private final FSFork decmpfsFork;
     private final FSFork resourceFork;
@@ -70,6 +69,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
         this.resourceFork = resourceFork;
     }
 
+    @Override
     public FSForkType getType() {
         return FSForkType.DATA;
     }
@@ -99,9 +99,10 @@ public class HFSPlusCompressedDataFork implements FSFork {
         return decmpfsHeader;
     }
 
+    @Override
     public synchronized long getLength() {
         if (!lengthValid) {
-            final DecmpfsHeader header = getDecmpfsHeader();
+            DecmpfsHeader header = getDecmpfsHeader();
 
             length = header.getRawFileSize();
             lengthValid = true;
@@ -110,10 +111,11 @@ public class HFSPlusCompressedDataFork implements FSFork {
         return length;
     }
 
+    @Override
     public synchronized long getOccupiedSize() {
         if (!occupiedSizeValid) {
-            final DecmpfsHeader header = getDecmpfsHeader();
-            final long tmpOccupiedSize;
+            DecmpfsHeader header = getDecmpfsHeader();
+            long tmpOccupiedSize;
 
             switch (header.getRawCompressionType()) {
                 case DecmpfsHeader.COMPRESSION_TYPE_INLINE:
@@ -126,7 +128,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
                         resourceForkStream = resourceFork.getReadableRandomAccessStream();
                         r = new ResourceForkReader(resourceForkStream);
 
-                        final ResourceMap m = r.getResourceMap();
+                        ResourceMap m = r.getResourceMap();
                         Long resourceDataLength = null;
 
                         for (ResourceType t : m.getResourceTypeList()) {
@@ -134,7 +136,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
                                 continue;
                             }
 
-                            final ReferenceListEntry[] entries = m.getReferencesByType(t);
+                            ReferenceListEntry[] entries = m.getReferencesByType(t);
                             if (entries.length != 1) {
                                 throw new RuntimeException("More than one instance (" + entries.length + ") " +
                                         "of resource type 'cmpf'.");
@@ -167,35 +169,43 @@ public class HFSPlusCompressedDataFork implements FSFork {
         return occupiedSize;
     }
 
+    @Override
     public boolean isWritable() {
         return false;
     }
 
+    @Override
     public boolean isTruncatable() {
         return false;
     }
 
+    @Override
     public boolean isCompressed() {
         return true;
     }
 
+    @Override
     public String getForkIdentifier() {
         return "Data fork";
     }
 
+    @Override
     public boolean hasXattrName() {
         return false;
     }
 
+    @Override
     public String getXattrName() {
         return null;
     }
 
+    @Override
     public InputStream getInputStream() {
         return new ReadableRandomAccessInputStream(
                 new SynchronizedReadableRandomAccessStream(getReadableRandomAccessStream()));
     }
 
+    @Override
     public synchronized ReadableRandomAccessStream getReadableRandomAccessStream() {
         ReadableRandomAccessStream decmpfsForkStream = null;
         ReadableRandomAccessStream resourceForkStream = null;
@@ -204,15 +214,15 @@ public class HFSPlusCompressedDataFork implements FSFork {
 
             decmpfsForkStream = decmpfsFork.getReadableRandomAccessStream();
 
-            final ReadableRandomAccessStream dataForkStream;
-            final long compressionType = header.getCompressionType();
+            ReadableRandomAccessStream dataForkStream;
+            long compressionType = header.getCompressionType();
 
             if (compressionType == DecmpfsHeader.COMPRESSION_TYPE_INLINE) {
                 // Compressed file data is stored within the decmpfs fork
                 // itself.
-                final long fileSize = header.getRawFileSize();
+                long fileSize = header.getRawFileSize();
                 if (fileSize < 0 || fileSize > Integer.MAX_VALUE) {
-                    System.err.println("Decompressed data is too large to be stored in memory.");
+                    logger.log(Level.DEBUG, "Decompressed data is too large to be stored in memory.");
                     return null;
                 }
 
@@ -224,20 +234,20 @@ public class HFSPlusCompressedDataFork implements FSFork {
                     // file.
                     final int uncompressedDataOffset =
                             DecmpfsHeader.STRUCTSIZE + 1;
-                    final long uncompressedDataLength =
+                    long uncompressedDataLength =
                             decmpfsForkStream.length() - uncompressedDataOffset;
                     if (uncompressedDataLength < 0 ||
                             uncompressedDataLength > Integer.MAX_VALUE) {
-                        System.err.println("Uncompressed data is too large to be stored in memory.");
+                        logger.log(Level.DEBUG, "Uncompressed data is too large to be stored in memory.");
                         return null;
                     }
 
                     if (uncompressedDataLength != fileSize) {
-                        System.err.println("[WARNING] decmpfs compression type 3 uncompressed data length " +
+                        logger.log(Level.DEBUG, "[WARNING] decmpfs compression type 3 uncompressed data length " +
                                 "(" + uncompressedDataLength + " doesn't match file size (" + fileSize + ").");
                     }
 
-                    final byte[] uncompressedData =
+                    byte[] uncompressedData =
                             IOUtil.readFully(decmpfsForkStream, uncompressedDataOffset, (int) fileSize);
 
                     dataForkStream =
@@ -249,32 +259,32 @@ public class HFSPlusCompressedDataFork implements FSFork {
                     // Decompress data in memory and return a stream for reading
                     // from the resulting memory buffer.
                     final int compressedDataOffset = DecmpfsHeader.STRUCTSIZE;
-                    final long compressedDataLength = decmpfsForkStream.length() - compressedDataOffset;
+                    long compressedDataLength = decmpfsForkStream.length() - compressedDataOffset;
                     if (compressedDataLength < 0 || compressedDataLength > Integer.MAX_VALUE) {
-                        System.err.println("Compressed data is too large to be stored in memory.");
+                        logger.log(Level.DEBUG, "Compressed data is too large to be stored in memory.");
                         return null;
                     }
 
-                    final byte[] compressedData =
+                    byte[] compressedData =
                             IOUtil.readFully(decmpfsForkStream, compressedDataOffset, (int) compressedDataLength);
 
-                    final Inflater inflater = new Inflater(false);
+                    Inflater inflater = new Inflater(false);
                     inflater.setInput(compressedData);
 
                     byte[] outBuffer = new byte[(int) fileSize];
                     try {
                         inflater.inflate(outBuffer);
                     } catch (DataFormatException ex) {
-                        System.err.println("Invalid compressed data in decmpfs attribute. Exception stack trace:");
-                        ex.printStackTrace();
+                        logger.log(Level.DEBUG, "Invalid compressed data in decmpfs attribute. Exception stack trace:");
+                        logger.log(Level.ERROR, ex.getMessage(), ex);
                         return null;
                     }
 
-                    final boolean inflaterFinished = inflater.finished();
+                    boolean inflaterFinished = inflater.finished();
                     inflater.end();
 
                     if (!inflaterFinished) {
-                        System.err.println("Decompression failed. All input was not processed.");
+                        logger.log(Level.DEBUG, "Decompression failed. All input was not processed.");
                         return null;
                     }
 
@@ -284,14 +294,14 @@ public class HFSPlusCompressedDataFork implements FSFork {
                 // Compressed file data is stored in the resource fork.
                 resourceForkStream = resourceFork.getReadableRandomAccessStream();
 
-                final ResourceForkReader resReader = new ResourceForkReader(resourceForkStream);
-                final ResourceMap map = resReader.getResourceMap();
+                ResourceForkReader resReader = new ResourceForkReader(resourceForkStream);
+                ResourceMap map = resReader.getResourceMap();
 
                 ResourceType cmpfType = null;
                 for (ResourceType curType : map.getResourceTypeList()) {
                     if (Util.toASCIIString(curType.getType()).equals("cmpf")) {
                         if (curType.getInstanceCount() > 0) {
-                            System.err.println("Resource fork har more than 1 instance of \"cmpf\" resource (" +
+                            logger.log(Level.DEBUG, "Resource fork har more than 1 instance of \"cmpf\" resource (" +
                                     (curType.getInstanceCount() + 1) + " instances). Don't know how to handle " +
                                     "this...");
                             return null;
@@ -303,14 +313,14 @@ public class HFSPlusCompressedDataFork implements FSFork {
                 }
 
                 if (cmpfType == null) {
-                    System.err.println("No \"cmpf\" resource found in resource fork.");
+                    logger.log(Level.DEBUG, "No \"cmpf\" resource found in resource fork.");
                     return null;
                 }
 
                 ReferenceListEntry[] referenceListEntries = map.getReferencesByType(cmpfType);
 
                 if (referenceListEntries.length != 1) {
-                    System.err.println("Unexpected length of returned reference list entry array (expected: 1, " +
+                    logger.log(Level.DEBUG, "Unexpected length of returned reference list entry array (expected: 1, " +
                             "actual: " + referenceListEntries.length);
                     return null;
                 }
@@ -318,7 +328,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
                 dataForkStream = new CompressedResourceStream(
                         resReader.getResourceStream(referenceListEntries[0]), header.getRawFileSize());
             } else {
-                System.err.println("Unknown decmpfs compression type: " + compressionType);
+                logger.log(Level.DEBUG, "Unknown decmpfs compression type: " + compressionType);
 
                 return null;
             }
@@ -335,18 +345,22 @@ public class HFSPlusCompressedDataFork implements FSFork {
         }
     }
 
+    @Override
     public WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public OutputStream getOutputStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -386,7 +400,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
         private int fixedBlockSize = 0;
         private long[] nextBlockOffsets = null;
 
-        public CompressedResourceStream(final ReadableRandomAccessStream resourceStream, final long uncompressedSize) {
+        public CompressedResourceStream(ReadableRandomAccessStream resourceStream, long uncompressedSize) {
             this.resourceStream = resourceStream;
             this.uncompressedSize = uncompressedSize;
 
@@ -395,19 +409,15 @@ public class HFSPlusCompressedDataFork implements FSFork {
             this.resourceStream.readFully(blockCountData);
             this.blockCount = Util.readIntLE(blockCountData);
 
-            if (DEBUG) {
-                System.err.println("[CompressedResourceStream.<init>] blockCount=" + blockCount);
-            }
+            logger.log(Level.DEBUG, "[CompressedResourceStream.<init>] blockCount=" + blockCount);
 
             this.blockTableData = new byte[this.blockCount * (2 * 4)];
             this.resourceStream.readFully(this.blockTableData);
-            if (DEBUG) {
-                System.err.println("[CompressedResourceStream.<init>] Block table data:");
-                for (int i = 0; i < blockCount; ++i) {
-                    System.err.println("[CompressedResourceStream.<init>]     " + i + ": offset=" +
-                            Util.readIntLE(blockTableData, 2 * 4 * i) + ", length=" +
-                            Util.readIntLE(blockTableData, 2 * 4 * i + 4));
-                }
+            logger.log(Level.DEBUG, "[CompressedResourceStream.<init>] Block table data:");
+            for (int i = 0; i < blockCount; ++i) {
+                logger.log(Level.DEBUG, "[CompressedResourceStream.<init>]     " + i + ": offset=" +
+                        Util.readIntLE(blockTableData, 2 * 4 * i) + ", length=" +
+                        Util.readIntLE(blockTableData, 2 * 4 * i + 4));
             }
         }
 
@@ -436,12 +446,9 @@ public class HFSPlusCompressedDataFork implements FSFork {
         }
 
         @Override
-        public synchronized int read(byte[] data, int pos, int len)
-                throws RuntimeIOException {
-            if (DEBUG) {
-                System.err.println("[CompressedResourceStream.read(byte[], " +
-                        "int, int)] Called with data=" + data + ", pos=" + pos + ", len=" + len + "...");
-            }
+        public synchronized int read(byte[] data, int pos, int len) throws RuntimeIOException {
+            logger.log(Level.TRACE, "[CompressedResourceStream.read(byte[], " +
+                    "int, int)] Called with data=" + data + ", pos=" + pos + ", len=" + len + "...");
 
             // Input check.
             if (data == null) {
@@ -480,16 +487,16 @@ public class HFSPlusCompressedDataFork implements FSFork {
                 // uncompressed block size has been identical so far, so we can
                 // calculate the uncompressed offset with one simple
                 // operation.
-                final long requestedBlock = fp / fixedBlockSize;
+                long requestedBlock = fp / fixedBlockSize;
 
                 if (requestedBlock > processedBlocks) {
                     curBlock = processedBlocks + 1;
-                    curFp = curBlock * fixedBlockSize;
+                    curFp = (long) curBlock * fixedBlockSize;
                     curBlockOffset = curFp;
                 } else {
                     curBlock = (int) requestedBlock;
                     curFp = fp;
-                    curBlockOffset = curBlock * fixedBlockSize;
+                    curBlockOffset = (long) curBlock * fixedBlockSize;
                 }
             }
 
@@ -499,19 +506,17 @@ public class HFSPlusCompressedDataFork implements FSFork {
             }
 
             byte[] compressedBuffer = null;
-            final byte[] decompressedBuffer = new byte[16 * 1024];
+            byte[] decompressedBuffer = new byte[16 * 1024];
             int bytesRead = 0;
 
             while (curFp < endFp) {
-                final boolean skip;
+                boolean skip;
 
-                if (DEBUG) {
-                    System.err.println("[CompressedResourceStream.read(byte[], int, int)]     Iterating... curFp " +
-                            "(" + curFp + ") < endFp (" + endFp + ")");
-                }
+                logger.log(Level.DEBUG, "[CompressedResourceStream.read(byte[], int, int)]     Iterating... curFp " +
+                        "(" + curFp + ") < endFp (" + endFp + ")");
 
                 if (curBlock < processedBlocks) {
-                    final long nextBlockOffset;
+                    long nextBlockOffset;
 
                     // We have cached data from a previous access.
                     if (fixedBlockSize != 0) {
@@ -540,29 +545,27 @@ public class HFSPlusCompressedDataFork implements FSFork {
                     // We cannot skip over this block since it might be within
                     // the range of data that we are requesting. So read the
                     // compressed data from disk and decompress it.
-                    final int curOffset = Util.readIntLE(blockTableData, curBlock * (2 * 4));
-                    final int curLength = Util.readIntLE(blockTableData, curBlock * (2 * 4) + 4);
+                    int curOffset = Util.readIntLE(blockTableData, curBlock * (2 * 4));
+                    int curLength = Util.readIntLE(blockTableData, curBlock * (2 * 4) + 4);
 
                     int curDecompressedOffsetInBlock = 0;
 
                     resourceStream.seek(curOffset);
-                    final byte compressionFlags = resourceStream.readFully();
+                    byte compressionFlags = resourceStream.readFully();
 
                     if ((compressionFlags & 0x0F) == 0x0F) {
                         // Block is not compressed... just copy from input to
                         // output.
-                        final int rawDataOffset = curOffset + 1;
-                        final int rawDataLength = curLength - 1;
+                        int rawDataOffset = curOffset + 1;
+                        int rawDataLength = curLength - 1;
 
-                        if (DEBUG) {
-                            System.err.println("[CompressedResourceStream.read(byte[], int, int)]     Copying " +
-                                    "raw data at logical offset " + curFp + ": [offset=" + rawDataOffset +
-                                    ", length=" + rawDataLength + "]");
-                        }
+                        logger.log(Level.DEBUG, "[CompressedResourceStream.read(byte[], int, int)]     Copying " +
+                                "raw data at logical offset " + curFp + ": [offset=" + rawDataOffset +
+                                ", length=" + rawDataLength + "]");
 
-                        final int remainingLen = len - bytesRead;
-                        final int remainingInBlock = rawDataLength;
-                        final int curBytesToRead = remainingInBlock < remainingLen ? remainingInBlock : remainingLen;
+                        int remainingLen = len - bytesRead;
+                        int remainingInBlock = rawDataLength;
+                        int curBytesToRead = Math.min(remainingInBlock, remainingLen);
 
                         // If the raw data is requested by the caller, i.e. if
                         // the file pointer is within the current block as we
@@ -586,14 +589,12 @@ public class HFSPlusCompressedDataFork implements FSFork {
                         // the compressed data in chunks, but let's not do that
                         // now since it will only complicate things.
 
-                        final int compressedDataOffset = curOffset + 2;
-                        final int compressedDataLength = curLength - 2;
+                        int compressedDataOffset = curOffset + 2;
+                        int compressedDataLength = curLength - 2;
 
-                        if (DEBUG) {
-                            System.err.println("[CompressedResourceStream.read(byte[], int, int)]     " +
-                                    "Decompressing compressed data at logical offset " + curFp + ": [offset=" +
-                                    compressedDataOffset + ", length=" + compressedDataLength + "]");
-                        }
+                        logger.log(Level.DEBUG, "[CompressedResourceStream.read(byte[], int, int)]     " +
+                                "Decompressing compressed data at logical offset " + curFp + ": [offset=" +
+                                compressedDataOffset + ", length=" + compressedDataLength + "]");
 
                         if (compressedBuffer == null ||
                                 compressedBuffer.length < compressedDataLength) {
@@ -620,7 +621,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
                                 compressedDataLength);
 
                         while (!inflater.finished()) {
-                            final int inflatedBytes;
+                            int inflatedBytes;
                             try {
                                 inflatedBytes = inflater.inflate(decompressedBuffer);
                             } catch (DataFormatException ex) {
@@ -628,10 +629,8 @@ public class HFSPlusCompressedDataFork implements FSFork {
                                         "(" + ex + ").", ex);
                             }
 
-                            if (DEBUG) {
-                                System.err.println("Inflated " + inflatedBytes +
-                                        " to decompressedBuffer (length: " + decompressedBuffer.length + ").");
-                            }
+                            logger.log(Level.DEBUG, "Inflated " + inflatedBytes +
+                                    " to decompressedBuffer (length: " + decompressedBuffer.length + ").");
 
                             if (inflatedBytes <= 0) {
                                 throw new RuntimeIOException("No (" + inflatedBytes + ") inflated " +
@@ -645,42 +644,36 @@ public class HFSPlusCompressedDataFork implements FSFork {
                             // is greater than the start of the block and less
                             // than the current decompressed end offset, then
                             // copy this data to the destination array.
-                            final long curOffsetInBlock = fp - curBlockOffset;
+                            long curOffsetInBlock = fp - curBlockOffset;
                             if (curOffsetInBlock >= curDecompressedOffsetInBlock &&
                                     curOffsetInBlock < (curDecompressedOffsetInBlock + inflatedBytes)) {
-                                final int inOffset = (int) (curOffsetInBlock - curDecompressedOffsetInBlock);
-                                final int remainingBytes = len - bytesRead;
-                                final int copyLength = remainingBytes < inflatedBytes ? remainingBytes : inflatedBytes;
+                                int inOffset = (int) (curOffsetInBlock - curDecompressedOffsetInBlock);
+                                int remainingBytes = len - bytesRead;
+                                int copyLength = Math.min(remainingBytes, inflatedBytes);
 
-                                if (DEBUG) {
-                                    System.err.println("Copying " + copyLength +
-                                            " bytes from decompressedBuffer @ " + inOffset + " to data @ " +
-                                            (pos + bytesRead) + " (curDecompressedOffsetInBlock=" +
-                                            curDecompressedOffsetInBlock + ", fp=" + fp + ", curBlockOffset=" +
-                                            curBlockOffset + ")...");
-                                }
+                                logger.log(Level.DEBUG, "Copying " + copyLength +
+                                        " bytes from decompressedBuffer @ " + inOffset + " to data @ " +
+                                        (pos + bytesRead) + " (curDecompressedOffsetInBlock=" +
+                                        curDecompressedOffsetInBlock + ", fp=" + fp + ", curBlockOffset=" +
+                                        curBlockOffset + ")...");
 
                                 System.arraycopy(decompressedBuffer, inOffset, data, pos + bytesRead, copyLength);
 
                                 fp += copyLength;
                                 bytesRead += copyLength;
                             } else {
-                                if (DEBUG) {
-                                    System.err.println("Skipping copy of data outside bounds of read. " +
-                                            "fp=" + fp + " curBlockOffset=" + curBlockOffset + " " +
-                                            "curOffsetInBlock=" + curOffsetInBlock + " " +
-                                            "curDecompressedOffsetInBlock=" + curDecompressedOffsetInBlock + " " +
-                                            "inflatedBytes=" + inflatedBytes);
-                                }
+                                logger.log(Level.DEBUG, "Skipping copy of data outside bounds of read. " +
+                                        "fp=" + fp + " curBlockOffset=" + curBlockOffset + " " +
+                                        "curOffsetInBlock=" + curOffsetInBlock + " " +
+                                        "curDecompressedOffsetInBlock=" + curDecompressedOffsetInBlock + " " +
+                                        "inflatedBytes=" + inflatedBytes);
                             }
 
                             curDecompressedOffsetInBlock += inflatedBytes;
                             curFp += inflatedBytes;
                         }
 
-                        if (DEBUG) {
-                            System.err.println("Inflater is finished.");
-                        }
+                        logger.log(Level.DEBUG, "Inflater is finished.");
                     }
 
                     if (curBlock == processedBlocks) {
@@ -699,7 +692,7 @@ public class HFSPlusCompressedDataFork implements FSFork {
                                             nextBlockOffsets, 0, oldNextBlockOffsets.length);
                                 } else {
                                     for (int i = 0; i < processedBlocks; ++i) {
-                                        nextBlockOffsets[i] = (i + 1) * fixedBlockSize;
+                                        nextBlockOffsets[i] = (long) (i + 1) * fixedBlockSize;
                                     }
                                 }
                             }
@@ -720,10 +713,8 @@ public class HFSPlusCompressedDataFork implements FSFork {
                 ++curBlock;
             }
 
-            if (DEBUG) {
-                System.err.println("[CompressedResourceStream.read(byte[], int, int)] Leaving with " +
-                        (bytesRead == 0 ? -1 : bytesRead) + ".");
-            }
+            logger.log(Level.DEBUG, "[CompressedResourceStream.read(byte[], int, int)] Leaving with " +
+                    (bytesRead == 0 ? -1 : bytesRead) + ".");
 
             return bytesRead == 0 ? -1 : bytesRead;
         }

@@ -17,7 +17,7 @@
 
 package org.catacombae.storage.fs.hfsplus;
 
-import java.util.logging.Logger;
+import java.lang.System.Logger.Level;
 
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
 import org.catacombae.hfs.types.hfs.HFSPlusWrapperMDB;
@@ -35,11 +35,15 @@ import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.io.SubDataLocator;
 import org.catacombae.util.Util;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFactory {
+
+    private static final System.Logger logger = getLogger(HFSPlusFileSystemHandlerFactory.class.getName());
 
     private static final FileSystemRecognizer recognizer = new HFSPlusFileSystemRecognizer();
 
@@ -59,8 +63,7 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
                             "directories and the journal files should show up in a " +
                             "directory listing.", true);
 
-    private static final Logger log = Logger.getLogger(HFSPlusFileSystemHandlerFactory.class.getName());
-
+    @Override
     public FileSystemCapability[] getCapabilities() {
         return HFSPlusFileSystemHandler.getStaticCapabilities();
     }
@@ -75,7 +78,7 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
 
         ReadableRandomAccessStream recognizerStream = data.createReadOnlyFile();
 
-        final DataLocator dataToLoad;
+        DataLocator dataToLoad;
         try {
             FileSystemType type = HFSCommonFileSystemRecognizer.detectFileSystem(recognizerStream, 0);
 
@@ -117,8 +120,8 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
 
     @Override
     public CustomAttribute[] getSupportedCustomAttributes() {
-        final CustomAttribute[] superAttributes = super.getSupportedCustomAttributes();
-        final CustomAttribute[] result = new CustomAttribute[superAttributes.length + 2];
+        CustomAttribute[] superAttributes = super.getSupportedCustomAttributes();
+        CustomAttribute[] result = new CustomAttribute[superAttributes.length + 2];
 
         Util.arrayCopy(superAttributes, result);
         result[superAttributes.length + 0] = compositionEnabledAttribute;
@@ -146,7 +149,7 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
     private static DataLocator hfsUnwrap(DataLocator data) {
         ReadableRandomAccessStream fsStream = data.createReadOnlyFile();
 
-        log.fine("Found a wrapped HFS+ volume:");
+        logger.log(Level.DEBUG, "Found a wrapped HFS+ volume:");
         byte[] mdbData = new byte[HFSPlusWrapperMDB.STRUCTSIZE];
         fsStream.seek(1024);
         fsStream.read(mdbData);
@@ -156,8 +159,8 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
         long fsOffset = ((long) Util.unsign(mdb.getDrAlBlSt())) * 512 +
                         ((long) Util.unsign(xd.getXdrStABN())) * hfsBlockSize;
         long fsLength = ((long) Util.unsign(xd.getXdrNumABlks())) * hfsBlockSize;
-        log.fine("  fsOffset: " + fsOffset);
-        log.fine("  fsLength: " + fsLength);
+        logger.log(Level.DEBUG, "  fsOffset: " + fsOffset);
+        logger.log(Level.DEBUG, "  fsLength: " + fsLength);
         // redetect with adjusted fsOffset
 
         return new SubDataLocator(data, fsOffset, fsLength);

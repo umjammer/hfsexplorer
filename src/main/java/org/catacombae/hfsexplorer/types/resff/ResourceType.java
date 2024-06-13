@@ -81,17 +81,20 @@ public class ResourceType implements StaticStruct, PrintableStruct {
         return Util.readShortBE(referenceListOffset);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " type: " + Util.toASCIIString(getType()));
         ps.println(prefix + " instanceCount: " + getInstanceCount());
         ps.println(prefix + " referenceListOffset: " + getReferenceListOffset());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ResourceType:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int offset = 0;
@@ -104,6 +107,7 @@ public class ResourceType implements StaticStruct, PrintableStruct {
         return result;
     }
 
+    @Override
     public int size() {
         return length();
     }

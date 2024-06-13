@@ -27,9 +27,9 @@ import java.nio.channels.ReadableByteChannel;
  */
 public interface RandomAccessChannel extends ReadableByteChannel {
 
-    public abstract long position() throws IOException;
+    long position() throws IOException;
 
-    public abstract FileChannel position(long newPosition) throws IOException;
+    FileChannel position(long newPosition) throws IOException;
 
-    public abstract long size() throws IOException;
+    long size() throws IOException;
 }

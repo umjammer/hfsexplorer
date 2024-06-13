@@ -17,34 +17,43 @@
 
 package org.catacombae.storage.io.win32;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.util.Util;
 
-/**
- * BUG: Writing at the end of a file will always expand it to fit the sector size! Not very good. Fixit.
- * Note: Is this fixed? TODO ?!
- */
+import static java.lang.System.getLogger;
+
+//
+// BUG: Writing at the end of a file will always expand it to fit the sector size! Not very good. Fixit.
+// Note: Is this fixed? TODO ?!
+//
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class Win32FileStream extends ReadableWin32FileStream implements RandomAccessStream {
 
-    private byte[] sectorBuffer;
+    private static final Logger logger = getLogger(Win32FileStream.class.getName());
+
+    private final byte[] sectorBuffer;
 
     public Win32FileStream(String filename) {
         super(filename);
         sectorBuffer = new byte[sectorSize];
     }
 
+    @Override
     public void write(byte[] b) {
         write(b, 0, b.length);
     }
 
+    @Override
     public void write(byte[] b, int pos, int len) {
         // NOTE: The reason for all this code is that we have to align write operations to sectors on the disk.
         if (fileHandle != null) {
-            final long fileLength = length(fileHandle); // We only record the length of the file at the beginning
+            long fileLength = length(fileHandle); // We only record the length of the file at the beginning
             // Will we allow writing beyond this file (extending it)? We currently do (but maybe windows prohibits it)
 
             System.out.println("write(b, " + pos + ", " + len + ");");
@@ -71,7 +80,7 @@ public class Win32FileStream extends ReadableWin32FileStream implements RandomAc
             // Replace the contents starting at filePointer, seek back to start pos and write to disk.
             seek(startSectorFP, fileHandle);
             int remainingSpaceInBuffer = sectorBuffer.length - startSectorFPOffset;
-            int bytesToReplace = (len < remainingSpaceInBuffer) ? len : remainingSpaceInBuffer;
+            int bytesToReplace = Math.min(len, remainingSpaceInBuffer);
             System.arraycopy(b, inputPos, sectorBuffer, startSectorFPOffset, bytesToReplace);
             inputPos += bytesToReplace;
             write(sectorBuffer, 0, startSectorFPOffset + bytesToReplace, fileHandle);
@@ -110,11 +119,13 @@ public class Win32FileStream extends ReadableWin32FileStream implements RandomAc
             throw new RuntimeException("File closed!");
     }
 
+    @Override
     public void write(int b) {
         write(new byte[] {(byte) (b & 0xFF)});
     }
 
     /** We override the open method in order to get the file opened in write mode */
+    @Override
     protected byte[] open(String filename) {
 //        System.out.println("Java: WritableWin32File.open(" + filename + ");");
         return openNative(filename);
@@ -126,7 +137,7 @@ public class Win32FileStream extends ReadableWin32FileStream implements RandomAc
     protected static native void write(byte[] data, int off, int len, byte[] handle);
 
     // TEST CODE FOLLOWS
-    private static java.io.BufferedReader stdin = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
+    private static final java.io.BufferedReader stdin = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
     private static Win32FileStream wwf;
     private static java.io.RandomAccessFile ref;
     private static long currentSeekPos;
@@ -204,7 +215,7 @@ public class Win32FileStream extends ReadableWin32FileStream implements RandomAc
                 testEquality(currentBufferLeft, currentBufferRight, "(3) Data not equal after writes!");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 

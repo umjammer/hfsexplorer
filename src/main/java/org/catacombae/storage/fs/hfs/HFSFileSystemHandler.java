@@ -35,16 +35,19 @@ public class HFSFileSystemHandler extends HFSCommonFileSystemHandler {
                 encodingName), posixNames, sfmSubstitutions, false, false);
     }
 
+    @Override
     protected boolean shouldHide(CommonHFSCatalogLeafRecord rec) {
         // For HFS we have nothing to hide.
         return false;
     }
 
+    @Override
     protected Long getLinkCount(CommonHFSCatalogFileRecord fr) {
         // HFS does not support links.
         return null;
     }
 
+    @Override
     protected String[] getAbsoluteLinkPath(String[] path, int pathLength, CommonHFSCatalogFileRecord rec) {
         // HFS does not support links.
         return null;

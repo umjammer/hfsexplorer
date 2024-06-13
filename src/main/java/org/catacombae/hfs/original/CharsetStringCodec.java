@@ -54,10 +54,12 @@ public class CharsetStringCodec implements StringCodec {
         this.encoder = cs.newEncoder();
     }
 
+    @Override
     public String decode(byte[] data) {
         return decode(data, 0, data.length);
     }
 
+    @Override
     public String decode(byte[] data, int off, int len) {
         try {
             return decoder.decode(ByteBuffer.wrap(data, off, len)).toString();
@@ -66,10 +68,12 @@ public class CharsetStringCodec implements StringCodec {
         }
     }
 
+    @Override
     public byte[] encode(String str) {
         return encode(str, 0, str.length());
     }
 
+    @Override
     public byte[] encode(String str, int off, int len) {
         try {
             return encoder.encode(CharBuffer.wrap(str.toCharArray(), off, len)).array();
@@ -83,6 +87,7 @@ public class CharsetStringCodec implements StringCodec {
      *
      * @return the charset name as it was passed to the constructor.
      */
+    @Override
     public String getCharsetName() {
         return charsetName;
     }

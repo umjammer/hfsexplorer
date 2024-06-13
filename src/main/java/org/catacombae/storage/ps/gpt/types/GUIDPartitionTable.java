@@ -200,19 +200,21 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         return Util.arrayCopy(backupEntries, new GPTEntry[backupEntries.length]);
     }
 
+    @Override
     public int getPartitionCount() {
         return entries.length;
     }
 
     public GPTEntry[] getUsedEntries() {
-        final LinkedList<GPTEntry> tempList = new LinkedList<GPTEntry>();
+        LinkedList<GPTEntry> tempList = new LinkedList<>();
         for (GPTEntry ge : entries) {
             if (ge.isUsed())
                 tempList.addLast(ge);
         }
-        return tempList.toArray(new GPTEntry[tempList.size()]);
+        return tempList.toArray(GPTEntry[]::new);
     }
 
+    @Override
     public int getUsedPartitionCount() {
         int count = 0;
         for (GPTEntry ge : entries) {
@@ -222,15 +224,18 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         return count;
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
         return getEntry(index);
     }
 
+    @Override
     public Partition[] getPartitionEntries() {
         return getEntries();
     }
 
     /** Returns only those partition entries that are non-null. */
+    @Override
     public Partition[] getUsedPartitionEntries() {
         return getUsedEntries();
     }
@@ -240,6 +245,7 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
      * too often, because it does some allocations and wastes some CPU cycles
      * due to lazy implementation.
      */
+    @Override
     public boolean isValid() {
         boolean primaryTableValid = header.isValid() &&
                         (header.getCRC32Checksum() == calculatePrimaryHeaderChecksum()) &&
@@ -274,7 +280,7 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         CRC32 checksum = new CRC32();
         for (GPTEntry entry : entries)
             checksum.update(entry.getBytes());
-        return (int) (checksum.getValue() & 0xFFFFFFFF);
+        return (int) (checksum.getValue() & 0xFFFFFFFFL);
     }
 
     public int calculateBackupHeaderChecksum() {
@@ -285,17 +291,20 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         CRC32 checksum = new CRC32();
         for (GPTEntry entry : backupEntries)
             checksum.update(entry.getBytes());
-        return (int) (checksum.getValue() & 0xFFFFFFFF);
+        return (int) (checksum.getValue() & 0xFFFFFFFFL);
     }
 
+    @Override
     public String getLongName() {
         return "GUID Partition Table";
     }
 
+    @Override
     public String getShortName() {
         return "GPT";
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         printPrimaryFields(ps, prefix);
         printBackupFields(ps, prefix);
@@ -323,6 +332,7 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         backupHeader.print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "GUIDPartitionTable:");
         printFields(ps, prefix);
@@ -378,13 +388,13 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder dbStruct = new DictionaryBuilder(getClass().getSimpleName());
         dbStruct.add("header", header.getStructElements());
         {
             ArrayBuilder ab = new ArrayBuilder(GPTEntry.class.getSimpleName());
-            for (int i = 0; i < entries.length; ++i) {
-                GPTEntry ge = entries[i];
+            for (GPTEntry ge : entries) {
                 ab.add(ge.getStructElements());
             }
             dbStruct.add("entries", ab.getResult());
@@ -392,8 +402,7 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
         dbStruct.add("backupHeader", backupHeader.getStructElements());
         {
             ArrayBuilder ab = new ArrayBuilder(GPTEntry.class.getSimpleName());
-            for (int i = 0; i < backupEntries.length; ++i) {
-                GPTEntry ge = backupEntries[i];
+            for (GPTEntry ge : backupEntries) {
                 ab.add(ge.getStructElements());
             }
             dbStruct.add("backupEntries", ab.getResult());
@@ -403,8 +412,7 @@ public class GUIDPartitionTable implements PartitionSystem, StructElements {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof GUIDPartitionTable) {
-            GUIDPartitionTable gpt = (GUIDPartitionTable) obj;
+        if (obj instanceof GUIDPartitionTable gpt) {
             return Util.arraysEqual(getPrimaryTableBytes(), gpt.getPrimaryTableBytes()) &&
                     Util.arraysEqual(getBackupTableBytes(), gpt.getBackupTableBytes());
             // Lazy man's method, generating new allocations and work for the GC. But it's convenient.

@@ -44,12 +44,12 @@ public class BinaryPlistFooter {
     public static final int STRUCTSIZE = 32;
 
     private final byte[] reserved = new byte[1 * 5];
-    private byte sortVersion;
-    private byte offsetTableOffsetSize;
-    private byte objectRefSize;
-    private long numObjects;
-    private long topObjectOffset;
-    private long offsetTableStart;
+    private final byte sortVersion;
+    private final byte offsetTableOffsetSize;
+    private final byte objectRefSize;
+    private final long numObjects;
+    private final long topObjectOffset;
+    private final long offsetTableStart;
 
     public BinaryPlistFooter(byte[] data, int offset) {
         System.arraycopy(data, offset + 0, this.reserved, 0, 1 * 5);
@@ -185,7 +185,7 @@ public class BinaryPlistFooter {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         System.arraycopy(this.reserved, 0, result, offset, this.reserved.length);
         offset += this.reserved.length;

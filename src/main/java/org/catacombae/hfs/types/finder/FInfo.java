@@ -92,6 +92,7 @@ public class FInfo implements PrintableStruct, StructElements {
         return Util.readShortBE(fdFldr);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " fdType: ");
         getFdType().print(ps, prefix + "  ");
@@ -103,6 +104,7 @@ public class FInfo implements PrintableStruct, StructElements {
         ps.println(prefix + " fdFldr: " + getFdFldr());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FInfo:");
         printFields(ps, prefix);
@@ -133,6 +135,7 @@ public class FInfo implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(FInfo.class.getSimpleName());
 

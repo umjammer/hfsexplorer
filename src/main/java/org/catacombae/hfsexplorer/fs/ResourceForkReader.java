@@ -80,12 +80,12 @@ public class ResourceForkReader {
     }
 
     private void validateHeader(ResourceHeader header) throws MalformedResourceForkException {
-        final long dataOffset = header.getDataOffset();
-        final long dataLength = header.getDataLength();
-        final long mapOffset = header.getMapOffset();
-        final long mapLength = header.getMapLength();
+        long dataOffset = header.getDataOffset();
+        long dataLength = header.getDataLength();
+        long mapOffset = header.getMapOffset();
+        long mapLength = header.getMapLength();
 
-        final long forkLength = forkStream.length();
+        long forkLength = forkStream.length();
 
         // If data extends beyond the end of the fork, the header is invalid.
         if (dataLength > forkLength || (forkLength - dataLength) < dataOffset) {
@@ -143,10 +143,10 @@ public class ResourceForkReader {
         long dataPos = getDataPos(entry);
         long dataLength = getDataLength(dataPos);
 
-//        System.err.println("Creating a new stream for ReferenceListEntry:");
+//        logger.log(Level.DEBUG, "Creating a new stream for ReferenceListEntry:");
 //        entry.printFields(System.err, "  ");
-//        System.err.println("dataPos=" + dataPos);
-//        System.err.println("dataLength=" + dataLength);
+//        logger.log(Level.DEBUG, "dataPos=" + dataPos);
+//        logger.log(Level.DEBUG, "dataLength=" + dataLength);
 
         return new ReadableConcatenatedStream(new ReadableRandomAccessSubstream(forkStream),
                 dataPos + 4, dataLength);

@@ -17,19 +17,26 @@
 
 package org.catacombae.hfsexplorer.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import org.catacombae.csjc.structelements.ArrayBuilder;
+import org.catacombae.hfs.AllocationFile;
+import org.catacombae.hfs.types.hfscommon.CommonHFSExtentDescriptor;
 import org.catacombae.hfsexplorer.GUIUtil;
 import org.catacombae.util.ObjectContainer;
-import org.catacombae.hfs.types.hfscommon.CommonHFSExtentDescriptor;
-import org.catacombae.hfs.AllocationFile;
+
+import static java.lang.System.getLogger;
+import static javax.swing.SwingUtilities.invokeLater;
 
 
 /**
@@ -37,11 +44,13 @@ import org.catacombae.hfs.AllocationFile;
  */
 public class AllocationFileInfoPanel extends javax.swing.JPanel {
 
+    private static final Logger logger = getLogger(AllocationFileInfoPanel.class.getName());
+
     private final AllocationFile afView;
-    private final ObjectContainer<Boolean> stopCountBlocksProcess = new ObjectContainer<Boolean>(false);
+    private final ObjectContainer<Boolean> stopCountBlocksProcess = new ObjectContainer<>(false);
 
     /** Creates new form AllocationFileInfoPanel */
-    public AllocationFileInfoPanel(JFrame window, final AllocationFile afView) {
+    public AllocationFileInfoPanel(JFrame window, AllocationFile afView) {
         this.afView = afView;
 
         initComponents();
@@ -54,73 +63,54 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
             }
         });
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                final ObjectContainer<Long> freeBlocks = new ObjectContainer<Long>((long) -1);
-                final ObjectContainer<Long> usedBlocks = new ObjectContainer<Long>((long) -1);
-                afView.countBlocks(freeBlocks, usedBlocks, stopCountBlocksProcess);
-                if (!stopCountBlocksProcess.o) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                                        public void run() {
-                            allocatedBlocksField.setText(usedBlocks.o.toString());
-                            freeBlocksField.setText(freeBlocks.o.toString());
-                        }
-                    });
-                } else
-                    System.err.println("AllocationFileInfoPanel thread aborted.");
-            }
+        Thread t = new Thread(() -> {
+            ObjectContainer<Long> freeBlocks = new ObjectContainer<>((long) -1);
+            ObjectContainer<Long> usedBlocks = new ObjectContainer<>((long) -1);
+            afView.countBlocks(freeBlocks, usedBlocks, stopCountBlocksProcess);
+            if (!stopCountBlocksProcess.o) {
+                invokeLater(() -> {
+                    allocatedBlocksField.setText(usedBlocks.o.toString());
+                    freeBlocksField.setText(freeBlocks.o.toString());
+                });
+            } else
+                logger.log(Level.DEBUG, "AllocationFileInfoPanel thread aborted.");
         });
         t.start();
 
-        allocateButton.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                allocateButton.setEnabled(false);
-                Thread t = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            long l = Long.parseLong(allocateSizeField.getText());
-                            CommonHFSExtentDescriptor[] descs = afView.findFreeSpace(l);
-                            if (descs != null) {
-                                final ArrayBuilder ab = new ArrayBuilder("CommonHFSExtentDescriptor[" +
-                                        descs.length + "]");
-                                for (CommonHFSExtentDescriptor desc : descs) {
-                                    System.err.println("Found descriptor: ");
-                                    desc.print(System.err, "  ");
-                                    ab.add(desc.getStructElements());
-                                }
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    public void run() {
-                                        resultScroller.setViewportView(new StructViewPanel("Possible allocations",
-                                                ab.getResult()));
-                                    }
-                                });
-                            } else {
-                                JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
-                                        "Not enough space on volume!", "Info",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            }
-                        } catch (NumberFormatException ee) {
-                            JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
-                                    "Invalid long value.", "Error", JOptionPane.ERROR_MESSAGE);
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            GUIUtil.displayExceptionDialog(t, 10, AllocationFileInfoPanel.this,
-                                    "Exception while trying to calculate available free extents:",
-                                    "Exception", JOptionPane.ERROR_MESSAGE);
-                        } finally {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                public void run() {
-                                    allocateButton.setEnabled(true);
-                                }
-                            });
-                        }
+        allocateButton.addActionListener(e -> {
+        allocateButton.setEnabled(false);
+        Thread t12 = new Thread(() -> {
+            try {
+                long l = Long.parseLong(allocateSizeField.getText());
+                CommonHFSExtentDescriptor[] descs = afView.findFreeSpace(l);
+                if (descs != null) {
+                    ArrayBuilder ab = new ArrayBuilder("CommonHFSExtentDescriptor[" + descs.length + "]");
+                    for (CommonHFSExtentDescriptor desc : descs) {
+                        logger.log(Level.DEBUG, "Found descriptor: ");
+                        desc.print(System.err, "  ");
+                        ab.add(desc.getStructElements());
                     }
-                });
-                t.start();
+                    invokeLater(() -> resultScroller.setViewportView(new StructViewPanel("Possible allocations",
+                            ab.getResult())));
+                } else {
+                    JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
+                            "Not enough space on volume!", "Info",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (NumberFormatException ee) {
+                JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
+                        "Invalid long value.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Throwable t1) {
+                logger.log(Level.ERROR, t1.getMessage(), t1);
+                GUIUtil.displayExceptionDialog(t1, 10, AllocationFileInfoPanel.this,
+                        "Exception while trying to calculate available free extents:",
+                        "Exception", JOptionPane.ERROR_MESSAGE);
+            } finally {
+                invokeLater(() -> allocateButton.setEnabled(true));
             }
-
         });
+        t12.start();
+    });
     }
 
     /**
@@ -242,17 +232,17 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton allocateButton;
-    private javax.swing.JTextField allocateSizeField;
-    private javax.swing.JLabel allocateSizeLabel;
-    private javax.swing.JLabel allocateUnitLabel;
-    private javax.swing.JTextField allocatedBlocksField;
-    private javax.swing.JLabel allocatedBlocksLabel;
-    private javax.swing.JLabel allocationHeader;
-    private javax.swing.JTextField freeBlocksField;
-    private javax.swing.JLabel freeBlocksLabel;
-    private javax.swing.JLabel resultLabel;
-    private javax.swing.JPanel resultPanel;
-    private javax.swing.JScrollPane resultScroller;
+    private JButton allocateButton;
+    private JTextField allocateSizeField;
+    private JLabel allocateSizeLabel;
+    private JLabel allocateUnitLabel;
+    private JTextField allocatedBlocksField;
+    private JLabel allocatedBlocksLabel;
+    private JLabel allocationHeader;
+    private JTextField freeBlocksField;
+    private JLabel freeBlocksLabel;
+    private JLabel resultLabel;
+    private JPanel resultPanel;
+    private JScrollPane resultScroller;
     // End of variables declaration//GEN-END:variables
 }

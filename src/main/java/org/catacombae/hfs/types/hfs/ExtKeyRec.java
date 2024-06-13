@@ -92,6 +92,7 @@ public class ExtKeyRec implements PrintableStruct, StructElements {
         return Util.readShortBE(xkrFABN);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " xkrKeyLen: " + getXkrKeyLen());
         ps.println(prefix + " xkrFkType: " + getXkrFkType());
@@ -99,6 +100,7 @@ public class ExtKeyRec implements PrintableStruct, StructElements {
         ps.println(prefix + " xkrFABN: " + getXkrFABN());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ExtKeyRec:");
         printFields(ps, prefix);
@@ -118,6 +120,7 @@ public class ExtKeyRec implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder("ExtKeyRec", "HFS extent key");
 

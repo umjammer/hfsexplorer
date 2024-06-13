@@ -54,10 +54,10 @@ public class LineCompare {
 
             ++lineNumber;
             line1 = "";
-            while (line1 != null && line1.trim().equals(""))
+            while (line1 != null && line1.trim().isEmpty())
                 line1 = file1.readLine();
             line2 = "";
-            while (line2 != null && line2.trim().equals(""))
+            while (line2 != null && line2.trim().isEmpty())
                 line2 = file2.readLine();
         }
         System.out.println("Files are equal (ignoring empty lines and different line endings).");

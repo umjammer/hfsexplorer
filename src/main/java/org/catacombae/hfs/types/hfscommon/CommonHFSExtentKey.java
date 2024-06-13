@@ -31,6 +31,7 @@ import org.catacombae.util.Util;
  */
 public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey> implements StructElements {
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -53,12 +54,7 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
             if (forkType1 == forkType2) {
                 long startBlock1 = k1.getStartBlock();
                 long startBlock2 = k2.getStartBlock();
-                if (startBlock1 == startBlock2)
-                    return 0;
-                else if (startBlock1 < startBlock2)
-                    return -1;
-                else
-                    return 1;
+                return Long.compare(startBlock1, startBlock2);
             } else if (forkType1 < forkType2)
                 return -1;
             else
@@ -103,23 +99,28 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
             return key.getBytes();
         }
 
+        @Override
         public int maxSize() {
             return key.length();
         }
 
+        @Override
         public int occupiedSize() {
             return key.length();
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
 
+        @Override
         public int compareTo(CommonHFSExtentKey o) {
             if (o instanceof HFSPlusImplementation) {
                 return commonCompare(this, o);
@@ -160,23 +161,28 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
             return key.getBytes();
         }
 
+        @Override
         public int maxSize() {
-            return key.length();
+            return ExtKeyRec.length();
         }
 
+        @Override
         public int occupiedSize() {
-            return key.length();
+            return ExtKeyRec.length();
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
 
+        @Override
         public int compareTo(CommonHFSExtentKey o) {
             if (o instanceof HFSImplementation) {
                 return commonCompare(this, o);

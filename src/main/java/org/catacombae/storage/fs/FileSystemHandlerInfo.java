@@ -32,7 +32,7 @@ public interface FileSystemHandlerInfo {
      *
      * @return the handler name;
      */
-    public String getHandlerName();
+    String getHandlerName();
 
     /**
      * Returns a unique identifier for this file system handler. This identifier
@@ -43,14 +43,14 @@ public interface FileSystemHandlerInfo {
      *
      * @return a unique identifier for this file system handler.
      */
-    public String getHandlerIdentifier();
+    String getHandlerIdentifier();
 
     /**
      * Returns a free-form user readable version string for this handler.
      *
      * @return a free-form user readable version string for this handler.
      */
-    public String getHandlerVersion();
+    String getHandlerVersion();
 
     /**
      * Returns the revision number of this release of the handler (striclty
@@ -61,7 +61,7 @@ public interface FileSystemHandlerInfo {
      *
      * @return the revision number of this release of the handler.
      */
-    public long getRevision();
+    long getRevision();
 
     /**
      * Returns the company / group / individual(s) that produced this file
@@ -69,5 +69,5 @@ public interface FileSystemHandlerInfo {
      *
      * @return the author of this file system handler.
      */
-    public String getAuthor();
+    String getAuthor();
 }

@@ -68,9 +68,9 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
                 ckrCNameLen = new byte[1];
                 System.arraycopy(data, offset + 6, ckrCNameLen, 0, 1);
 
-                final int trailingBytes = structSize - 7;
+                int trailingBytes = structSize - 7;
 
-                final int cNameLen = Util.unsign(getCkrCNameLen());
+                int cNameLen = Util.unsign(getCkrCNameLen());
                 if (cNameLen > trailingBytes)
                     throw new RuntimeException("Malformed CatKeyRec: ckrCNameLen=" +
                             cNameLen + " > trailingBytes=" + trailingBytes);
@@ -78,7 +78,7 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
                 ckrCName = new byte[cNameLen];
                 System.arraycopy(data, offset + 7, ckrCName, 0, ckrCName.length);
 
-                final int remainingBytes = trailingBytes - cNameLen;
+                int remainingBytes = trailingBytes - cNameLen;
                 ckrPad = new byte[remainingBytes];
                 System.arraycopy(data, offset + 7 + cNameLen, ckrPad, 0, remainingBytes);
             } else {
@@ -145,6 +145,7 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
         return Util.createCopy(ckrPad);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " ckrKeyLen: " + getCkrKeyLen());
         ps.println(prefix + " ckrResrv1: " + getCkrResrv1());
@@ -154,11 +155,13 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
         ps.println(prefix + " ckrPad: byte[" + ckrPad.length + "]");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CatKeyRec:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         int offset = 0;
@@ -178,14 +181,17 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
         return result;
     }
 
+    @Override
     public int maxSize() {
         return MAX_STRUCTSIZE;
     }
 
+    @Override
     public int occupiedSize() {
         return 1 + Util.unsign(getCkrKeyLen());
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CatKeyRec.class.getSimpleName());
 
@@ -241,7 +247,7 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
      * - The character 0xD8 ('ÿ') sorts after 'Y'.
      * - The range 0xD9-0xFF consists only of identity mappings.
      */
-    private final static char HFS_RELSTRING_KEY_COMPARE_TABLE[] = {
+    private final static char[] HFS_RELSTRING_KEY_COMPARE_TABLE = {
             0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0x0600, 0x0700,
             0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00,
             0x1000, 0x1100, 0x1200, 0x1300, 0x1400, 0x1500, 0x1600, 0x1700,
@@ -277,15 +283,15 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
     };
 
     private static int relstringCompare(byte[] a, int aoff, int alen, byte[] b, int boff, int blen) {
-        final int compareLen = Math.min(alen, blen);
+        int compareLen = Math.min(alen, blen);
 
         for (int i = 0; i < compareLen; ++i) {
-            final byte aCur = a[aoff + i];
-            final byte bCur = b[boff + i];
+            byte aCur = a[aoff + i];
+            byte bCur = b[boff + i];
 
             if (aCur != bCur) {
-                final int aRel = (int) HFS_RELSTRING_KEY_COMPARE_TABLE[aCur & 0xFF] & 0xFFFF;
-                final int bRel = (int) HFS_RELSTRING_KEY_COMPARE_TABLE[bCur & 0xFF] & 0xFFFF;
+                int aRel = (int) HFS_RELSTRING_KEY_COMPARE_TABLE[aCur & 0xFF] & 0xFFFF;
+                int bRel = (int) HFS_RELSTRING_KEY_COMPARE_TABLE[bCur & 0xFF] & 0xFFFF;
 
                 if (aRel != bRel) {
                     return aRel - bRel;
@@ -301,18 +307,14 @@ public class CatKeyRec implements DynamicStruct, PrintableStruct,
         return relstringCompare(a, 0, a.length, b, 0, b.length);
     }
 
+    @Override
     public int compareTo(CatKeyRec o) {
-        final long ourParID = Util.unsign(getCkrParID());
-        final long theirParID = Util.unsign(o.getCkrParID());
+        long ourParID = Util.unsign(getCkrParID());
+        long theirParID = Util.unsign(o.getCkrParID());
 
         if (ourParID == theirParID) {
             int res2 = relstringCompare(getCkrCName(), o.getCkrCName());
-            if (res2 == 0)
-                return 0;
-            else if (res2 > 0)
-                return 1;
-            else
-                return -1;
+            return Integer.compare(res2, 0);
         } else if (ourParID > theirParID)
             return 1;
         else

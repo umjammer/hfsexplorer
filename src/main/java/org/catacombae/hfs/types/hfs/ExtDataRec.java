@@ -63,6 +63,7 @@ public class ExtDataRec implements PrintableStruct, StructElements {
         return Util.arrayCopy(extDataRecs, new ExtDescriptor[extDataRecs.length]);
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " extDataRecs: ");
         for (int i = 0; i < extDataRecs.length; ++i) {
@@ -71,6 +72,7 @@ public class ExtDataRec implements PrintableStruct, StructElements {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "ExtDataRec:");
         printFields(ps, prefix);
@@ -90,6 +92,7 @@ public class ExtDataRec implements PrintableStruct, StructElements {
         return result;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(ExtDataRec.class.getSimpleName());
 

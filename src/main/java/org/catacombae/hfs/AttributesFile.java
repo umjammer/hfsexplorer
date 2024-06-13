@@ -46,6 +46,7 @@ public class AttributesFile extends BTreeFile<CommonHFSAttributesKey, CommonHFSA
 
         ReadableRandomAccessStream attributesFileStream;
 
+        @Override
         protected ReadableRandomAccessStream getBTreeStream(CommonHFSVolumeHeader header) {
             if (!(header instanceof CommonHFSVolumeHeader.HFSPlusImplementation)) {
                 throw new RuntimeException("Illegal CommonHFSVolumeHeader " +
@@ -77,20 +78,23 @@ public class AttributesFile extends BTreeFile<CommonHFSAttributesKey, CommonHFSA
                 header.getAllocationBlockStart() * view.getPhysicalBlockSize());
     }
 
+    @Override
     BTreeFileSession openSession() {
         return new Session();
     }
 
+    @Override
     protected CommonHFSAttributesIndexNode createIndexNode(byte[] nodeData, int offset, int nodeSize) {
         return CommonHFSAttributesIndexNode.createHFSPlus(nodeData, 0, nodeSize);
     }
 
+    @Override
     protected CommonHFSAttributesLeafNode createLeafNode(byte[] nodeData, int offset, int nodeSize) {
         return CommonHFSAttributesLeafNode.createHFSPlus(nodeData, 0, nodeSize);
     }
 
     public CommonBTHeaderNode getHeaderNode() {
-        CommonBTNode firstNode = getNode(0);
+        CommonBTNode<?> firstNode = getNode(0);
         if (firstNode instanceof CommonBTHeaderNode) {
             return (CommonBTHeaderNode) firstNode;
         } else {
@@ -98,16 +102,16 @@ public class AttributesFile extends BTreeFile<CommonHFSAttributesKey, CommonHFSA
         }
     }
 
-    public String[] listAttributeNames(final CommonHFSCatalogNodeID nodeID) {
-        final LinkedList<String> list = new LinkedList<String>();
+    public String[] listAttributeNames(CommonHFSCatalogNodeID nodeID) {
+        LinkedList<String> list = new LinkedList<>();
 
         listAttributeNames(nodeID, list);
 
-        return list.toArray(new String[list.size()]);
+        return list.toArray(String[]::new);
     }
 
-    public void listAttributeNames(final CommonHFSCatalogNodeID nodeID, LinkedList<String> list) {
-        final LinkedList<CommonHFSAttributesLeafRecord> recordList = new LinkedList<CommonHFSAttributesLeafRecord>();
+    public void listAttributeNames(CommonHFSCatalogNodeID nodeID, LinkedList<String> list) {
+        LinkedList<CommonHFSAttributesLeafRecord> recordList = new LinkedList<>();
 
         listAttributeRecords(nodeID, recordList);
 
@@ -119,33 +123,32 @@ public class AttributesFile extends BTreeFile<CommonHFSAttributesKey, CommonHFSA
         }
     }
 
-    public CommonHFSAttributesLeafRecord[] listAttributeRecords(final CommonHFSCatalogNodeID nodeID) {
-        final LinkedList<CommonHFSAttributesLeafRecord> list = new LinkedList<CommonHFSAttributesLeafRecord>();
+    public CommonHFSAttributesLeafRecord[] listAttributeRecords(CommonHFSCatalogNodeID nodeID) {
+        LinkedList<CommonHFSAttributesLeafRecord> list = new LinkedList<>();
 
         listAttributeRecords(nodeID, list);
 
-        return list.toArray(new CommonHFSAttributesLeafRecord[list.size()]);
+        return list.toArray(CommonHFSAttributesLeafRecord[]::new);
     }
 
-    public void listAttributeRecords(final CommonHFSCatalogNodeID nodeID, final LinkedList<CommonHFSAttributesLeafRecord> list) {
-        final CommonBTNode rootNode = getRootNode();
+    public void listAttributeRecords(CommonHFSCatalogNodeID nodeID, LinkedList<CommonHFSAttributesLeafRecord> list) {
+        CommonBTNode<?> rootNode = getRootNode();
         if (rootNode != null) {
             listAttributeRecords(rootNode, nodeID, list);
         }
     }
 
-    private void listAttributeRecords(final CommonBTNode curNode,
-                                      final CommonHFSCatalogNodeID nodeID,
-                                      final LinkedList<CommonHFSAttributesLeafRecord> list) {
-        final CommonHFSAttributesKey searchKey = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(
+    private void listAttributeRecords(CommonBTNode<?> curNode,
+                                      CommonHFSCatalogNodeID nodeID,
+                                      LinkedList<CommonHFSAttributesLeafRecord> list) {
+        CommonHFSAttributesKey searchKey = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(
                         ((CommonHFSCatalogNodeID.HFSPlusImplementation) nodeID).
                                 getHFSCatalogNodeID(), 0, new char[0]));
-        final CommonHFSAttributesKey endKey = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(
+        CommonHFSAttributesKey endKey = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(
                         ((CommonHFSCatalogNodeID.HFSPlusImplementation)
                                 nodeID.add(1)).getHFSCatalogNodeID(), 0, new char[0]));
 
-        if (curNode instanceof CommonHFSAttributesLeafNode) {
-            CommonHFSAttributesLeafNode leafNode = (CommonHFSAttributesLeafNode) curNode;
+        if (curNode instanceof CommonHFSAttributesLeafNode leafNode) {
 
             int listSizeBefore = list.size();
             if (!findLEKeys(leafNode, searchKey, endKey, true, list)) {
@@ -153,9 +156,8 @@ public class AttributesFile extends BTreeFile<CommonHFSAttributesKey, CommonHFSA
                     list.removeLast();
                 }
             }
-        } else if (curNode instanceof CommonHFSAttributesIndexNode) {
-            CommonHFSAttributesIndexNode indexNode = (CommonHFSAttributesIndexNode) curNode;
-            LinkedList<CommonBTIndexRecord<CommonHFSAttributesKey>> recList = new LinkedList<CommonBTIndexRecord<CommonHFSAttributesKey>>();
+        } else if (curNode instanceof CommonHFSAttributesIndexNode indexNode) {
+            LinkedList<CommonBTIndexRecord<CommonHFSAttributesKey>> recList = new LinkedList<>();
 
             // Search for all keys in index node between search key (inclusive)
             // and end key (exclusive).

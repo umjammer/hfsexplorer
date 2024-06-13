@@ -46,20 +46,20 @@ public class AppleSingleDebug {
 
                 if (ed.getEntryId() == EntryDescriptor.ENTRY_ID_FINDERINFO &&
                         ed.getEntryLength() > (32 + 2 + AttributeHeader.STRUCTSIZE)) {
-                    final byte[] finderInfoData = new byte[ed.getEntryLength()];
-                    final int entryOffset = ed.getEntryOffset();
+                    byte[] finderInfoData = new byte[ed.getEntryLength()];
+                    int entryOffset = ed.getEntryOffset();
 
                     is.seek(entryOffset);
                     is.readFully(finderInfoData);
 
-                    final AttributeHeader header = new AttributeHeader(finderInfoData, 32 + 2);
+                    AttributeHeader header = new AttributeHeader(finderInfoData, 32 + 2);
                     if (header.getMagic() == AttributeHeader.MAGIC) {
                         header.print(System.out, "    ");
 
-                        final int numAttrs = header.getNumAttrs();
+                        int numAttrs = header.getNumAttrs();
                         int curOffset = 32 + 2 + AttributeHeader.STRUCTSIZE;
                         for (i = 0; i < numAttrs; ++i) {
-                            final AttributeEntry ae = new AttributeEntry(finderInfoData, curOffset);
+                            AttributeEntry ae = new AttributeEntry(finderInfoData, curOffset);
 
                             System.out.println("    Attribute entry " + (i + 1) + ":");
                             ae.print(System.out, "     ");
@@ -68,7 +68,7 @@ public class AppleSingleDebug {
 
                             // Entries are always 4-byte aligned, so skip any
                             // bytes up to the next 4 byte boundary.
-                            final int remainder =
+                            int remainder =
                                     (entryOffset + nextOffset) & 0x3;
                             if (remainder != 0) {
                                 nextOffset += 4 - remainder;

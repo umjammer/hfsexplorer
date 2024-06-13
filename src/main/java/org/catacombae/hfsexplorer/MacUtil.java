@@ -17,7 +17,6 @@
 
 package org.catacombae.hfsexplorer;
 
-import java.awt.desktop.QuitResponse;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,19 +48,19 @@ public class MacUtil {
     /**
      * Interface for a handler for Mac OS X application events.
      */
-    public static interface MacApplicationHandler {
+    public interface MacApplicationHandler {
 
         /**
          * Returns whether or not this application accepts to be terminated.
          *
          * @return whether or not this application accepts to be terminated.
          */
-        public boolean acceptQuit();
+        boolean acceptQuit();
 
         /**
          *
          */
-        public void showAboutDialog();
+        void showAboutDialog();
     }
 
     /**
@@ -70,7 +69,7 @@ public class MacUtil {
      * @param qh the QuitHandler to register.
      */
     public static void registerMacApplicationHandler(
-            final MacApplicationHandler qh) {
+            MacApplicationHandler qh) {
         try {
             try {
                 registerMacApplicationHandlerInternal(qh);
@@ -95,7 +94,7 @@ public class MacUtil {
     }
 
     private static void registerMacApplicationHandlerInternal(
-            final MacApplicationHandler qh)
+            MacApplicationHandler qh)
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException {
         Class<?> applicationClass = Class.forName("com.apple.eawt.Application");
@@ -105,12 +104,12 @@ public class MacUtil {
         Method applicationGetApplicationMethod = applicationClass.getMethod("getApplication");
         Object applicationObject = applicationGetApplicationMethod.invoke(null);
 
-        final Method applicationEventSetHandledMethod =
+        Method applicationEventSetHandledMethod =
                 applicationEventClass.getMethod("setHandled", boolean.class);
 
-        InvocationHandler invocationHandler = new InvocationHandler() {
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (method.getName().equals("handleQuit")) {
+        InvocationHandler invocationHandler = (proxy, method, args) -> {
+            switch (method.getName()) {
+                case "handleQuit" -> {
                     Object event = args[0];
 
                     if (qh.acceptQuit()) {
@@ -120,23 +119,22 @@ public class MacUtil {
                     }
 
                     return null;
-                } else if (method.getName().equals("handleAbout")) {
+                }
+                case "handleAbout" -> {
                     Object event = args[0];
 
                     qh.showAboutDialog();
                     applicationEventSetHandledMethod.invoke(event, true);
 
                     return null;
-                } else if (method.getName().equals("handleOpenApplication") ||
-                        method.getName().equals("handleOpenFile") ||
-                        method.getName().equals("handlePreferences") ||
-                        method.getName().equals("handlePrintFile") ||
-                        method.getName().equals("handleReOpenApplication")) {
+                }
+                case "handleOpenApplication", "handleOpenFile", "handlePreferences", "handlePrintFile",
+                     "handleReOpenApplication" -> {
                     return null;
                 }
-
-                throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
             }
+
+            throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
         };
 
         Object applicationAdapterObject = Proxy.newProxyInstance(
@@ -152,7 +150,7 @@ public class MacUtil {
     }
 
     private static void registerJavaAwtDesktopHandlersInternal(
-            final MacApplicationHandler qh)
+            MacApplicationHandler qh)
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException {
         Class<?> desktopClass = Class.forName("java.awt.Desktop");
@@ -163,27 +161,25 @@ public class MacUtil {
         Method desktopGetDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = desktopGetDesktopMethod.invoke(null);
 
-        final Method quitResponsePerformQuitMethod = quitResponseClass.getMethod("performQuit");
-        final Method quitResponseCancelQuitMethod = quitResponseClass.getMethod("cancelQuit");
+        Method quitResponsePerformQuitMethod = quitResponseClass.getMethod("performQuit");
+        Method quitResponseCancelQuitMethod = quitResponseClass.getMethod("cancelQuit");
 
-        InvocationHandler quitInvocationHandler = new InvocationHandler() {
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (method.getName().equals("handleQuitRequestWith")) {
-                    // void handleQuitRequestWith(AppEvent.QuitEvent e, QuitResponse response)
-                    Object e = args[0];
-                    Object response = args[1];
+        InvocationHandler quitInvocationHandler = (proxy, method, args) -> {
+            if (method.getName().equals("handleQuitRequestWith")) {
+                // void handleQuitRequestWith(AppEvent.QuitEvent e, QuitResponse response)
+                Object e = args[0];
+                Object response = args[1];
 
-                    if (qh.acceptQuit()) {
-                        quitResponsePerformQuitMethod.invoke(response);
-                    } else {
-                        quitResponseCancelQuitMethod.invoke(response);
-                    }
-
-                    return null;
+                if (qh.acceptQuit()) {
+                    quitResponsePerformQuitMethod.invoke(response);
+                } else {
+                    quitResponseCancelQuitMethod.invoke(response);
                 }
 
-                throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
+                return null;
             }
+
+            throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
         };
 
         Object quitHandlerObject = Proxy.newProxyInstance(
@@ -195,19 +191,17 @@ public class MacUtil {
 
         desktopSetQuitHandlerMethod.invoke(desktopObject, quitHandlerObject);
 
-        InvocationHandler aboutInvocationHandler = new InvocationHandler() {
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (method.getName().equals("handleAbout")) {
-                    // void handleAbout(AppEvent.AboutEvent e)
-                    Object e = args[0];
+        InvocationHandler aboutInvocationHandler = (proxy, method, args) -> {
+            if (method.getName().equals("handleAbout")) {
+                // void handleAbout(AppEvent.AboutEvent e)
+                Object e = args[0];
 
-                    qh.showAboutDialog();
+                qh.showAboutDialog();
 
-                    return null;
-                }
-
-                throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
+                return null;
             }
+
+            throw new NoSuchMethodException("No \"" + method.getName() + "\" defined.");
         };
 
         Object aboutHandlerObject = Proxy.newProxyInstance(

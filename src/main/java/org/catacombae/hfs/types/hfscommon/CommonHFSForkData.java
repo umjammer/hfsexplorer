@@ -58,19 +58,23 @@ public abstract class CommonHFSForkData implements PrintableStruct {
             this.logicalSize = logicalSize;
         }
 
+        @Override
         public final boolean hasTotalBlocks() {
             return false;
         }
 
+        @Override
         public final long getTotalBlocks() {
             throw new UnsupportedOperationException("Information about the " +
                     "total number of blocks in a fork does not exist in HFS.");
         }
 
+        @Override
         public long getLogicalSize() {
             return logicalSize;
         }
 
+        @Override
         public CommonHFSExtentDescriptor[] getBasicExtents() {
             ExtDescriptor[] src = edr.getExtDataRecs();
             CommonHFSExtentDescriptor[] result = new CommonHFSExtentDescriptor[src.length];
@@ -80,10 +84,12 @@ public abstract class CommonHFSForkData implements PrintableStruct {
             return result;
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             edr.print(ps, prefix);
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             edr.printFields(ps, prefix);
         }
@@ -97,18 +103,22 @@ public abstract class CommonHFSForkData implements PrintableStruct {
             this.hper = hper;
         }
 
+        @Override
         public final boolean hasTotalBlocks() {
             return true;
         }
 
+        @Override
         public final long getTotalBlocks() {
             return Util.unsign(hper.getTotalBlocks());
         }
 
+        @Override
         public long getLogicalSize() {
             return hper.getLogicalSize();
         }
 
+        @Override
         public CommonHFSExtentDescriptor[] getBasicExtents() {
             HFSPlusExtentDescriptor[] src = hper.getExtents().getExtentDescriptors();
             CommonHFSExtentDescriptor[] result = new CommonHFSExtentDescriptor[src.length];
@@ -118,10 +128,12 @@ public abstract class CommonHFSForkData implements PrintableStruct {
             return result;
         }
 
+        @Override
         public void print(PrintStream ps, String prefix) {
             hper.print(ps, prefix);
         }
 
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hper.printFields(ps, prefix);
         }

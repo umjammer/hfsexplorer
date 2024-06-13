@@ -45,7 +45,7 @@ public abstract class CommonExtendedFinderInfo implements StructElements, Printa
         System.arraycopy(data, offset + 12, putAwayFolderID, 0, 4);
     }
 
-    private static final int length() {
+    private static int length() {
         return 8;
     }
 
@@ -73,6 +73,7 @@ public abstract class CommonExtendedFinderInfo implements StructElements, Printa
         return (getExtendedFinderFlags() & kExtendedFlagHasRoutingInfo) != 0;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " extendedFinderFlags: 0x" + Util.toHexStringBE(getExtendedFinderFlags()));
         ps.println(prefix + "  kExtendedFlagsAreInvalid: " +
@@ -85,6 +86,7 @@ public abstract class CommonExtendedFinderInfo implements StructElements, Printa
         ps.println(prefix + " putAwayFolderID: " + Util.unsign(getPutAwayFolderID()));
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CommonExtendedFinderInfo.class.getName());
 

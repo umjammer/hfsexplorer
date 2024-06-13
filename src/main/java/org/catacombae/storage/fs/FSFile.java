@@ -36,5 +36,5 @@ public interface FSFile extends FSEntry {
      *
      * @return the main (data) fork of this file.
      */
-    public abstract FSFork getMainFork();
+    FSFork getMainFork();
 }

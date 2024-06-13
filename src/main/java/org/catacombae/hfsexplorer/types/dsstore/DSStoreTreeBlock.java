@@ -40,11 +40,11 @@ public class DSStoreTreeBlock {
 
     public static final int STRUCTSIZE = 20;
 
-    private int firstDataBlockID;
-    private int recordsInTree;
-    private int levelsOfInternalBlocks;
-    private int totalTreeBlocks;
-    private int unknownAlways0x1000;
+    private final int firstDataBlockID;
+    private final int recordsInTree;
+    private final int levelsOfInternalBlocks;
+    private final int totalTreeBlocks;
+    private final int unknownAlways0x1000;
 
     public DSStoreTreeBlock(byte[] data, int offset) {
         this.firstDataBlockID = Util.readIntBE(data, offset + 0);
@@ -143,7 +143,7 @@ public class DSStoreTreeBlock {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int startOffset = offset;
+        int startOffset = offset;
 
         Util.arrayPutBE(result, offset, this.firstDataBlockID);
         offset += 4;

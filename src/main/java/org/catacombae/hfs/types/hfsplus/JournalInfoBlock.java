@@ -55,10 +55,10 @@ public class JournalInfoBlock implements StaticStruct, PrintableStruct, StructEl
 
     public static final int STRUCTSIZE = 180;
 
-    private int flags;
+    private final int flags;
     private final byte[] deviceSignature = new byte[4 * 8];
-    private long offset;
-    private long size;
+    private final long offset;
+    private final long size;
     private final byte[] reserved = new byte[4 * 32];
 
     public JournalInfoBlock(byte[] data, int offset) {
@@ -73,6 +73,7 @@ public class JournalInfoBlock implements StaticStruct, PrintableStruct, StructEl
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -128,6 +129,7 @@ public class JournalInfoBlock implements StaticStruct, PrintableStruct, StructEl
         return length();
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " flags: " + getFlags());
         ps.println(prefix + " deviceSignature: " + getDeviceSignature());
@@ -136,11 +138,13 @@ public class JournalInfoBlock implements StaticStruct, PrintableStruct, StructEl
         ps.println(prefix + " reserved: " + getReserved());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "JournalInfoBlock:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         int _offset = 0;
@@ -163,6 +167,7 @@ public class JournalInfoBlock implements StaticStruct, PrintableStruct, StructEl
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder("JournalInfoBlock",
                 "Journal info block, describing the location and size of the journal.");

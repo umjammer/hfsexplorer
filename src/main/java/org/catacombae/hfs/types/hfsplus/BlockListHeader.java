@@ -48,11 +48,11 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
 
     private final boolean littleEndian;
 
-    private short maxBlocks;
-    private short numBlocks;
-    private int bytesUsed;
-    private int checksum;
-    private int pad;
+    private final short maxBlocks;
+    private final short numBlocks;
+    private final int bytesUsed;
+    private final int checksum;
+    private final int pad;
 
     public BlockListHeader(byte[] data, int offset, boolean littleEndian) {
         this.littleEndian = littleEndian;
@@ -76,6 +76,7 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -134,6 +135,7 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
         return pad;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " maxBlocks: " + getMaxBlocks());
         ps.println(prefix + " numBlocks: " + getNumBlocks());
@@ -143,11 +145,13 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
         ps.println(prefix + " pad: 0x" + Util.toHexStringBE(getRawPad()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BlockListHeader:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
         getBytes(result, 0);
@@ -155,7 +159,7 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int originalOffset = offset;
+        int originalOffset = offset;
 
         if (!littleEndian) {
             Util.arrayPutBE(result, offset, maxBlocks);
@@ -197,8 +201,8 @@ public class BlockListHeader implements StaticStruct, PrintableStruct {
         data[10] = 0;
         data[11] = 0;
 
-        for (int i = 0; i < data.length; i++) {
-            cksum = (cksum << 8) ^ (cksum + Util.unsign(data[i]));
+        for (byte datum : data) {
+            cksum = (cksum << 8) ^ (cksum + Util.unsign(datum));
         }
 
         return (~cksum);

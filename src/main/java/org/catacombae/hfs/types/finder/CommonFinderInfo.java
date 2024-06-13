@@ -22,7 +22,6 @@ import java.io.PrintStream;
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.csjc.structelements.IntegerField;
 import org.catacombae.hfs.types.carbon.Point;
 import org.catacombae.util.Util;
 
@@ -89,26 +88,17 @@ public abstract class CommonFinderInfo implements StructElements, PrintableStruc
 
     public int[] getFinderFlagColorRGB() {
         int color = getFinderFlagColor();
-        switch (color) {
-            case 0:
-                return null;
-            case 1:
-                return COLOR_1;
-            case 2:
-                return COLOR_2;
-            case 3:
-                return COLOR_3;
-            case 4:
-                return COLOR_4;
-            case 5:
-                return COLOR_5;
-            case 6:
-                return COLOR_6;
-            case 7:
-                return COLOR_7;
-            default:
-                throw new RuntimeException("Color out of range! (" + color + ")");
-        }
+        return switch (color) {
+            case 0 -> null;
+            case 1 -> COLOR_1;
+            case 2 -> COLOR_2;
+            case 3 -> COLOR_3;
+            case 4 -> COLOR_4;
+            case 5 -> COLOR_5;
+            case 6 -> COLOR_6;
+            case 7 -> COLOR_7;
+            default -> throw new RuntimeException("Color out of range! (" + color + ")");
+        };
     }
 
     public boolean getFinderFlagIsShared() {
@@ -163,6 +153,7 @@ public abstract class CommonFinderInfo implements StructElements, PrintableStruc
         return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " finderFlags: 0x" + Util.toHexStringBE(getFinderFlags()));
         ps.println(prefix + "  kIsOnDesk: " + (getFinderFlagIsOnDesk() ? "1" : "0"));
@@ -181,6 +172,7 @@ public abstract class CommonFinderInfo implements StructElements, PrintableStruc
         ps.println(prefix + " reservedField: 0x" + Util.toHexStringBE(getReservedField()));
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(CommonFinderInfo.class.getSimpleName());
 

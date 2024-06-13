@@ -19,11 +19,11 @@ package org.catacombae.hfs;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 import org.catacombae.hfs.io.ForkFilter;
 import org.catacombae.hfs.io.ReadableBlockCachingStream;
-import org.catacombae.hfs.original.HFSOriginalVolume;
-import org.catacombae.hfs.plus.HFSPlusVolume;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor;
@@ -43,20 +43,22 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSExtentLeafNode;
 import org.catacombae.hfs.types.hfscommon.CommonHFSForkData;
 import org.catacombae.hfs.types.hfscommon.CommonHFSForkType;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
-import org.catacombae.hfs.x.HFSXVolume;
 import org.catacombae.io.Readable;
-import org.catacombae.io.ReadableConcatenatedStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableRandomAccessSubstream;
 import org.catacombae.io.SynchronizedReadableRandomAccess;
 import org.catacombae.io.SynchronizedReadableRandomAccessStream;
-import org.catacombae.storage.io.DataLocator;
+
+import static java.lang.System.getLogger;
 
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class HFSVolume {
+
+    private static final Logger logger = getLogger(HFSVolume.class.getName());
+
     /*
      * The idea is to make few assumptions about static data in the file system.
      * No operations should be cached, since it would provide an inaccurate view
@@ -79,7 +81,7 @@ public abstract class HFSVolume {
      * Debug variable which is mainly used to adjust the block offsets of file
      * data when recovering data from a corrupted volume image with 'gaps'.
      */
-    public static volatile long fileReadOffset = 0;
+    public static final long fileReadOffset = 0;
 
     protected volatile SynchronizedReadableRandomAccess hfsFile;
     private volatile SynchronizedReadableRandomAccessStream hfsStream;
@@ -96,7 +98,7 @@ public abstract class HFSVolume {
     private boolean closed = false;
 
     protected HFSVolume(ReadableRandomAccessStream hfsFile, boolean cachingEnabled) {
-//        System.err.println("HFSVolume(" + hfsFile + ", " +
+//        logger.log(Level.DEBUG, "HFSVolume(" + hfsFile + ", " +
 //                cachingEnabled + ", " + btreeOperations + ", " +
 //                catalogOperations + ", " + extentsOverflowOperations + ");");
         this.sourceStream = new SynchronizedReadableRandomAccessStream(hfsFile);
@@ -117,7 +119,7 @@ public abstract class HFSVolume {
 
         try {
             runSanityChecks();
-//            System.err.println("Sanity checks completed successfully.");
+//            logger.log(Level.DEBUG, "Sanity checks completed successfully.");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -195,7 +197,7 @@ public abstract class HFSVolume {
         // Check the volume header for validity.
         CommonHFSVolumeHeader vh = getVolumeHeader();
         if (!vh.isValid()) {
-            System.err.println("Detected invalid volume header:");
+            logger.log(Level.DEBUG, "Detected invalid volume header:");
             vh.print(System.err, "  ");
             throw new Exception("Invalid volume header!");
         }

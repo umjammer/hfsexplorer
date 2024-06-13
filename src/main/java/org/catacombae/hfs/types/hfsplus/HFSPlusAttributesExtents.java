@@ -48,7 +48,7 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
 
     public static final int STRUCTSIZE = 72;
 
-    private int reserved;
+    private final int reserved;
     private final HFSPlusExtentRecord extents;
 
     public HFSPlusAttributesExtents(byte[] data, int offset) {
@@ -61,6 +61,7 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
         return STRUCTSIZE;
     }
 
+    @Override
     public int size() {
         return length();
     }
@@ -80,6 +81,7 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
         return reserved;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " recordType: " + getRecordType());
         ps.println(prefix + " reserved: " + getReserved());
@@ -87,11 +89,13 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
         getExtents().print(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusAttrExtents:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[length()];
 
@@ -102,7 +106,7 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
 
     @Override
     protected int getBytes(byte[] result, int offset) {
-        final int originalOffset = offset;
+        int originalOffset = offset;
 
         offset += super.getBytes(result, offset);
         Util.arrayPutBE(result, offset, reserved);
@@ -118,12 +122,12 @@ public class HFSPlusAttributesExtents extends HFSPlusAttributesLeafRecordData
 
     @Override
     public Dictionary getStructElements() {
-        final Class thisClass = HFSPlusAttributesExtents.class;
+        final Class<HFSPlusAttributesExtents> thisClass = HFSPlusAttributesExtents.class;
         DictionaryBuilder db = new DictionaryBuilder(thisClass.getSimpleName(),
                 "HFS+ attribute extents");
 
         try {
-            final Field reservedField = thisClass.getDeclaredField("reserved");
+            Field reservedField = thisClass.getDeclaredField("reserved");
 
             reservedField.setAccessible(true);
 
