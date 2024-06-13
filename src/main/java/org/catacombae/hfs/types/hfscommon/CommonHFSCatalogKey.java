@@ -18,68 +18,60 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
+import org.catacombae.hfs.FastUnicodeCompare;
 import org.catacombae.hfs.types.hfs.CatKeyRec;
+import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafNode.HFSXImplementation;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
+import org.catacombae.hfs.types.hfsx.HFSXKeyCompareType;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKey> implements StructElements {
+
     public abstract CommonHFSCatalogNodeID getParentID();
+
     public abstract CommonHFSCatalogString getNodeName();
 
-    /* @Override */
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogKey.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
-    public static CommonHFSCatalogKey create(CommonHFSCatalogNodeID parentID,
-            CommonHFSCatalogString name)
-    {
+    public static CommonHFSCatalogKey create(CommonHFSCatalogNodeID parentID, CommonHFSCatalogString name) {
         final long parentIDLong = parentID.toLong();
-        if(parentIDLong > 0xFFFFFFFFL) {
+        if (parentIDLong > 0xffff_ffffL) {
             throw new RuntimeException("Unexpected: UInt32 overflow in " +
-                    "value returned from CommonHFSCatalogNodeID.toLong " +
-                    "(" + parentIDLong + ").");
+                    "value returned from CommonHFSCatalogNodeID.toLong (" + parentIDLong + ").");
         }
 
-        if(parentID instanceof CommonHFSCatalogNodeID.HFSImplementation &&
-                name instanceof CommonHFSCatalogString.HFSImplementation)
-        {
+        if (parentID instanceof CommonHFSCatalogNodeID.HFSImplementation &&
+                name instanceof CommonHFSCatalogString.HFSImplementation) {
             byte[] nameBytes = name.getStringBytes();
-            if(nameBytes.length > 31) {
+            if (nameBytes.length > 31) {
                 throw new RuntimeException("Name length too large for HFS " +
-                        "catalog record (name length: " + nameBytes.length +
-                        ", max: 31).");
+                        "catalog record (name length: " + nameBytes.length + ", max: 31).");
             }
 
-            return CommonHFSCatalogKey.create(new CatKeyRec((int) parentIDLong,
-                    nameBytes));
-        }
-        else if(parentID instanceof CommonHFSCatalogNodeID.
-                HFSPlusImplementation &&
-                name instanceof CommonHFSCatalogString.HFSPlusImplementation)
-        {
+            return CommonHFSCatalogKey.create(new CatKeyRec((int) parentIDLong, nameBytes));
+        } else if (parentID instanceof CommonHFSCatalogNodeID.HFSPlusImplementation &&
+                name instanceof CommonHFSCatalogString.HFSPlusImplementation) {
             byte[] nameBytes = name.getStringBytes();
-            if(nameBytes.length > 255) {
+            if (nameBytes.length > 255) {
                 throw new RuntimeException("Name length too large for HFS+ " +
-                        "catalog record (name length: " + nameBytes.length +
-                        ", max: 255).");
+                        "catalog record (name length: " + nameBytes.length + ", max: 255).");
             }
 
             return new HFSPlusImplementation(new HFSPlusCatalogKey(
-                    ((CommonHFSCatalogNodeID.HFSPlusImplementation) parentID).
-                    getHFSCatalogNodeID(),
-                    ((CommonHFSCatalogString.HFSPlusImplementation) name).
-                    getInternal()));
-        }
-        else {
+                    ((CommonHFSCatalogNodeID.HFSPlusImplementation) parentID).getHFSCatalogNodeID(),
+                    ((CommonHFSCatalogString.HFSPlusImplementation) name).getInternal()));
+        } else {
             throw new RuntimeException("Mismatching/unknown types for " +
-                    "parentID (" + parentID.getClass() + ") and name " +
-                    "(" + name.getClass() + ").");
+                    "parentID (" + parentID.getClass() + ") and name (" + name.getClass() + ").");
         }
     }
 
@@ -87,31 +79,28 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
         return new HFSPlusImplementation(key);
     }
 
-    /*
-    public static CommonHFSCatalogKey create(HFSPlusCatalogKey key, HFSXKeyCompareType compType) {
-        return new HFSXImplementation(key, compType);
-    }
-     * */
+//    public static CommonHFSCatalogKey create(HFSPlusCatalogKey key, HFSXKeyCompareType compType) {
+//        return new HFSXImplementation(key, compType);
+//    }
 
     public static CommonHFSCatalogKey create(CatKeyRec key) {
         return new HFSImplementation(key);
     }
 
     public static class HFSPlusImplementation extends CommonHFSCatalogKey {
+
         private final HFSPlusCatalogKey key;
-        //private HFSXKeyCompareType compType;
+//        private HFSXKeyCompareType compType;
 
         public HFSPlusImplementation(HFSPlusCatalogKey key) {
-            //this(key, HFSXKeyCompareType.CASE_FOLDING);
+//            this(key, HFSXKeyCompareType.CASE_FOLDING);
             this.key = key;
         }
-        /*
-        protected HFSPlusImplementation(HFSPlusCatalogKey key,
-                HFSXKeyCompareType compType) {
-            this.key = key;
-            this.compType = compType;
-        }
-        */
+
+//        protected HFSPlusImplementation(HFSPlusCatalogKey key, HFSXKeyCompareType compType) {
+//            this.key = key;
+//            this.compType = compType;
+//        }
 
         @Override
         public CommonHFSCatalogNodeID getParentID() {
@@ -128,70 +117,59 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return key.getBytes();
         }
 
-        /* @Override */
         public int compareTo(CommonHFSCatalogKey o) {
-            if(o instanceof HFSPlusImplementation) {
+            if (o instanceof HFSPlusImplementation) {
                 HFSPlusImplementation k = (HFSPlusImplementation) o;
                 return key.compareTo(k.key);
-                /*
-                long res = getParentID().toLong() - k.getParentID().toLong();
-                if(res == 0) {
-                    switch(compType) {
-                        case CASE_FOLDING:
-                            return FastUnicodeCompare.compare(key.getNodeName().getUnicode(),
-                                    k.key.getNodeName().getUnicode());
-                        case BINARY_COMPARE:
-                            return Util.unsignedArrayCompareLex(key.getNodeName().getUnicode(),
-                                    k.key.getNodeName().getUnicode());
-                        default:
-                            throw new RuntimeException("Invalid value in file system structure! " +
-                                    "Compare type = " + compType);
-                    }
-                }
-                else if(res > 0)
-                    return 1;
-                else
-                    return -1;
-                */
-            }
-            else {
-                throw new RuntimeException("Can't compare a " + o.getClass() +
-                        " with a " + this.getClass());
+//                long res = getParentID().toLong() - k.getParentID().toLong();
+//                if (res == 0) {
+//                    switch (compType) {
+//                        case CASE_FOLDING:
+//                            return FastUnicodeCompare.compare(key.getNodeName().getUnicode(),
+//                                    k.key.getNodeName().getUnicode());
+//                        case BINARY_COMPARE:
+//                            return Util.unsignedArrayCompareLex(key.getNodeName().getUnicode(),
+//                                    k.key.getNodeName().getUnicode());
+//                        default:
+//                            throw new RuntimeException("Invalid value in file system structure! " +
+//                                    "Compare type = " + compType);
+//                    }
+//                } else if (res > 0)
+//                    return 1;
+//                else
+//                    return -1;
+            } else {
+                throw new RuntimeException("Can't compare a " + o.getClass() + " with a " + this.getClass());
             }
         }
 
-        /* @Override */
         public int maxSize() {
             return key.maxSize();
         }
 
-        /* @Override */
         public int occupiedSize() {
             return key.occupiedSize();
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
     }
 
-    /*
-    public static class HFSXImplementation extends HFSPlusImplementation {
-        public HFSXImplementation(HFSPlusCatalogKey key,
-                HFSXKeyCompareType compType) {
-            super(key, compType);
-        }
-    }
-    */
+//    public static class HFSXImplementation extends HFSPlusImplementation {
+//
+//        public HFSXImplementation(HFSPlusCatalogKey key, HFSXKeyCompareType compType) {
+//            super(key, compType);
+//        }
+//    }
 
     public static class HFSImplementation extends CommonHFSCatalogKey {
+
         private final CatKeyRec key;
 
         public HFSImplementation(CatKeyRec key) {
@@ -208,12 +186,10 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return CommonHFSCatalogString.createHFS(key.getCkrCName());
         }
 
-        /* @Override */
         public int maxSize() {
             return key.maxSize();
         }
 
-        /* @Override */
         public int occupiedSize() {
             return key.occupiedSize();
         }
@@ -223,24 +199,19 @@ public abstract class CommonHFSCatalogKey extends CommonBTKey<CommonHFSCatalogKe
             return key.getBytes();
         }
 
-        /* @Override */
         public int compareTo(CommonHFSCatalogKey o) {
-            if(o instanceof HFSImplementation) {
+            if (o instanceof HFSImplementation) {
                 return key.compareTo(((HFSImplementation) o).key);
-            }
-            else {
-                throw new RuntimeException("Can't compare a " + o.getClass() +
-                        " with a " + this.getClass());
+            } else {
+                throw new RuntimeException("Can't compare a " + o.getClass() + " with a " + this.getClass());
             }
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return key.getStructElements();
         }

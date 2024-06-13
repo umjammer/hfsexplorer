@@ -26,6 +26,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface FSFolder extends FSEntry {
+
     /**
      * Lists the contents of this folder as an array of the names of its subentries.
      *

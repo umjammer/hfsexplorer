@@ -19,6 +19,7 @@ package org.catacombae.storage.ps;
 
 import org.catacombae.csjc.PrintableStruct;
 
+
 /**
  * <pre>
  * A partition is a string of bytes. It is a substring of some possibly larger
@@ -38,6 +39,7 @@ import org.catacombae.csjc.PrintableStruct;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface Partition extends PrintableStruct {
+
     /** Returns the start offset in bytes. */
     public abstract long getStartOffset();
 

@@ -17,15 +17,14 @@
 
 package org.catacombae.hfs.types.hfscommon;
 
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
 import org.catacombae.hfs.types.hfs.ExtKeyRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSExtentIndexNode
-        extends CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSExtentKey>>
-{
+public abstract class CommonHFSExtentIndexNode extends CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSExtentKey>> {
 
     protected CommonHFSExtentIndexNode(byte[] data, int offset, int nodeSize, FSType type) {
         super(data, offset, nodeSize, type);
@@ -40,6 +39,7 @@ public abstract class CommonHFSExtentIndexNode
     }
 
     public static class HFSImplementation extends CommonHFSExtentIndexNode {
+
         public HFSImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS);
         }
@@ -53,6 +53,7 @@ public abstract class CommonHFSExtentIndexNode
     }
 
     public static class HFSPlusImplementation extends CommonHFSExtentIndexNode {
+
         public HFSPlusImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS_PLUS);
         }

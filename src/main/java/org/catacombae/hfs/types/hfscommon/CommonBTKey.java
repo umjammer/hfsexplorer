@@ -20,9 +20,11 @@ package org.catacombae.hfs.types.hfscommon;
 import org.catacombae.csjc.DynamicStruct;
 import org.catacombae.csjc.PrintableStruct;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonBTKey <K extends CommonBTKey> implements Comparable<K>, DynamicStruct, PrintableStruct {
+public abstract class CommonBTKey<K extends CommonBTKey> implements Comparable<K>, DynamicStruct, PrintableStruct {
+
     public abstract byte[] getBytes();
 }

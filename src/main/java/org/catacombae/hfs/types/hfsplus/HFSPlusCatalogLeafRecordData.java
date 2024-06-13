@@ -17,26 +17,29 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import org.catacombae.util.Util;
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class HFSPlusCatalogLeafRecordData implements PrintableStruct, StructElements {
+
     public static final int RECORD_TYPE_FOLDER = 0x0001;
     public static final int RECORD_TYPE_FILE = 0x0002;
     public static final int RECORD_TYPE_FOLDER_THREAD = 0x0003;
     public static final int RECORD_TYPE_FILE_THREAD = 0x0004;
 
     public abstract short getRecordType();
+
     public String getRecordTypeAsString() {
-	int recordType = Util.unsign(getRecordType());
-	if(recordType == RECORD_TYPE_FOLDER) return "kHFSPlusFolderRecord";
-	else if(recordType == RECORD_TYPE_FILE) return "kHFSPlusFileRecord";
-	else if(recordType == RECORD_TYPE_FOLDER_THREAD) return "kHFSPlusFolderThreadRecord";
-	else if(recordType == RECORD_TYPE_FILE_THREAD) return "kHFSPlusFileThreadRecord";
-	else return "UNKNOWN!";
+        int recordType = Util.unsign(getRecordType());
+        if (recordType == RECORD_TYPE_FOLDER) return "kHFSPlusFolderRecord";
+        else if (recordType == RECORD_TYPE_FILE) return "kHFSPlusFileRecord";
+        else if (recordType == RECORD_TYPE_FOLDER_THREAD) return "kHFSPlusFolderThreadRecord";
+        else if (recordType == RECORD_TYPE_FILE_THREAD) return "kHFSPlusFileThreadRecord";
+        else return "UNKNOWN!";
     }
 }

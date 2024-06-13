@@ -1,6 +1,6 @@
 /*-
  * Copyright (C) 2006 Erik Larsson
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,14 +18,17 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.structelements.Array;
 import org.catacombae.csjc.structelements.ArrayBuilder;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusExtentRecord implements PrintableStruct {
+
     /*
      * HFSPlusExtentDescriptor (typedef HFSPlusExtentDescriptor[8])
      * size: 64 bytes
@@ -40,63 +43,62 @@ public class HFSPlusExtentRecord implements PrintableStruct {
         this(false, data, offset);
     }
 
-    private HFSPlusExtentRecord(final boolean mutable, byte[] data, int offset)
-    {
-        for(int i = 0; i < array.length; ++i) {
-            if(mutable)
-                array[i] = new HFSPlusExtentDescriptor.Mutable(data,
-                        offset+i*HFSPlusExtentDescriptor.getSize());
+    private HFSPlusExtentRecord(final boolean mutable, byte[] data, int offset) {
+        for (int i = 0; i < array.length; ++i) {
+            if (mutable)
+                array[i] = new HFSPlusExtentDescriptor.Mutable(data, offset + i * HFSPlusExtentDescriptor.getSize());
             else
-                array[i] = new HFSPlusExtentDescriptor(data,
-                        offset+i*HFSPlusExtentDescriptor.getSize());
+                array[i] = new HFSPlusExtentDescriptor(data, offset + i * HFSPlusExtentDescriptor.getSize());
         }
     }
 
     public HFSPlusExtentDescriptor getExtentDescriptor(int index) {
-	return array[index];
+        return array[index];
     }
+
     public HFSPlusExtentDescriptor[] getExtentDescriptors() {
-	HFSPlusExtentDescriptor[] arrayCopy = new HFSPlusExtentDescriptor[array.length];
-	for(int i = 0; i < array.length; ++i)
-	    arrayCopy[i] = array[i];
-	return arrayCopy;
+        HFSPlusExtentDescriptor[] arrayCopy = new HFSPlusExtentDescriptor[array.length];
+        for (int i = 0; i < array.length; ++i)
+            arrayCopy[i] = array[i];
+        return arrayCopy;
     }
 
     public int length() {
         int res = 0;
-        for(HFSPlusExtentDescriptor desc : array)
+        for (HFSPlusExtentDescriptor desc : array)
             res += desc.getSize();
         return res;
     }
-    
+
     /**
      * Returns the number of extents that are in use, i.e. non-zero block count
      * and start block.
+     *
      * @return the number of extents that are in use.
      */
     public int getNumExtentsInUse() {
-        for(int i = 0; i < array.length; ++i) {
+        for (int i = 0; i < array.length; ++i) {
             HFSPlusExtentDescriptor cur = array[i];
-            if(cur.getBlockCount() == 0 &&
-               cur.getStartBlock() == 0) {
+            if (cur.getBlockCount() == 0 &&
+                    cur.getStartBlock() == 0) {
                 return i;
             }
         }
         return array.length;
     }
-	
+
     public void print(PrintStream ps, int pregap) {
-	String pregapString = "";
-	for(int i = 0; i < pregap; ++i)
-	    pregapString += " ";
-	print(ps, pregapString);
+        String pregapString = "";
+        for (int i = 0; i < pregap; ++i)
+            pregapString += " ";
+        print(ps, pregapString);
     }
 
     private void _printFields(PrintStream ps, String prefix) {
-	for(int i = 0; i < array.length; ++i) {
-	    ps.println(prefix + "array[" + i + "]:");
-	    array[i].print(ps, prefix + "  ");
-	}
+        for (int i = 0; i < array.length; ++i) {
+            ps.println(prefix + "array[" + i + "]:");
+            array[i].print(ps, prefix + "  ");
+        }
     }
 
     public void printFields(PrintStream ps, String prefix) {
@@ -110,67 +112,61 @@ public class HFSPlusExtentRecord implements PrintableStruct {
 
     public byte[] getBytes() {
         byte[] result = new byte[length()];
-	byte[] tempData;
-	int offset = 0;
-        
-        for(HFSPlusExtentDescriptor desc : array) {
+        byte[] tempData;
+        int offset = 0;
+
+        for (HFSPlusExtentDescriptor desc : array) {
             tempData = desc.getBytes();
-            System.arraycopy(tempData, 0, result, offset, tempData.length); offset += tempData.length;
+            System.arraycopy(tempData, 0, result, offset, tempData.length);
+            offset += tempData.length;
         }
-        
+
         return result;
     }
 
     public Array getStructElement() {
         ArrayBuilder ab = new ArrayBuilder("HFSPlusExtentDescriptor[8]");
 
-        for(HFSPlusExtentDescriptor descriptor : array)
+        for (HFSPlusExtentDescriptor descriptor : array)
             ab.add(descriptor.getStructElements());
 
         return ab.getResult();
     }
 
     private void _set(HFSPlusExtentRecord rec) {
-        for(int i = 0; i < this.array.length; ++i) {
-            ((HFSPlusExtentDescriptor.Mutable) this.array[i]).set(
-                    rec.array[i]);
+        for (int i = 0; i < this.array.length; ++i) {
+            ((HFSPlusExtentDescriptor.Mutable) this.array[i]).set(rec.array[i]);
         }
     }
 
-    private void _setExtentDescriptor(int index,
-            HFSPlusExtentDescriptor extentDescriptor)
-    {
-        if(index < 0 || index > this.array.length) {
+    private void _setExtentDescriptor(int index, HFSPlusExtentDescriptor extentDescriptor) {
+        if (index < 0 || index > this.array.length) {
             throw new RuntimeException("index out of range: " + index);
         }
 
-        ((HFSPlusExtentDescriptor.Mutable) this.array[index]).set(
-                extentDescriptor);
+        ((HFSPlusExtentDescriptor.Mutable) this.array[index]).set(extentDescriptor);
     }
 
-    private void _setExtentDescriptors(
-            HFSPlusExtentDescriptor[] extentDescriptors)
-    {
-        if(extentDescriptors.length != this.array.length) {
-            throw new RuntimeException("Invalid length of array " +
-                    "'extentDescriptors': " + extentDescriptors.length);
+    private void _setExtentDescriptors(HFSPlusExtentDescriptor[] extentDescriptors) {
+        if (extentDescriptors.length != this.array.length) {
+            throw new RuntimeException("Invalid length of array 'extentDescriptors': " + extentDescriptors.length);
         }
 
-        for(int i = 0; i < this.array.length; ++i) {
+        for (int i = 0; i < this.array.length; ++i) {
             this._setExtentDescriptor(i, extentDescriptors[i]);
         }
     }
 
     private HFSPlusExtentDescriptor.Mutable[] _getMutableExtentDescriptors() {
-	HFSPlusExtentDescriptor.Mutable[] result =
-                new HFSPlusExtentDescriptor.Mutable[array.length];
-	for(int i = 0; i < array.length; ++i)
-	    result[i] = (HFSPlusExtentDescriptor.Mutable) array[i];
-	return result;
+        HFSPlusExtentDescriptor.Mutable[] result = new HFSPlusExtentDescriptor.Mutable[array.length];
+        for (int i = 0; i < array.length; ++i)
+            result[i] = (HFSPlusExtentDescriptor.Mutable) array[i];
+        return result;
     }
 
 
     public static class Mutable extends HFSPlusExtentRecord {
+
         public Mutable(byte[] data, int offset) {
             super(true, data, offset);
         }
@@ -179,15 +175,12 @@ public class HFSPlusExtentRecord implements PrintableStruct {
             super._set(rec);
         }
 
-        public void setExtentDescriptor(int index,
-                HFSPlusExtentDescriptor extentDescriptor)
-        {
+        public void setExtentDescriptor(int index, HFSPlusExtentDescriptor extentDescriptor) {
             super._setExtentDescriptor(index, extentDescriptor);
         }
 
         public void setExtentDescriptors(
-                HFSPlusExtentDescriptor[] extentDescriptors)
-        {
+                HFSPlusExtentDescriptor[] extentDescriptors) {
             super._setExtentDescriptors(extentDescriptors);
         }
 

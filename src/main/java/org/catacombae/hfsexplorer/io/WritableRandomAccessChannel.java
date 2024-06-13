@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface WritableRandomAccessChannel extends RandomAccessChannel, WritableByteChannel {
 
-    public abstract FileChannel truncate(long size)
-            throws IOException;
+    public abstract FileChannel truncate(long size) throws IOException;
 }

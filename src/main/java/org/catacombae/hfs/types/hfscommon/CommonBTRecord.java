@@ -19,10 +19,13 @@ package org.catacombae.hfs.types.hfscommon;
 
 import org.catacombae.csjc.PrintableStruct;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonBTRecord implements PrintableStruct {
+
     public abstract int getSize();
+
     public abstract byte[] getBytes();
 }

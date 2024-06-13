@@ -17,13 +17,15 @@
 
 package org.catacombae.storage.io;
 
-import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RandomAccessStream;
+import org.catacombae.io.ReadableRandomAccessStream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class DataLocator {
+
     private boolean closed = false;
     private long references;
 
@@ -31,12 +33,11 @@ public abstract class DataLocator {
         this.references = 1;
     }
 
-    /*
-    public InputStream createStream() {
-        // RandomAccessFileInputStream doesn't exist yet
-        return new RandomAccessFileInputStream(createReadOnlyFile());
-    }
-    */
+//    public InputStream createStream() {
+//        // RandomAccessFileInputStream doesn't exist yet
+//        return new RandomAccessFileInputStream(createReadOnlyFile());
+//    }
+
     public abstract ReadableRandomAccessStream createReadOnlyFile();
 
     /**
@@ -49,16 +50,14 @@ public abstract class DataLocator {
     public abstract boolean isWritable();
 
     /**
-     *
      * @return a readable and writable stream.
-     * @throws java.lang.UnsupportedOperationException if this DataLocator is
-     * not writable.
+     * @throws UnsupportedOperationException if this DataLocator is
+     *                                       not writable.
      */
-    public abstract RandomAccessStream createReadWriteFile()
-            throws UnsupportedOperationException;
+    public abstract RandomAccessStream createReadWriteFile() throws UnsupportedOperationException;
 
     public final synchronized void close() {
-        if(closed) {
+        if (closed) {
             throw new RuntimeException("Already closed.");
         }
 
@@ -67,15 +66,13 @@ public abstract class DataLocator {
     }
 
     private synchronized void dereference(final boolean closing) {
-        if(((closed || closing) && references <= 0) ||
-                (!(closed || closing) && references <= 1))
-        {
+        if (((closed || closing) && references <= 0) || (!(closed || closing) && references <= 1)) {
             throw new RuntimeException("Too few references left!");
         }
 
         --references;
 
-        if(references == 0) {
+        if (references == 0) {
             releaseResources();
         }
     }

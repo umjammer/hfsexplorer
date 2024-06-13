@@ -19,6 +19,7 @@ package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
 import java.util.Date;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
@@ -26,15 +27,15 @@ import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfsplus.HFSPlusVolumeHeader;
 import org.catacombae.hfs.types.hfs.MasterDirectoryBlock;
 
+
 /**
  * This class acts as a generalization of the common data properties of the
  * volume headers of all versions of HFS.
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSVolumeHeader
-        implements PrintableStruct, StructElements
-{
+public abstract class CommonHFSVolumeHeader implements PrintableStruct, StructElements {
+
     public abstract short getSignature();
 
     /**
@@ -46,7 +47,9 @@ public abstract class CommonHFSVolumeHeader
      * @return the physical block number of the first allocation block.
      */
     public abstract long getAllocationBlockStart();
+
     public abstract long getAllocationBlockSize();
+
     /**
      * Returns a byte pointer (not block) to the end of the volume, that is,
      * a pointer to byte following the last byte of the volume. You could call
@@ -55,20 +58,28 @@ public abstract class CommonHFSVolumeHeader
      * @return a byte pointer to the end of the volume.
      */
     public abstract long getFileSystemEnd();
+
     public abstract long getTotalBlocks();
+
     public abstract long getFreeBlocks();
+
     public abstract Date getCreateDate();
+
     public abstract Date getModifyDate();
+
     public abstract Date getBackupDate();
+
     public abstract CommonHFSCatalogNodeID getNextCatalogNodeID();
+
     //public abstract long getCatalogFileSize();
     public abstract CommonHFSForkData getCatalogFile();
+
     //public abstract long getExtentsOverflowFileSize();
     public abstract CommonHFSForkData getExtentsOverflowFile();
 
     /**
      * Get the fork data of the allocation file.
-     *
+     * <p>
      * The allocation file only exists in HFS+ and HFSX. For HFS file systems
      * this function will return <code>null</code>.
      *
@@ -79,7 +90,7 @@ public abstract class CommonHFSVolumeHeader
 
     /**
      * Get the fork data of the attributes file.
-     *
+     * <p>
      * The attributes file only exists in HFS+ and HFSX. For HFS file systems
      * this function will return <code>null</code>.
      *
@@ -90,7 +101,7 @@ public abstract class CommonHFSVolumeHeader
 
     /**
      * Get the fork data of the startup file.
-     *
+     * <p>
      * The startup file only exists in HFS+ and HFSX. For HFS file systems this
      * function will return <code>null</code>.
      *
@@ -115,6 +126,7 @@ public abstract class CommonHFSVolumeHeader
     public abstract boolean isValid();
 
     public static class HFSPlusImplementation extends CommonHFSVolumeHeader {
+
         private final HFSPlusVolumeHeader hdr;
 
         public HFSPlusImplementation(HFSPlusVolumeHeader hdr) {
@@ -191,12 +203,10 @@ public abstract class CommonHFSVolumeHeader
             return CommonHFSForkData.create(hdr.getStartupFile());
         }
 
-        /* @Override */
         public void print(PrintStream err, String prefix) {
             hdr.print(err, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream err, String prefix) {
             hdr.printFields(err, prefix);
         }
@@ -211,7 +221,6 @@ public abstract class CommonHFSVolumeHeader
             return 0;
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return hdr.getStructElements();
         }
@@ -219,7 +228,7 @@ public abstract class CommonHFSVolumeHeader
         @Override
         public long getFileSystemEnd() {
             // In HFS+, the entire volume is mapped by allocation blocks.
-            return getTotalBlocks()*getAllocationBlockSize();
+            return getTotalBlocks() * getAllocationBlockSize();
         }
 
         @Override
@@ -233,6 +242,7 @@ public abstract class CommonHFSVolumeHeader
     }
 
     public static class HFSImplementation extends CommonHFSVolumeHeader {
+
         private final MasterDirectoryBlock hdr;
 
         public HFSImplementation(MasterDirectoryBlock hdr) {
@@ -306,12 +316,10 @@ public abstract class CommonHFSVolumeHeader
             return null;
         }
 
-        /* @Override */
         public void print(PrintStream err, String prefix) {
             hdr.print(err, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream err, String prefix) {
             hdr.printFields(err, prefix);
         }
@@ -321,7 +329,6 @@ public abstract class CommonHFSVolumeHeader
             return Util.unsign(hdr.getDrAlBlSt());
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return hdr.getStructElements();
         }
@@ -329,7 +336,7 @@ public abstract class CommonHFSVolumeHeader
         @Override
         public long getFileSystemEnd() {
             // In HFS, only the "data" part of the volume is mapped by allocation blocks.
-            return getAllocationBlockStart()*512 + getTotalBlocks()*getAllocationBlockSize() + 2*512;
+            return getAllocationBlockStart() * 512 + getTotalBlocks() * getAllocationBlockSize() + 2 * 512;
         }
 
         @Override

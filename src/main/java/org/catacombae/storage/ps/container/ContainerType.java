@@ -22,7 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.storage.ps.container.hfs.HFSContainerHandlerFactory;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -33,10 +35,10 @@ public enum ContainerType {
     APPLE_UNIX_SVR2,
     LINUX_NATIVE;
 
-    private LinkedList<Class<? extends ContainerHandlerFactory>> factoryClasses =
-            new LinkedList<Class<? extends ContainerHandlerFactory>>();
+    private LinkedList<Class<? extends ContainerHandlerFactory>> factoryClasses = new LinkedList<Class<? extends ContainerHandlerFactory>>();
 
-    private ContainerType() {}
+    private ContainerType() {
+    }
 
     private ContainerType(Class<? extends ContainerHandlerFactory> defaultFactoryClass) {
         this.factoryClasses.addLast(defaultFactoryClass);
@@ -56,6 +58,7 @@ public enum ContainerType {
     /**
      * Returns all registered factory classes for this type. The first entry in
      * the list will be the default factory class.
+     *
      * @return all registered factory classes for this type.
      */
     public List<Class<? extends ContainerHandlerFactory>> getFactoryClasses() {
@@ -70,11 +73,10 @@ public enum ContainerType {
      * @return a newly created factory from the type's default factory class.
      */
     public ContainerHandlerFactory createDefaultHandlerFactory() {
-        if(factoryClasses.size() == 0)
+        if (factoryClasses.size() == 0)
             return null;
         else {
-            Class<? extends ContainerHandlerFactory> factoryClass =
-                    factoryClasses.getFirst();
+            Class<? extends ContainerHandlerFactory> factoryClass = factoryClasses.getFirst();
             return createHandlerFactory(factoryClass);
         }
     }
@@ -87,18 +89,17 @@ public enum ContainerType {
      */
     public static ContainerHandlerFactory createHandlerFactory(Class<? extends ContainerHandlerFactory> factoryClass) {
         try {
-            Constructor<? extends ContainerHandlerFactory> c =
-                    factoryClass.getConstructor();
+            Constructor<? extends ContainerHandlerFactory> c = factoryClass.getConstructor();
             return c.newInstance();
-        } catch(NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
-        } catch(InstantiationException e) {
+        } catch (InstantiationException e) {
             e.printStackTrace();
-        } catch(IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
-        } catch(InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;

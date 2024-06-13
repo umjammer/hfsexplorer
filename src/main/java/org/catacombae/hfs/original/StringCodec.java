@@ -23,6 +23,7 @@ package org.catacombae.hfs.original;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface StringCodec {
+
     /**
      * Decodes the specified data into a string.
      *
@@ -35,8 +36,8 @@ public interface StringCodec {
      * Decodes the specified data into a string.
      *
      * @param data the data to decode.
-     * @param off the offset in <code>data</code> to start reading at.
-     * @param len the amount of data to process.
+     * @param off  the offset in <code>data</code> to start reading at.
+     * @param len  the amount of data to process.
      * @return the decoded string.
      */
     public String decode(byte[] data, int off, int len);
@@ -71,6 +72,7 @@ public interface StringCodec {
      * data and Unicode fails.
      */
     public static class StringCodecException extends RuntimeException {
+
         public StringCodecException(String message) {
             super(message);
         }

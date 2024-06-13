@@ -19,6 +19,7 @@ package org.catacombae.storage.ps.ebr;
 
 import java.io.PrintStream;
 import java.util.LinkedList;
+
 import org.catacombae.storage.ps.mbr.types.MBRPartitionTable;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.legacy.PartitionSystem;
@@ -27,15 +28,18 @@ import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.ps.PartitionType;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class EBRPartitionSystem implements PartitionSystem {
+
     private final ExtendedBootRecord[] bootRecords;
 
     public EBRPartitionSystem(ReadableRandomAccessStream psStream, final long ebrPartitionOffset, int sectorSize) {
         this(psStream, ebrPartitionOffset, -1, sectorSize);
     }
+
     public EBRPartitionSystem(ReadableRandomAccessStream psStream, final long ebrPartitionOffset, final long ebrPartitionLength, int sectorSize) {
         byte[] tempBuffer = new byte[512];
 
@@ -45,31 +49,30 @@ public class EBRPartitionSystem implements PartitionSystem {
 
         LinkedList<ExtendedBootRecord> recordList = new LinkedList<ExtendedBootRecord>();
         ExtendedBootRecord ebr;
-        while((ebr = new ExtendedBootRecord(tempBuffer, 0, ebrPartitionOffset, curOffset, sectorSize)).isValid()) {
-            //System.err.println("EBR partition " + recordList.size() + ":");
-            //ebr.print(System.err, "  ");
-            if(recordList.size() > 10000)
+        while ((ebr = new ExtendedBootRecord(tempBuffer, 0, ebrPartitionOffset, curOffset, sectorSize)).isValid()) {
+//            System.err.println("EBR partition " + recordList.size() + ":");
+//            ebr.print(System.err, "  ");
+            if (recordList.size() > 10000)
                 throw new RuntimeException("Number of EBR partitions capped at 10000.");
             recordList.add(ebr);
 
-            if(ebr.isTerminator())
+            if (ebr.isTerminator())
                 break; // We have reached the end of the EBR linked list.
             else {
-                //EBRPartition firstEntry = ebr.getFirstEntry();
+//                EBRPartition firstEntry = ebr.getFirstEntry();
                 curOffset = ebr.getSecondEntry().getStartOffset();
 
-                if(ebrPartitionLength > 0 && curOffset > ebrPartitionOffset+ebrPartitionLength)
+                if (ebrPartitionLength > 0 && curOffset > ebrPartitionOffset + ebrPartitionLength)
                     throw new RuntimeException("Invalid DOS Extended partition system (curOffset=" + curOffset + ").");
 
-                //System.err.println("Seeking to offset(" + offset + ") + secondEntryStart(" + ebr.getSecondEntry().getStartOffset() + ") = " + curOffset);
+//                System.err.println("Seeking to offset(" + offset + ") + secondEntryStart(" + ebr.getSecondEntry().getStartOffset() + ") = " + curOffset);
                 psStream.seek(curOffset);
                 psStream.readFully(tempBuffer);
             }
         }
 
-        if(!ebr.isValid())
-            throw new RuntimeException("Invalid extended partition table at index " +
-                    recordList.size() + ".");
+        if (!ebr.isValid())
+            throw new RuntimeException("Invalid extended partition table at index " + recordList.size() + ".");
         else
             this.bootRecords = recordList.toArray(new ExtendedBootRecord[recordList.size()]);
     }
@@ -88,7 +91,7 @@ public class EBRPartitionSystem implements PartitionSystem {
 
     public Partition[] getPartitionEntries() {
         Partition[] result = new Partition[bootRecords.length];
-        for(int i = 0; i < result.length; ++i) {
+        for (int i = 0; i < result.length; ++i) {
             result[i] = bootRecords[i].getFirstEntry();
         }
         return result;
@@ -112,7 +115,7 @@ public class EBRPartitionSystem implements PartitionSystem {
 
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " bootRecords:");
-        for(int i = 0; i < bootRecords.length; ++i) {
+        for (int i = 0; i < bootRecords.length; ++i) {
             ExtendedBootRecord ebr = bootRecords[i];
             ps.print(prefix + "  [" + i + "]:");
             ebr.print(ps, prefix + "   ");
@@ -129,18 +132,18 @@ public class EBRPartitionSystem implements PartitionSystem {
 
         String inputFilename = args[0];
         ReadableRandomAccessStream inputStream;
-        if(ReadableWin32FileStream.isSystemSupported())
+        if (ReadableWin32FileStream.isSystemSupported())
             inputStream = new ReadableWin32FileStream(inputFilename);
         else
             inputStream = new ReadableFileStream(inputFilename);
 
         MBRPartitionTable mpt = new MBRPartitionTable(inputStream, 0);
-        if(!mpt.isValid())
+        if (!mpt.isValid())
             throw new RuntimeException("Invalid MBR.");
 
         int i = 0;
-        for(Partition p : mpt.getUsedPartitionEntries()) {
-            if(p.getType() == PartitionType.DOS_EXTENDED) {
+        for (Partition p : mpt.getUsedPartitionEntries()) {
+            if (p.getType() == PartitionType.DOS_EXTENDED) {
                 System.err.println("Found extended partition system at MBR partition " + i + ":");
                 EBRPartitionSystem ebt = new EBRPartitionSystem(inputStream, p.getStartOffset(), p.getLength(), 512);
                 ebt.print(System.err, "  ");

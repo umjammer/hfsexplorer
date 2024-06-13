@@ -17,9 +17,12 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import org.catacombae.hfs.types.hfs.HFSDate;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+
+import org.catacombae.hfs.types.hfs.HFSDate;
+
 
 /**
  * In the future, this could wrap a 32 bit HFS+ date.
@@ -38,13 +41,14 @@ public class HFSPlusDate extends HFSDate {
     private static final Date baseDate =
             getBaseDate(TimeZone.getTimeZone("GMT"));
 
-    protected HFSPlusDate() {}
+    protected HFSPlusDate() {
+    }
 
-    /**
-     * Pre-calculated. This is the amount of milliseconds between 01-01-1904 00:00:00.0000
-     * (HFS+ starting date) and 01-01-1970 00:00:00.0000 (the start of the java "epoch").
-     */
-    //public static final long DIFF_TO_JAVA_DATE_IN_MILLIS = 2082844800000L;
+//    /**
+//     * Pre-calculated. This is the amount of milliseconds between 01-01-1904 00:00:00.0000
+//     * (HFS+ starting date) and 01-01-1970 00:00:00.0000 (the start of the java "epoch").
+//     */
+//    public static final long DIFF_TO_JAVA_DATE_IN_MILLIS = 2082844800000L;
 
     /**
      * Converts a HFS+ date stored in GMT to a Java Date.
@@ -53,21 +57,20 @@ public class HFSPlusDate extends HFSDate {
      * @return a java.util.Date set to the time of the HFS+ GMT timestamp.
      */
     public static Date gmtTimestampToDate(int hfsPlusTimestamp) {
-	return new Date(baseDate.getTime() + (hfsPlusTimestamp & 0xFFFFFFFFL)*1000);
-	/*
-	Calendar c = Calendar.getInstance();
-	c.clear();
-	c.setLenient(true);
-	c.setTimeZone(TimeZone.getTimeZone("GMT"));
-	c.set(Calendar.YEAR, 1904);
-	c.set(Calendar.DAY_OF_YEAR, 1);
-	if(hfsPlusTimestamp < 0)
-	    c.add(Calendar.SECOND, 0x7FFFFFFF);
-	c.add(Calendar.SECOND, hfsPlusTimestamp & 0x7FFFFFFF);
-	return c.getTime();
-	*/
-	//return timestampToDate(hfsPlusTimestamp, TimeZone.getTimeZone("GMT"));
-	//return new Date((hfsPlusTimestamp & 0xFFFFFFFFL)*1000 - DIFF_TO_JAVA_DATE_IN_MILLIS);
+        return new Date(baseDate.getTime() + (hfsPlusTimestamp & 0xFFFFFFFFL) * 1000);
+//        Calendar c = Calendar.getInstance();
+//        c.clear();
+//        c.setLenient(true);
+//        c.setTimeZone(TimeZone.getTimeZone("GMT"));
+//        c.set(Calendar.YEAR, 1904);
+//        c.set(Calendar.DAY_OF_YEAR, 1);
+//        if (hfsPlusTimestamp < 0)
+//            c.add(Calendar.SECOND, 0x7FFFFFFF);
+//        c.add(Calendar.SECOND, hfsPlusTimestamp & 0x7FFFFFFF);
+//        return c.getTime();
+
+//        return timestampToDate(hfsPlusTimestamp, TimeZone.getTimeZone("GMT"));
+//        return new Date((hfsPlusTimestamp & 0xFFFFFFFFL) * 1000 - DIFF_TO_JAVA_DATE_IN_MILLIS);
     }
 
     /**
@@ -80,9 +83,8 @@ public class HFSPlusDate extends HFSDate {
      */
     public static int dateToGmtTimestamp(Date date) {
         long timestamp = (date.getTime() - baseDate.getTime()) / 1000;
-        if(timestamp < 0 || timestamp > 0xFFFFFFFFL) {
-            throw new RuntimeException("Timestamp outside of UInt32 range:" +
-                    timestamp);
+        if (timestamp < 0 || timestamp > 0xFFFFFFFFL) {
+            throw new RuntimeException("Timestamp outside of UInt32 range:" + timestamp);
         }
 
         return (int) timestamp;

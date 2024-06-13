@@ -20,6 +20,7 @@ package org.catacombae.hfsexplorer.gui;
 import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.catacombae.hfs.AttributesFile;
 import org.catacombae.hfs.types.hfscommon.CommonBTIndexRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNode;
@@ -31,12 +32,12 @@ import org.catacombae.hfsexplorer.FileSystemBrowser.NoLeafMutableTreeNode;
 import org.catacombae.hfsexplorer.gui.BTreeInfoPanel.BTLeafStorage;
 import org.catacombae.util.Util.Pair;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class AttributesInfoPanel
-        extends BTreeInfoPanel<CommonHFSAttributesLeafRecord, AttributesFile>
-{
+public class AttributesInfoPanel extends BTreeInfoPanel<CommonHFSAttributesLeafRecord, AttributesFile> {
+
     /** Creates new form CatalogInfoPanel */
     public AttributesInfoPanel(final AttributesFile attributesFile) {
         super(attributesFile);
@@ -50,18 +51,14 @@ public class AttributesInfoPanel
         return "View of the attributes file's B*-tree:";
     }
 
-    protected void createCustomPanels(List<Pair<JPanel, String>> panelsList)
-    {
+    protected void createCustomPanels(List<Pair<JPanel, String>> panelsList) {
         /* No custom panels are implemented for the attributes file. */
     }
 
-    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node,
-            AttributesFile attributesFile)
-    {
-        if(node instanceof CommonHFSAttributesIndexNode) {
-            List<CommonBTIndexRecord<CommonHFSAttributesKey>> recs =
-                    ((CommonHFSAttributesIndexNode) node).getBTRecords();
-            for(CommonBTIndexRecord<CommonHFSAttributesKey> rec : recs) {
+    protected void expandNode(DefaultMutableTreeNode dmtn, CommonBTNode node, AttributesFile attributesFile) {
+        if (node instanceof CommonHFSAttributesIndexNode) {
+            List<CommonBTIndexRecord<CommonHFSAttributesKey>> recs = ((CommonHFSAttributesIndexNode) node).getBTRecords();
+            for (CommonBTIndexRecord<CommonHFSAttributesKey> rec : recs) {
 
                 final long nodeNumber = rec.getIndex();
                 final CommonBTNode curNode = attributesFile.getNode(nodeNumber);
@@ -71,31 +68,27 @@ public class AttributesInfoPanel
                         new String(key.getAttrName()) + ":" +
                         key.getStartBlock())));
             }
-        }
-        else if(node instanceof CommonHFSAttributesLeafNode) {
-            CommonHFSAttributesLeafNode leafNode =
-                    (CommonHFSAttributesLeafNode) node;
+        } else if (node instanceof CommonHFSAttributesLeafNode) {
+            CommonHFSAttributesLeafNode leafNode = (CommonHFSAttributesLeafNode) node;
             CommonHFSAttributesLeafRecord[] recs = leafNode.getLeafRecords();
             int[] recordOffsets = leafNode.getRecordOffsets();
 
-            for(int i = 0; i < recs.length; ++i) {
+            for (int i = 0; i < recs.length; ++i) {
                 final CommonHFSAttributesLeafRecord rec = recs[i];
                 CommonHFSAttributesKey key = rec.getKey();
                 dmtn.add(new DefaultMutableTreeNode(new BTLeafStorage(i,
                         recordOffsets[i],
                         recordOffsets[i + 1] - recordOffsets[i], rec,
-                        key.getFileID().toLong() + ":" +
-                        new String(key.getAttrName()) + ":" +
-                        key.getStartBlock())));
+                        key.getFileID().toLong() + ":" + new String(key.getAttrName()) + ":" +
+                                key.getStartBlock())));
             }
-        }
-        else
+        } else
             throw new RuntimeException("Invalid node type in tree: " + node);
     }
 
     protected boolean handleLeafRecord(BTLeafStorage leafStorage) {
-        /* No custom panels are implemented for the attributes file, so no
-         * special handling is needed for leaf records. */
+        // No custom panels are implemented for the attributes file, so no
+        // special handling is needed for leaf records.
         return false;
     }
 }

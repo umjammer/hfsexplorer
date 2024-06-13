@@ -18,11 +18,13 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.util.Date;
+
 import org.catacombae.hfs.types.hfsplus.HFSPlusBSDInfo;
+
 
 /**
  * Generalization of the common attributes of CommonHFSCatalogFolder and CommonHFSCatalogFile.
- *
+ * <p>
  * Please note that this class is NOT designed to cope with subtle differences
  * between HFS and HFS+. For instance HFS does not have the concept of separate
  * content modify and attribute modify dates, and does not at all store access
@@ -31,17 +33,26 @@ import org.catacombae.hfs.types.hfsplus.HFSPlusBSDInfo;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface CommonHFSCatalogAttributes {
+
     /**
      * Returns the associated Catalog Node ID (File ID or Folder ID).
+     *
      * @return the associated Catalog Node ID (File ID or Folder ID).
      */
     public CommonHFSCatalogNodeID getCatalogNodeID();
+
     public short getRecordType();
+
     public short getFlags();
+
     public int getCreateDate();
+
     public int getContentModDate();
+
     public int getAttributeModDate();
+
     public int getAccessDate();
+
     public int getBackupDate();
 
 
@@ -92,17 +103,23 @@ public interface CommonHFSCatalogAttributes {
 
     /**
      * Returns whether or not this object contains HFS+ permissions.
+     *
      * @return whether or not this object contains HFS+ permissions.
      */
     public boolean hasPermissions();
+
     public HFSPlusBSDInfo getPermissions();
     //public int getTextEncoding();
 
     public CommonHFSFinderInfo getFinderInfo();
 
     public Date getCreateDateAsDate();
+
     public Date getContentModDateAsDate();
+
     public Date getAttributeModDateAsDate();
+
     public Date getAccessDateAsDate();
+
     public Date getBackupDateAsDate();
 }

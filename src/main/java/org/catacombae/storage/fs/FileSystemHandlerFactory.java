@@ -19,7 +19,9 @@ package org.catacombae.storage.fs;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * A factory for creating FileSystemHandlers. By setting attributes in the
@@ -37,8 +39,7 @@ public abstract class FileSystemHandlerFactory {
     protected final Attributes createAttributes;
 
     protected FileSystemHandlerFactory() {
-       this.createAttributes = new Attributes(getSupportedStandardAttributes(),
-               getSupportedCustomAttributes());
+        this.createAttributes = new Attributes(getSupportedStandardAttributes(), getSupportedCustomAttributes());
     }
 
     /**
@@ -62,8 +63,8 @@ public abstract class FileSystemHandlerFactory {
     public abstract FileSystemCapability[] getCapabilities();
 
     public boolean hasCapability(FileSystemCapability c) {
-        for(FileSystemCapability cur : getCapabilities()) {
-            if(cur == c)
+        for (FileSystemCapability cur : getCapabilities()) {
+            if (cur == c)
                 return true;
         }
 
@@ -72,6 +73,7 @@ public abstract class FileSystemHandlerFactory {
 
     /**
      * Creates a new instance of this particular factory subclass.
+     *
      * @return a new instance of this particular factory subclass.
      */
     public abstract FileSystemHandlerFactory newInstance();
@@ -113,8 +115,8 @@ public abstract class FileSystemHandlerFactory {
      * and <code>null</code> otherwise.
      */
     public CustomAttribute getCustomAttribute(String name) {
-        for(CustomAttribute attr : getSupportedCustomAttributes()) {
-            if(attr.getName().equals(name))
+        for (CustomAttribute attr : getSupportedCustomAttributes()) {
+            if (attr.getName().equals(name))
                 return attr;
         }
 
@@ -129,8 +131,8 @@ public abstract class FileSystemHandlerFactory {
      * @return whether or not <code>attr</code> is supported.
      */
     public boolean isSupported(StandardAttribute attr) {
-        for(StandardAttribute sa : getSupportedStandardAttributes()) {
-            if(sa == attr)
+        for (StandardAttribute sa : getSupportedStandardAttributes()) {
+            if (sa == attr)
                 return true;
         }
         return false;
@@ -145,8 +147,7 @@ public abstract class FileSystemHandlerFactory {
      *
      * @param defaultValue the new default value for this standard attribute.
      */
-    protected void setStandardAttributeDefaultValue(StandardAttribute attr,
-            Object defaultValue) {
+    protected void setStandardAttributeDefaultValue(StandardAttribute attr, Object defaultValue) {
         attr.setDefaultValue(defaultValue);
     }
 
@@ -154,39 +155,36 @@ public abstract class FileSystemHandlerFactory {
      * Creates a new CustomAttribute, for implementor-defined attributes
      * that are not general, but specific to the current implementation.
      *
-     * @param iType the type of the custom attribute.
-     * @param iName the name of the custom attribute. This should typically
-     * be written in C constants-style, like
-     * <code>A_NEW_CUSTOM_ATTRIBUTE</code>, to fit in with the general
-     * aesthetic approach. ;-)
-     * @param iDescription a description of the attribute.
+     * @param iType         the type of the custom attribute.
+     * @param iName         the name of the custom attribute. This should typically
+     *                      be written in C constants-style, like
+     *                      <code>A_NEW_CUSTOM_ATTRIBUTE</code>, to fit in with the general
+     *                      aesthetic approach. ;-)
+     * @param iDescription  a description of the attribute.
      * @param iDefaultValue the default newValue of the attribute.
      * @return a new CustomAttribute object, created from the given parameters.
      */
     protected static CustomAttribute createCustomAttribute(AttributeType iType,
-            String iName, String iDescription, Object iDefaultValue) {
-        //System.err.println("createCustomAttribute(" + iType + ", " + iName + ", " + iDescription + ", " + iDefaultValue + "); invoked");
-        CustomAttribute createdCustomAttribute =
-                new CustomAttribute(iType, iName, iDescription, iDefaultValue);
-        //System.err.println("Returning a custom attribute: " + createdCustomAttribute);
+                                                           String iName, String iDescription, Object iDefaultValue) {
+//        System.err.println("createCustomAttribute(" + iType + ", " + iName + ", " + iDescription + ", " + iDefaultValue + "); invoked");
+        CustomAttribute createdCustomAttribute = new CustomAttribute(iType, iName, iDescription, iDefaultValue);
+//        System.err.println("Returning a custom attribute: " + createdCustomAttribute);
         return createdCustomAttribute;
     }
 
     public class Attributes {
-        private final Map<StandardAttribute, Object> standardCreateAttributeMap =
-                new HashMap<StandardAttribute, Object>();
-        private final Map<CustomAttribute, Object> customCreateAttributeMap =
-                new HashMap<CustomAttribute, Object>();
 
-        private Attributes(StandardAttribute[] iSupportedStandardAttributes,
-                CustomAttribute[] iSupportedCustomAttributes) {
+        private final Map<StandardAttribute, Object> standardCreateAttributeMap = new HashMap<StandardAttribute, Object>();
+        private final Map<CustomAttribute, Object> customCreateAttributeMap = new HashMap<CustomAttribute, Object>();
+
+        private Attributes(StandardAttribute[] iSupportedStandardAttributes, CustomAttribute[] iSupportedCustomAttributes) {
             // Add the supported standard attributes to the list
-            for(StandardAttribute sa : iSupportedStandardAttributes) {
+            for (StandardAttribute sa : iSupportedStandardAttributes) {
                 standardCreateAttributeMap.put(sa, sa.getDefaultValue());
             }
 
             // Add the custom attributes to the list
-            for(CustomAttribute ca : iSupportedCustomAttributes) {
+            for (CustomAttribute ca : iSupportedCustomAttributes) {
                 customCreateAttributeMap.put(ca, ca.getDefaultValue());
             }
         }
@@ -215,7 +213,6 @@ public abstract class FileSystemHandlerFactory {
             return getStringAttribute(attr.getType(), customCreateAttributeMap.get(attr));
         }
 
-
         public void setBooleanAttribute(StandardAttribute attr, Boolean value) {
             setAttribute(attr, value, standardCreateAttributeMap.get(attr));
         }
@@ -241,97 +238,69 @@ public abstract class FileSystemHandlerFactory {
         }
 
         private final Boolean getBooleanAttribute(AttributeType type, Object value) {
-            if(type != AttributeType.BOOLEAN) {
-                throw new IllegalArgumentException("Tried to get BOOLEAN value " +
-                        "from " + type + " type!");
-            }
-            else if(value == null) {
-                throw new IllegalArgumentException("Attribute is not supported " +
-                        "by this implementation!");
-            }
-            else {
-                if(value instanceof Boolean) {
+            if (type != AttributeType.BOOLEAN) {
+                throw new IllegalArgumentException("Tried to get BOOLEAN value from " + type + " type!");
+            } else if (value == null) {
+                throw new IllegalArgumentException("Attribute is not supported by this implementation!");
+            } else {
+                if (value instanceof Boolean) {
                     return (Boolean) value;
-                }
-                else {
+                } else {
                     throw new RuntimeException("INTERNAL ERROR: Kick the coder " +
-                            "for inserting " + value.getClass() + " values in a " +
-                            "BOOLEAN attribute.");
+                            "for inserting " + value.getClass() + " values in a BOOLEAN attribute.");
                 }
             }
         }
 
         private final Long getIntegerAttribute(AttributeType type, Object value) {
-            if(type != AttributeType.INTEGER) {
-                throw new IllegalArgumentException("Tried to get INTEGER value " +
-                        "from " + type + " type!");
-            }
-            else if(value == null) {
-                throw new IllegalArgumentException("Attribute is not supported " +
-                        "by this implementation!");
-            }
-            else {
-                if(value instanceof Long) {
+            if (type != AttributeType.INTEGER) {
+                throw new IllegalArgumentException("Tried to get INTEGER value from " + type + " type!");
+            } else if (value == null) {
+                throw new IllegalArgumentException("Attribute is not supported by this implementation!");
+            } else {
+                if (value instanceof Long) {
                     return (Long) value;
-                }
-                else if(value instanceof Number) {
+                } else if (value instanceof Number) {
                     return ((Number) value).longValue();
-                }
-                else {
+                } else {
                     throw new RuntimeException("INTERNAL ERROR: Kick the coder " +
-                            "for inserting " + value.getClass() + " values in an " +
-                            "INTEGER attribute.");
+                            "for inserting " + value.getClass() + " values in an INTEGER attribute.");
                 }
             }
         }
 
         private final String getStringAttribute(AttributeType type, Object value) {
-            if(type != AttributeType.STRING) {
-                throw new IllegalArgumentException("Tried to get STRING value " +
-                        "from " + type + " type!");
-            }
-            else if(value == null) {
-                throw new IllegalArgumentException("Attribute is not supported " +
-                        "by this implementation!");
-            }
-            else {
-                if(value instanceof String) {
+            if (type != AttributeType.STRING) {
+                throw new IllegalArgumentException("Tried to get STRING value from " + type + " type!");
+            } else if (value == null) {
+                throw new IllegalArgumentException("Attribute is not supported by this implementation!");
+            } else {
+                if (value instanceof String) {
                     return (String) value;
-                }
-                else {
+                } else {
                     throw new RuntimeException("INTERNAL ERROR: Kick the coder " +
-                            "for inserting " + value.getClass() + " values in a " +
-                            "STRING attribute.");
+                            "for inserting " + value.getClass() + " values in a STRING attribute.");
                 }
             }
         }
 
-        private void setAttribute(StandardAttribute attr, Object newValue,
-                Object oldValue) {
-            if(!attr.getType().isValidValue(newValue)) {
+        private void setAttribute(StandardAttribute attr, Object newValue, Object oldValue) {
+            if (!attr.getType().isValidValue(newValue)) {
                 throw new IllegalArgumentException("Invalid value type (" +
                         newValue.getClass() + ") for attribute (" + attr + ")!");
-            }
-            else if(oldValue == null) {
-                throw new IllegalArgumentException("Attribute " + attr + " is not supported " +
-                        "by this implementation!");
-            }
-            else {
+            } else if (oldValue == null) {
+                throw new IllegalArgumentException("Attribute " + attr + " is not supported by this implementation!");
+            } else {
                 standardCreateAttributeMap.put(attr, newValue);
             }
         }
 
-        private void setAttribute(CustomAttribute attr, Object newValue,
-                Object oldValue) {
-            if(!attr.getType().isValidValue(newValue)) {
-                throw new IllegalArgumentException("Invalid value type (" +
-                        newValue.getClass() + ") for attribute (" + attr + ")!");
-            }
-            else if(oldValue == null) {
-                throw new IllegalArgumentException("Attribute " + attr + " is not supported " +
-                        "by this implementation!");
-            }
-            else {
+        private void setAttribute(CustomAttribute attr, Object newValue, Object oldValue) {
+            if (!attr.getType().isValidValue(newValue)) {
+                throw new IllegalArgumentException("Invalid value type (" + newValue.getClass() + ") for attribute (" + attr + ")!");
+            } else if (oldValue == null) {
+                throw new IllegalArgumentException("Attribute " + attr + " is not supported by this implementation!");
+            } else {
                 customCreateAttributeMap.put(attr, newValue);
             }
         }
@@ -363,8 +332,8 @@ public abstract class FileSystemHandlerFactory {
          * @return whether or not the supplied value is valid for this type.
          */
         public boolean isValidValue(Object value) {
-            for(Class c : valueSuperClasses)
-                if(c.isInstance(value))
+            for (Class c : valueSuperClasses)
+                if (c.isInstance(value))
                     return true;
             return false;
         }
@@ -383,7 +352,7 @@ public abstract class FileSystemHandlerFactory {
          * internal caching mechanism. Default newValue for this standard attribute
          * is <code>false</code>.
          */
-        CACHING_ENABLED(AttributeType.BOOLEAN, new Boolean(false));
+        CACHING_ENABLED(AttributeType.BOOLEAN, false);
 
         private final AttributeType type;
         private Object defaultValue;
@@ -396,6 +365,7 @@ public abstract class FileSystemHandlerFactory {
 
         /**
          * Returns the type of this standard attribute.
+         *
          * @return the type of this standard attribute.
          */
         public AttributeType getType() {
@@ -404,6 +374,7 @@ public abstract class FileSystemHandlerFactory {
 
         /**
          * Returns the default newValue for this standard attribute.
+         *
          * @return the default newValue for this standard attribute.
          */
         public Object getDefaultValue() {
@@ -418,10 +389,10 @@ public abstract class FileSystemHandlerFactory {
          * <code>getSupportedStandardAttributes()</code>!</b>
          *
          * @param iDefaultValue the new default newValue for this standard
-         * attribute.
+         *                      attribute.
          */
         private void setDefaultValue(Object iDefaultValue) {
-            if(!type.isValidValue(iDefaultValue))
+            if (!type.isValidValue(iDefaultValue))
                 throw new IllegalArgumentException("Illegal default value!");
             else
                 this.defaultValue = iDefaultValue;
@@ -441,6 +412,7 @@ public abstract class FileSystemHandlerFactory {
      * </pre>
      */
     public static final class CustomAttribute {
+
         private final AttributeType type;
         private final String name;
         private final String description;
@@ -450,29 +422,29 @@ public abstract class FileSystemHandlerFactory {
          * Creates a new CustomAttribute, for implementor-defined attributes
          * that are not general, but specific to the current implementation.
          *
-         * @param iType the type of the custom attribute.
-         * @param iName the name of the custom attribute. This should typically
-         * be written in C constants-style, like
-         * <code>A_NEW_CUSTOM_ATTRIBUTE</code>, to fit in with the general
-         * aesthetic approach. ;-)
-         * @param iDescription a description of the attribute.
+         * @param iType         the type of the custom attribute.
+         * @param iName         the name of the custom attribute. This should typically
+         *                      be written in C constants-style, like
+         *                      <code>A_NEW_CUSTOM_ATTRIBUTE</code>, to fit in with the general
+         *                      aesthetic approach. ;-)
+         * @param iDescription  a description of the attribute.
          * @param iDefaultValue the default newValue of the attribute.
          */
         private CustomAttribute(AttributeType iType, String iName,
-                String iDescription, Object iDefaultValue) {
+                                String iDescription, Object iDefaultValue) {
             // Input check...
-            if(iType == null)
+            if (iType == null)
                 throw new IllegalArgumentException("An attribute must have a type.");
 
-            if(iName == null)
+            if (iName == null)
                 throw new IllegalArgumentException("An attribute must have a name.");
 
-            if(iDescription == null)
+            if (iDescription == null)
                 throw new IllegalArgumentException("An attribute must have a description.");
 
-            if(iDefaultValue == null)
+            if (iDefaultValue == null)
                 throw new IllegalArgumentException("An attribute must have a default value.");
-            else if(!iType.isValidValue(iDefaultValue))
+            else if (!iType.isValidValue(iDefaultValue))
                 throw new IllegalArgumentException("Illegal default value!");
 
             this.type = iType;
@@ -518,21 +490,20 @@ public abstract class FileSystemHandlerFactory {
             return defaultValue;
         }
 
-        /**
-         * Sets the default newValue of this custom attribute. Factory
-         * implementors can ovveride this default newValue specific to their
-         * implementation as this enum is instance-bound and not static.
-         *
-         * @param iDefaultValue the new default newValue for this custom
-         * attribute.
-         */
-        /* // Not needed here
-        protected void setDefaultValue(Object iDefaultValue) {
-            if(!type.isValidValue(iDefaultValue))
-                throw new IllegalArgumentException("Illegal default newValue!");
-            else
-                this.defaultValue = iDefaultValue;
-        }
-         * */
+//        /**
+//         * Sets the default newValue of this custom attribute. Factory
+//         * implementors can ovveride this default newValue specific to their
+//         * implementation as this enum is instance-bound and not static.
+//         *
+//         * @param iDefaultValue the new default newValue for this custom
+//         *                      attribute.
+//         */
+//        // Not needed here
+//        protected void setDefaultValue(Object iDefaultValue) {
+//            if (!type.isValidValue(iDefaultValue))
+//                throw new IllegalArgumentException("Illegal default newValue!");
+//            else
+//                this.defaultValue = iDefaultValue;
+//        }
     }
 }

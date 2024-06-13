@@ -27,8 +27,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+
 import org.catacombae.hfs.UnicodeNormalizationToolkit;
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -58,10 +60,10 @@ public class VisualizeUnicodeNormalization extends JFrame {
             }
         };
         TreeSet<Map.Entry<Character, char[]>> ts = new TreeSet<Map.Entry<Character, char[]>>(cmp);
-        for(Map.Entry<Character, char[]> ent : table.entrySet())
+        for (Map.Entry<Character, char[]> ent : table.entrySet())
             ts.add(ent);
-        //ts.addAll(table.entrySet());
-        for(Map.Entry<Character, char[]> ent : ts) {
+//        ts.addAll(table.entrySet());
+        for (Map.Entry<Character, char[]> ent : ts) {
             Character key = ent.getKey();
             char[] value = ent.getValue();
             sb.append(Util.toHexStringBE(key.charValue()));
@@ -69,7 +71,7 @@ public class VisualizeUnicodeNormalization extends JFrame {
             sb.append(key.toString());
             sb.append(" \" -> \" ");
             sb.append(value[0]);
-            for(int i = 1; i < value.length; ++i) {
+            for (int i = 1; i < value.length; ++i) {
                 sb.append(" \", \" ");
                 sb.append(value[i]);
             }

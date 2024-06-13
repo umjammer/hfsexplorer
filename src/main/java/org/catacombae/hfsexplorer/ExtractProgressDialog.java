@@ -28,8 +28,10 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+
 import org.catacombae.hfsexplorer.gui.ExtractProgressPanel;
 import org.catacombae.hfsexplorer.gui.ExtractSettingsPanel;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -61,18 +63,16 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
         cancelButton = progressPanel.cancelButton;
         cancelButton.addActionListener(new ActionListener() {
 
-            /* @Override */
-            public void actionPerformed(ActionEvent ae) {
+                public void actionPerformed(ActionEvent ae) {
                 signalCancel();
             }
         });
 
         progressPanel.addShowSettingsButtonListener(new ActionListener() {
 
-            /* @Override */
-            public void actionPerformed(ActionEvent e) {
+                public void actionPerformed(ActionEvent e) {
                 boolean selected = progressPanel.getShowSettingsButtonSelected();
-                if(selected)
+                if (selected)
                     backgroundPanel.add(settingsPanel);
                 else
                     backgroundPanel.remove(settingsPanel);
@@ -99,56 +99,47 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
         setResizable(false);
     }
 
-    /* @Override */
     public void updateCalculateDir(String dirname) {
         progressPanel.updateCalculateDir(dirname);
     }
 
-    /* @Override */
     public void updateTotalProgress(double fraction, String message) {
         progressPanel.updateTotalProgress(fraction, message);
     }
 
-    /* @Override */
     public void updateCurrentDir(String dirname) {
         progressPanel.updateCurrentDir(dirname);
     }
 
-    /* @Override */
     public void updateCurrentFile(String filename, long fileSize) {
         progressPanel.updateCurrentFile(filename, fileSize);
     }
 
-    /* @Override */
     public synchronized void signalCancel() {
         cancelButton.setEnabled(false);
         cancelSignaled = true;
     }
 
-    /* @Override */
     public boolean cancelSignaled() {
         return cancelSignaled;
     }
 
-    /* @Override */
     public void confirmCancel() {
-        if(isVisible())
+        if (isVisible())
             dispose();
     }
 
     private synchronized void requestCloseWindow() {
-        if(!cancelSignaled)
+        if (!cancelSignaled)
             signalCancel();
         dispose();
     }
 
-    /* @Override */
     public void setDataSize(long totalSize) {
         this.totalSize = totalSize;
         addDataProgress(0);
     }
 
-    /* @Override */
     public void addDataProgress(long dataSize) {
         completedSize += dataSize;
         String message = SpeedUnitUtils.bytesToBinaryUnit(completedSize, sizeFormatter) + "/" +
@@ -156,62 +147,49 @@ public class ExtractProgressDialog extends JDialog implements ExtractProgressMon
         updateTotalProgress(((double) completedSize) / totalSize, message);
     }
 
-    /*
-    @Override
-    public boolean confirmOverwriteDirectory(File dir) {
-        return SimpleGUIProgressMonitor.confirmOverwriteDirectory(this, dir);
-    }
+//    @Override
+//    public boolean confirmOverwriteDirectory(File dir) {
+//        return SimpleGUIProgressMonitor.confirmOverwriteDirectory(this, dir);
+//    }
 
-    @Override
-    public boolean confirmSkipDirectory(String... messageLines) {
-        return SimpleGUIProgressMonitor.confirmSkipDirectory(this, messageLines);
-    }
-    */
+//    @Override
+//    public boolean confirmSkipDirectory(String... messageLines) {
+//        return SimpleGUIProgressMonitor.confirmSkipDirectory(this, messageLines);
+//    }
 
-    /* @Override */
     public CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory) {
         return SimpleGUIProgressMonitor.createDirectoryFailed(this, dirname, parentDirectory);
     }
 
-    /* @Override */
     public CreateFileFailedAction createFileFailed(String filename, File parentDirectory) {
         return SimpleGUIProgressMonitor.createFileFailed(this, filename, parentDirectory);
     }
 
-    /* @Override */
     public DirectoryExistsAction directoryExists(File directory) {
         return SimpleGUIProgressMonitor.directoryExists(this, directory);
     }
 
-    /* @Override */
     public FileExistsAction fileExists(File file) {
         return SimpleGUIProgressMonitor.fileExists(this, file);
     }
 
-    /* @Override */
-    public UnhandledExceptionAction unhandledException(String filename,
-            Throwable t)
-    {
+    public UnhandledExceptionAction unhandledException(String filename, Throwable t) {
         return SimpleGUIProgressMonitor.unhandledException(this, filename, t);
     }
 
-    /* @Override */
     public String displayRenamePrompt(String currentName, File outDir) {
         return SimpleGUIProgressMonitor.displayRenamePrompt(this, currentName, outDir);
     }
 
-    /* @Override */
     public ExtractProperties getExtractProperties() {
         return extractProperties;
     }
 
-    /*
-    public static void main(String[] args) {
-        ExtractProgressDialog d = new ExtractProgressDialog(null);
-        d.pack();
-        d.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        d.setLocationRelativeTo(null);
-        d.setVisible(true);
-    }
-    */
+//    public static void main(String[] args) {
+//        ExtractProgressDialog d = new ExtractProgressDialog(null);
+//        d.pack();
+//        d.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+//        d.setLocationRelativeTo(null);
+//        d.setVisible(true);
+//    }
 }

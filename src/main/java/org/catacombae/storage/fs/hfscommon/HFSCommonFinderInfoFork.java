@@ -19,21 +19,24 @@ package org.catacombae.storage.fs.hfscommon;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.catacombae.io.ReadableRandomAccessInputStream;
-import org.catacombae.io.SynchronizedReadableRandomAccessStream;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSFinderInfo;
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.io.ReadableByteArrayStream;
+import org.catacombae.io.ReadableRandomAccessInputStream;
 import org.catacombae.io.ReadableRandomAccessStream;
+import org.catacombae.io.SynchronizedReadableRandomAccessStream;
 import org.catacombae.io.TruncatableRandomAccessStream;
 import org.catacombae.io.WritableRandomAccessStream;
 import org.catacombae.storage.fs.FSFork;
 import org.catacombae.storage.fs.FSForkType;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSCommonFinderInfoFork implements FSFork {
+
     private final CommonHFSFinderInfo finderInfo;
 
     public HFSCommonFinderInfoFork(CommonHFSFinderInfo finderInfo) {
@@ -79,7 +82,7 @@ public class HFSCommonFinderInfoFork implements FSFork {
     public InputStream getInputStream() {
         return new ReadableRandomAccessInputStream(
                 new SynchronizedReadableRandomAccessStream(
-                getReadableRandomAccessStream()));
+                        getReadableRandomAccessStream()));
     }
 
     public ReadableRandomAccessStream getReadableRandomAccessStream() {
@@ -101,5 +104,4 @@ public class HFSCommonFinderInfoFork implements FSFork {
     public TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }

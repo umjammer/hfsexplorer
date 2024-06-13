@@ -21,6 +21,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class WindowsFileAttributes {
+
     private static final int FILE_ATTRIBUTE_READONLY = 0x1;
     private static final int FILE_ATTRIBUTE_HIDDEN = 0x2;
     private static final int FILE_ATTRIBUTE_SYSTEM = 0x4;

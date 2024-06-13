@@ -19,12 +19,14 @@ package org.catacombae.hfs.types.hfsplus;
 
 import java.util.Date;
 
+
 /**
  * Generalization of the common attributes of HFSPlusCatalogFolder and HFSPlusCatalogFile.
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface HFSPlusCatalogAttributes {
+
     public static short kHFSFileLockedBit = 0x0000;
     public static short kHFSFileLockedMask = 0x0001;
 
@@ -50,18 +52,30 @@ public interface HFSPlusCatalogAttributes {
     public static short kHFSHasDateAddedMask = 0x0080;
 
     public short getRecordType();
+
     public short getFlags();
+
     public int getCreateDate();
+
     public int getContentModDate();
+
     public int getAttributeModDate();
+
     public int getAccessDate();
+
     public int getBackupDate();
+
     public HFSPlusBSDInfo getPermissions();
+
     public int getTextEncoding();
 
     public Date getCreateDateAsDate();
+
     public Date getContentModDateAsDate();
+
     public Date getAttributeModDateAsDate();
+
     public Date getAccessDateAsDate();
+
     public Date getBackupDateAsDate();
 }

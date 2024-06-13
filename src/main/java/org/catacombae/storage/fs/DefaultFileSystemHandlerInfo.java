@@ -24,6 +24,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class DefaultFileSystemHandlerInfo implements FileSystemHandlerInfo {
+
     private final String handlerIdentifier;
     private final String handlerName;
     private final String handlerVersion;
@@ -31,15 +32,14 @@ public class DefaultFileSystemHandlerInfo implements FileSystemHandlerInfo {
     private final String author;
 
     /**
-     *
      * @param iHandlerIdentifier a unique identifier for this file system handler.
-     * @param iHandlerName the handler name.
-     * @param iHandlerVersion a free-form user readable version string for this handler.
-     * @param iRevision the revision number of this release of the handler.
-     * @param iAuthor the author of the handler.s
+     * @param iHandlerName       the handler name.
+     * @param iHandlerVersion    a free-form user readable version string for this handler.
+     * @param iRevision          the revision number of this release of the handler.
+     * @param iAuthor            the author of the handler.s
      */
     public DefaultFileSystemHandlerInfo(String iHandlerIdentifier, String iHandlerName,
-            String iHandlerVersion, long iRevision, String iAuthor) {
+                                        String iHandlerVersion, long iRevision, String iAuthor) {
         this.handlerIdentifier = iHandlerIdentifier;
         this.handlerName = iHandlerName;
         this.handlerVersion = iHandlerVersion;
@@ -47,37 +47,22 @@ public class DefaultFileSystemHandlerInfo implements FileSystemHandlerInfo {
         this.author = iAuthor;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getHandlerIdentifier() {
         return handlerIdentifier;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getHandlerName() {
         return handlerName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getHandlerVersion() {
         return handlerVersion;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public long getRevision() {
         return revision;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getAuthor() {
         return author;
     }

@@ -25,6 +25,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface FSEntry {
+
     public static enum Type {
         FILE, FOLDER, SYMLINK, CHARACTER_DEVICE, BLOCK_DEVICE, FIFO, SOCKET;
     }
@@ -43,11 +44,11 @@ public interface FSEntry {
 
     /**
      * Returns whether or not the entry as a whole is compressed on disk.
-     *
+     * <p>
      * The meaning of this flag is implementation dependent. Implementations
      * supporting multiple forks may choose to set this flag when the main fork
      * is compressed, or due to some other condition.
-     *
+     * <p>
      * The information is purely advisory. Upper layers can use this to indicate
      * whether or not compression is applied but must never make any assumptions
      * based on the setting of this flag.

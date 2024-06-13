@@ -22,16 +22,17 @@ import org.catacombae.io.SynchronizedReadableRandomAccessStream;
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ReadableStreamDataLocator extends DataLocator {
+
     private SynchronizedReadableRandomAccessStream backingStream;
     private boolean closed = false;
 
     public ReadableStreamDataLocator(ReadableRandomAccessStream sourceStream) {
-        this.backingStream =
-                new SynchronizedReadableRandomAccessStream(sourceStream);
+        this.backingStream = new SynchronizedReadableRandomAccessStream(sourceStream);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class ReadableStreamDataLocator extends DataLocator {
 
     @Override
     protected synchronized void releaseResources() {
-        if(closed) {
+        if (closed) {
             throw new RuntimeException("Stream is already closed.");
         }
 
@@ -67,7 +68,7 @@ public class ReadableStreamDataLocator extends DataLocator {
     @Override
     public synchronized void finalize() throws Throwable {
         try {
-            if(!closed) {
+            if (!closed) {
                 close();
             }
         } finally {

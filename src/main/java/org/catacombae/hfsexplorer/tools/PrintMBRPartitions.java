@@ -18,10 +18,12 @@
 package org.catacombae.hfsexplorer.tools;
 
 import java.io.FileOutputStream;
+
 import org.catacombae.storage.ps.mbr.types.MBRPartitionTable;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -30,7 +32,7 @@ public class PrintMBRPartitions {
 
     public static void main(String[] args) throws Exception {
         ReadableRandomAccessStream llf;
-        if(ReadableWin32FileStream.isSystemSupported())
+        if (ReadableWin32FileStream.isSystemSupported())
             llf = new ReadableWin32FileStream(args[0]);
         else
             llf = new ReadableFileStream(args[0]);

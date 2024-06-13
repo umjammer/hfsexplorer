@@ -24,10 +24,12 @@ import org.catacombae.io.RandomAccessStream;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.storage.io.win32.Win32FileStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class WindowsDeviceDataLocator extends DataLocator {
+
     private final String devicePath;
     private final Long pos, len;
 
@@ -46,7 +48,7 @@ public class WindowsDeviceDataLocator extends DataLocator {
     @Override
     public ReadableRandomAccessStream createReadOnlyFile() {
         ReadableRandomAccessStream llf = new ReadableWin32FileStream(devicePath);
-        if(pos != null && len != null)
+        if (pos != null && len != null)
             return new ReadableConcatenatedStream(llf, pos, len);
         else
             return llf;
@@ -55,7 +57,7 @@ public class WindowsDeviceDataLocator extends DataLocator {
     @Override
     public RandomAccessStream createReadWriteFile() {
         RandomAccessStream wllf = new Win32FileStream(devicePath);
-        if(pos != null && len != null)
+        if (pos != null && len != null)
             return new ConcatenatedStream(wllf, pos, len);
         else
             return wllf;
@@ -68,7 +70,7 @@ public class WindowsDeviceDataLocator extends DataLocator {
 
     @Override
     public void releaseResources() {
-        /* Our only persistent reference is the device path string. So we don't
-         * need to release any resources. */
+        // Our only persistent reference is the device path string. So we don't
+        // need to release any resources.
     }
 }

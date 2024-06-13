@@ -18,6 +18,7 @@
 package org.catacombae.storage.io;
 
 import java.io.File;
+
 import org.catacombae.io.ReadableConcatenatedStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableFileStream;
@@ -25,10 +26,12 @@ import org.catacombae.io.ConcatenatedStream;
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.io.FileStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class RandomAccessFileDataLocator extends DataLocator {
+
     private final File file;
     private final Long pos, len;
     private final boolean writable;
@@ -36,7 +39,7 @@ public class RandomAccessFileDataLocator extends DataLocator {
     /**
      * Creates a new DataLocator with a path to the backing file.
      *
-     * @param pPath     path to the backing file.
+     * @param pPath path to the backing file.
      */
     public RandomAccessFileDataLocator(String pPath) {
         this(new File(pPath));
@@ -56,9 +59,9 @@ public class RandomAccessFileDataLocator extends DataLocator {
     /**
      * Creates a new DataLocator with a path to the backing file.
      *
-     * @param pPath     path to the backing file.
-     * @param pPos      the start offset in the file for the data.
-     * @param pLen      the length of the data being addressed.
+     * @param pPath path to the backing file.
+     * @param pPos  the start offset in the file for the data.
+     * @param pLen  the length of the data being addressed.
      */
     public RandomAccessFileDataLocator(String pPath, long pPos, long pLen) {
         this(new File(pPath), pPos, pLen, true);
@@ -73,8 +76,7 @@ public class RandomAccessFileDataLocator extends DataLocator {
      * @param pWritable whether or not the data locator should be able to open
      *                  writable streams.
      */
-    public RandomAccessFileDataLocator(String pPath, long pPos, long pLen,
-            boolean pWritable) {
+    public RandomAccessFileDataLocator(String pPath, long pPos, long pLen, boolean pWritable) {
         this(new File(pPath), pPos, pLen, pWritable);
     }
 
@@ -102,9 +104,9 @@ public class RandomAccessFileDataLocator extends DataLocator {
     /**
      * Creates a new DataLocator with File object pointing at the backing file.
      *
-     * @param pFile     the backing file.
-     * @param pPos      the start offset in the file for the data.
-     * @param pLen      the length of the data being addressed.
+     * @param pFile the backing file.
+     * @param pPos  the start offset in the file for the data.
+     * @param pLen  the length of the data being addressed.
      */
     public RandomAccessFileDataLocator(File pFile, long pPos, long pLen) {
         this(pFile, Long.valueOf(pPos), Long.valueOf(pLen), true);
@@ -119,18 +121,15 @@ public class RandomAccessFileDataLocator extends DataLocator {
      * @param pWritable whether or not the data locator should be able to open
      *                  writable streams.
      */
-    public RandomAccessFileDataLocator(File pFile, long pPos, long pLen,
-            boolean pWritable) {
+    public RandomAccessFileDataLocator(File pFile, long pPos, long pLen, boolean pWritable) {
         this(pFile, Long.valueOf(pPos), Long.valueOf(pLen), pWritable);
     }
 
-    private RandomAccessFileDataLocator(File pFile, Long pPos, Long pLen,
-            boolean writable) {
-        if(!pFile.canRead())
+    private RandomAccessFileDataLocator(File pFile, Long pPos, Long pLen, boolean writable) {
+        if (!pFile.canRead())
             throw new RuntimeException("Can not read from file!");
-        if(writable && !pFile.canWrite())
-            throw new RuntimeException("Requested write mode but file is not " +
-                    "writable.");
+        if (writable && !pFile.canWrite())
+            throw new RuntimeException("Requested write mode but file is not writable.");
 
         this.file = pFile;
         this.pos = pPos;
@@ -141,7 +140,7 @@ public class RandomAccessFileDataLocator extends DataLocator {
     @Override
     public ReadableRandomAccessStream createReadOnlyFile() {
         ReadableRandomAccessStream llf = new ReadableFileStream(file);
-        if(pos != null && len != null)
+        if (pos != null && len != null)
             return new ReadableConcatenatedStream(llf, pos, len);
         else
             return llf;
@@ -150,7 +149,7 @@ public class RandomAccessFileDataLocator extends DataLocator {
     @Override
     public RandomAccessStream createReadWriteFile() {
         RandomAccessStream wllf = new FileStream(file);
-        if(pos != null && len != null)
+        if (pos != null && len != null)
             return new ConcatenatedStream(wllf, pos, len);
         else
             return wllf;
@@ -163,7 +162,7 @@ public class RandomAccessFileDataLocator extends DataLocator {
 
     @Override
     public void releaseResources() {
-        /* Our only persistent reference is the File object, which does not need
-         * closing. */
+        // Our only persistent reference is the File object, which does not need
+        // closing.
     }
 }

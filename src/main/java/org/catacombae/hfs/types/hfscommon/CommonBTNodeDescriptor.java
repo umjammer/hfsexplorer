@@ -18,10 +18,12 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfsplus.BTNodeDescriptor;
 import org.catacombae.hfs.types.hfs.NodeDescriptor;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -31,18 +33,23 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
     public enum NodeType {
         INDEX, HEADER, MAP, LEAF;
     }
+
     public abstract long getForwardLink();
+
     public abstract long getBackwardLink();
+
     public abstract NodeType getNodeType();
+
     public abstract short getHeight();
+
     public abstract int getNumberOfRecords();
 
-    /*public void print(PrintStream ps, String prefix) {
-        ps.println(prefix + "CommonBTNodeDescriptor:");
-        printFields(ps, prefix);
-    }
-    public abstract void printFields(PrintStream ps, String prefix);
-    */
+//    public void print(PrintStream ps, String prefix) {
+//        ps.println(prefix + "CommonBTNodeDescriptor:");
+//        printFields(ps, prefix);
+//    }
+
+//    public abstract void printFields(PrintStream ps, String prefix);
 
     public static CommonBTNodeDescriptor create(BTNodeDescriptor btnd) {
         return new HFSPlusImplementation(btnd);
@@ -53,6 +60,7 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
     }
 
     private static class HFSPlusImplementation extends CommonBTNodeDescriptor {
+
         private final BTNodeDescriptor btnd;
 
         public HFSPlusImplementation(BTNodeDescriptor btnd) {
@@ -72,7 +80,7 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
         @Override
         public NodeType getNodeType() {
             byte b = btnd.getKind();
-            switch(b) {
+            switch (b) {
                 case BTNodeDescriptor.BT_HEADER_NODE:
                     return NodeType.HEADER;
                 case BTNodeDescriptor.BT_INDEX_NODE:
@@ -96,18 +104,17 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
             return Util.unsign(btnd.getNumRecords());
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             btnd.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             btnd.printFields(ps, prefix);
         }
     }
 
     public static class HFSImplementation extends CommonBTNodeDescriptor {
+
         private final NodeDescriptor nd;
 
         public HFSImplementation(NodeDescriptor nd) {
@@ -127,7 +134,7 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
         @Override
         public NodeType getNodeType() {
             byte b = nd.getNdType();
-            switch(b) {
+            switch (b) {
                 case NodeDescriptor.ndHdrNode:
                     return NodeType.HEADER;
                 case NodeDescriptor.ndIndxNode:
@@ -151,12 +158,10 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
             return Util.unsign(nd.getNdNRecs());
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             nd.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             nd.printFields(ps, prefix);
         }

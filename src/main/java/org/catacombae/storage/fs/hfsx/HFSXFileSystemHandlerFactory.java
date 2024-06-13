@@ -17,7 +17,6 @@
 
 package org.catacombae.storage.fs.hfsx;
 
-import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.fs.DefaultFileSystemHandlerInfo;
 import org.catacombae.storage.fs.FileSystemCapability;
 import org.catacombae.storage.fs.FileSystemHandler;
@@ -25,16 +24,19 @@ import org.catacombae.storage.fs.FileSystemHandlerFactory;
 import org.catacombae.storage.fs.FileSystemHandlerInfo;
 import org.catacombae.storage.fs.FileSystemRecognizer;
 import org.catacombae.storage.fs.hfsplus.HFSPlusFileSystemHandlerFactory;
+import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSXFileSystemHandlerFactory extends HFSPlusFileSystemHandlerFactory {
+
     private static final FileSystemRecognizer recognizer = new HFSXFileSystemRecognizer();
 
     private static final FileSystemHandlerInfo handlerInfo =
             new DefaultFileSystemHandlerInfo("org.catacombae.hfsx_handler",
-            "HFSX file system handler", "1.0", 0, "Erik Larsson, Catacombae Software");
+                    "HFSX file system handler", "1.0", 0, "Erik Larsson, Catacombae Software");
 
     @Override
     public FileSystemCapability[] getCapabilities() {
@@ -43,10 +45,9 @@ public class HFSXFileSystemHandlerFactory extends HFSPlusFileSystemHandlerFactor
 
     @Override
     protected FileSystemHandler createHandlerInternal(DataLocator data,
-            boolean useCaching, boolean posixFilenames,
-            boolean sfmSubstitutions, boolean composeFilename,
-            boolean hideProtected)
-    {
+                                                      boolean useCaching, boolean posixFilenames,
+                                                      boolean sfmSubstitutions, boolean composeFilename,
+                                                      boolean hideProtected) {
         return new HFSXFileSystemHandler(data, useCaching, posixFilenames,
                 sfmSubstitutions, composeFilename, hideProtected);
     }

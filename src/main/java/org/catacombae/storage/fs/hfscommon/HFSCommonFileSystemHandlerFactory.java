@@ -19,28 +19,30 @@ package org.catacombae.storage.fs.hfscommon;
 
 import org.catacombae.storage.fs.FileSystemHandlerFactory;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class HFSCommonFileSystemHandlerFactory  extends FileSystemHandlerFactory {
+public abstract class HFSCommonFileSystemHandlerFactory extends FileSystemHandlerFactory {
+
     protected static final CustomAttribute posixFilenamesAttribute =
             createCustomAttribute(AttributeType.BOOLEAN, "POSIX_FILENAMES",
                     "Controls whether filenames should be translated from " +
-                    "their on-disk format to POSIX format, swapping the ':' " +
-                    "and '/' characters.", false);
+                            "their on-disk format to POSIX format, swapping the ':' " +
+                            "and '/' characters.", false);
 
     protected static final CustomAttribute sfmSubstitutionsAttribute =
             createCustomAttribute(AttributeType.BOOLEAN, "SFM_SUBSTITUTIONS",
                     "Controls whether filename characters that are invalid " +
-                    "in Windows filesystems should be remapped to characters " +
-                    "in the Unicode private range using the same method used " +
-                    "in Microsoft's now defunct Services for Mac software.",
+                            "in Windows filesystems should be remapped to characters " +
+                            "in the Unicode private range using the same method used " +
+                            "in Microsoft's now defunct Services for Mac software.",
                     false);
 
     public CustomAttribute[] getSupportedCustomAttributes() {
         return new CustomAttribute[] {
-            posixFilenamesAttribute,
-            sfmSubstitutionsAttribute,
+                posixFilenamesAttribute,
+                sfmSubstitutionsAttribute,
         };
     }
 }

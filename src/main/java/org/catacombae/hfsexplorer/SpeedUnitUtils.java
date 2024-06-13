@@ -23,4 +23,5 @@ package org.catacombae.hfsexplorer;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class SpeedUnitUtils extends org.catacombae.util.SpeedUnitUtils {
+
 }

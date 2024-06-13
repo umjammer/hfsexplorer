@@ -21,18 +21,18 @@ import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.fs.FileSystemRecognizer;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSFileSystemRecognizer implements FileSystemRecognizer {
 
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
-        switch(HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
+        switch (HFSCommonFileSystemRecognizer.detectFileSystem(fsStream, offset)) {
             case HFS:
                 return true;
             default:
                 return false;
         }
     }
-
 }

@@ -18,22 +18,24 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
 import org.catacombae.hfs.types.hfs.CdrFThdRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogFileThread extends CommonHFSCatalogThread
-        implements PrintableStruct, StructElements
-{
+        implements PrintableStruct, StructElements {
+
     public abstract int length();
+
     public abstract byte[] getBytes();
 
-    /* @Override */
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFileThread.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -48,6 +50,7 @@ public abstract class CommonHFSCatalogFileThread extends CommonHFSCatalogThread
     }
 
     private static class HFSPlusImplementation extends CommonHFSCatalogFileThread {
+
         private final HFSPlusCatalogThread data;
 
         public HFSPlusImplementation(HFSPlusCatalogThread data) {
@@ -78,13 +81,13 @@ public abstract class CommonHFSCatalogFileThread extends CommonHFSCatalogThread
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
     }
 
     private static class HFSImplementation extends CommonHFSCatalogFileThread {
+
         private final CdrFThdRec data;
 
         public HFSImplementation(CdrFThdRec data) {
@@ -115,7 +118,6 @@ public abstract class CommonHFSCatalogFileThread extends CommonHFSCatalogThread
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             return data.getStructElements();
         }

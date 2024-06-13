@@ -27,6 +27,7 @@ import org.catacombae.hfsexplorer.types.resff.ResourceMap;
 import org.catacombae.io.ReadableConcatenatedStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * Accessor class for the data inside a resource fork.
  *
@@ -78,9 +79,7 @@ public class ResourceForkReader {
         return new ResourceHeader(headerData, 0);
     }
 
-    private void validateHeader(ResourceHeader header)
-            throws MalformedResourceForkException
-    {
+    private void validateHeader(ResourceHeader header) throws MalformedResourceForkException {
         final long dataOffset = header.getDataOffset();
         final long dataLength = header.getDataLength();
         final long mapOffset = header.getMapOffset();
@@ -88,8 +87,8 @@ public class ResourceForkReader {
 
         final long forkLength = forkStream.length();
 
-        /* If data extends beyond the end of the fork, the header is invalid. */
-        if(dataLength > forkLength || (forkLength - dataLength) < dataOffset) {
+        // If data extends beyond the end of the fork, the header is invalid.
+        if (dataLength > forkLength || (forkLength - dataLength) < dataOffset) {
             throw new MalformedResourceForkException("Invalid ResourceHeader " +
                     "data (data region extends beyond end of fork: " +
                     "fork length=" + forkLength + " " +
@@ -97,8 +96,8 @@ public class ResourceForkReader {
                     "data length=" + dataLength + ").");
         }
 
-        /* If map extends beyond the end of the fork, the header is invalid. */
-        if(mapLength > forkLength || (forkLength - mapLength) < mapOffset) {
+        // If map extends beyond the end of the fork, the header is invalid.
+        if (mapLength > forkLength || (forkLength - mapLength) < mapOffset) {
             throw new MalformedResourceForkException("Invalid ResourceHeader " +
                     "data (map region extends beyond end of fork: " +
                     "fork length=" + forkLength + " " +
@@ -106,10 +105,9 @@ public class ResourceForkReader {
                     "map length=" + mapLength + ").");
         }
 
-        /* If data and map regions overlap, the header is invalid. */
-        if(dataOffset < (mapOffset + mapLength) &&
-                (dataOffset + dataLength) > mapOffset)
-        {
+        // If data and map regions overlap, the header is invalid.
+        if (dataOffset < (mapOffset + mapLength) &&
+                (dataOffset + dataLength) > mapOffset) {
             throw new MalformedResourceForkException("Invalid ResourceHeader " +
                     "data (data and map regions overlap: " +
                     "data offset=" + dataOffset + " " +
@@ -145,17 +143,17 @@ public class ResourceForkReader {
         long dataPos = getDataPos(entry);
         long dataLength = getDataLength(dataPos);
 
-        //System.err.println("Creating a new stream for ReferenceListEntry:");
-        //entry.printFields(System.err, "  ");
-        //System.err.println("dataPos=" + dataPos);
-        //System.err.println("dataLength=" + dataLength);
+//        System.err.println("Creating a new stream for ReferenceListEntry:");
+//        entry.printFields(System.err, "  ");
+//        System.err.println("dataPos=" + dataPos);
+//        System.err.println("dataLength=" + dataLength);
 
         return new ReadableConcatenatedStream(new ReadableRandomAccessSubstream(forkStream),
                 dataPos + 4, dataLength);
     }
 
-    public static class MalformedResourceForkException extends RuntimeException
-    {
+    public static class MalformedResourceForkException extends RuntimeException {
+
         public MalformedResourceForkException() {
             super();
         }

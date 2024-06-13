@@ -18,24 +18,26 @@
 package org.catacombae.hfs;
 
 import java.util.LinkedList;
-import org.catacombae.util.ObjectContainer;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSExtentDescriptor;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.ReadableRandomAccessStream;
+import org.catacombae.util.ObjectContainer;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class AllocationFile {
+
     protected final HFSVolume parentView;
     protected final ReadableRandomAccessStream allocationFileStream;
 
-    protected AllocationFile(HFSVolume parentView,
-            ReadableRandomAccessStream allocationFileStream) {
+    protected AllocationFile(HFSVolume parentView, ReadableRandomAccessStream allocationFileStream) {
         this.parentView = parentView;
         this.allocationFileStream = allocationFileStream;
 
-        if(this.parentView == null)
+        if (this.parentView == null)
             throw new IllegalArgumentException("parentView == null");
     }
 
@@ -47,7 +49,7 @@ public abstract class AllocationFile {
      * @return whether the block <code>blockNumber</code> is used (true) or not
      * (false).
      * @throws java.lang.IllegalArgumentException if <code>blockNumber</code>
-     * is out of range.
+     *                                            is out of range.
      */
     public synchronized boolean isAllocationBlockUsed(long blockNumber)
             throws IllegalArgumentException {
@@ -58,16 +60,15 @@ public abstract class AllocationFile {
 
     private synchronized boolean isAllocationBlockUsed(long blockNumber, CommonHFSVolumeHeader vh) {
         long numAllocationBlocks = vh.getTotalBlocks();
-        if(blockNumber >= numAllocationBlocks)
+        if (blockNumber >= numAllocationBlocks)
             throw new IllegalArgumentException("Block number (" + blockNumber +
-                    ") is beyond the highest block of the volume (" +
-                    (numAllocationBlocks-1) + ").");
+                    ") is beyond the highest block of the volume (" + (numAllocationBlocks - 1) + ").");
 
 
         long byteIndex = blockNumber / 8;
         allocationFileStream.seek(byteIndex);
         int currentByte = allocationFileStream.read();
-        if(currentByte >= 0)
+        if (currentByte >= 0)
             return (currentByte & (1 << 7 - (blockNumber % 8))) != 0;
         else
             throw new RuntimeException("No data left in stream! allocationFileStream.getFilePointer()=" +
@@ -75,29 +76,25 @@ public abstract class AllocationFile {
                     allocationFileStream.length());
     }
 
-    /**
-     * Loops through the entire allocation file and counts the number of blocks
-     * that are marked as free.
-     *
-     * @return the number of free blocks in the allocation file.
-     */
-    /*
-    public synchronized long countFreeBlocks() {
-        return countBlocks(false);
-    }
-    */
+//    /**
+//     * Loops through the entire allocation file and counts the number of blocks
+//     * that are marked as free.
+//     *
+//     * @return the number of free blocks in the allocation file.
+//     */
+//    public synchronized long countFreeBlocks() {
+//        return countBlocks(false);
+//    }
 
-    /**
-     * Loops through the entire allocation file and counts the number of blocks
-     * that are marked as allocated.
-     *
-     * @return the number of allocated blocks in the allocation file.
-     */
-    /*
-    public synchronized long countAllocatedBlocks() {
-        return countBlocks(true);
-    }
-    */
+//    /**
+//     * Loops through the entire allocation file and counts the number of blocks
+//     * that are marked as allocated.
+//     *
+//     * @return the number of allocated blocks in the allocation file.
+//     */
+//    public synchronized long countAllocatedBlocks() {
+//        return countBlocks(true);
+//    }
 
     /**
      * Loops through the entire allocation file to count the number of used and free blocks on the
@@ -105,54 +102,53 @@ public abstract class AllocationFile {
      *
      * @param oFreeBlocks (optional) variable where the algorithm stores the free block count.
      * @param oUsedBlocks (optional) variable where the algorithm stores the used block count.
-     * @param stop (optional) variable which can be set to abort the block counting process. Must
-     * initally be set to <code>false</code> or no work will be done whatsoever.
+     * @param stop        (optional) variable which can be set to abort the block counting process. Must
+     *                    initally be set to <code>false</code> or no work will be done whatsoever.
      * @return the total number of allocation blocks on the volume.
      */
     public long countBlocks(ObjectContainer<Long> oFreeBlocks, ObjectContainer<Long> oUsedBlocks, ObjectContainer<Boolean> stop) {
         CommonHFSVolumeHeader vh = parentView.getVolumeHeader();
-        byte[] currentBlock = new byte[128*1024];
+        byte[] currentBlock = new byte[128 * 1024];
         final long totalBlocks = vh.getTotalBlocks();
         long blockCount = 0;
-        //long allocatedBlockCount = 0;
+//        long allocatedBlockCount = 0;
         long usedBlockCount = 0;
-        //int blockValue = (usedBlocks?0x1:0x0);
-        if(stop == null)
+//        int blockValue = (usedBlocks?0x1:0x0);
+        if (stop == null)
             stop = new ObjectContainer<Boolean>(false);
 
-        //System.err.println("countBlocks(): totalBlocks=" + totalBlocks);
-        //System.err.println("countBlocks(): allocationFileStream.length()=" + allocationFileStream.length());
+//        System.err.println("countBlocks(): totalBlocks=" + totalBlocks);
+//        System.err.println("countBlocks(): allocationFileStream.length()=" + allocationFileStream.length());
         allocationFileStream.seek(0);
-        while(blockCount < totalBlocks && !stop.o) {
-            //System.err.println("countBlocks():   blockCount=" + blockCount);
-            //System.err.println("countBlocks():   allocationFileStream.getFilePointer()=" + allocationFileStream.getFilePointer());
-            //System.err.println("countBlocks():   =" + );
+        while (blockCount < totalBlocks && !stop.o) {
+//            System.err.println("countBlocks():   blockCount=" + blockCount);
+//            System.err.println("countBlocks():   allocationFileStream.getFilePointer()=" + allocationFileStream.getFilePointer());
+//            System.err.println("countBlocks():   =" + );
 
-            //System.out.println("countBlocks():   Reading a blob (" + currentBlock.length + " bytes)...");
+//            System.out.println("countBlocks():   Reading a blob (" + currentBlock.length + " bytes)...");
             int bytesRead = allocationFileStream.read(currentBlock);
-            //System.out.println("countBlocks():   ..." + bytesRead + " bytes read.");
+//            System.out.println("countBlocks():   ..." + bytesRead + " bytes read.");
 
-            if(bytesRead >= 0) {
-                for(int i = 0; i < bytesRead && blockCount < totalBlocks && !stop.o; ++i) {
+            if (bytesRead >= 0) {
+                for (int i = 0; i < bytesRead && blockCount < totalBlocks && !stop.o; ++i) {
                     byte currentByte = currentBlock[i];
-                    for(int j = 0; j < 8 && blockCount < totalBlocks && !stop.o; ++j) {
+                    for (int j = 0; j < 8 && blockCount < totalBlocks && !stop.o; ++j) {
                         ++blockCount;
-                        if(((currentByte >> (7 - j)) & 0x1) == 0x1)
+                        if (((currentByte >> (7 - j)) & 0x1) == 0x1)
                             ++usedBlockCount;
                     }
                 }
-            }
-            else
+            } else
                 throw new RuntimeException("Could not read all blocks from allocation file!");
         }
 
-        if(blockCount != totalBlocks)
+        if (blockCount != totalBlocks)
             throw new RuntimeException("[INTERNAL ERROR] blockCount(" + blockCount +
                     ") != totalBlocks(" + totalBlocks + ")");
 
-        if(oFreeBlocks != null)
-            oFreeBlocks.o = blockCount-usedBlockCount;
-        if(oUsedBlocks != null)
+        if (oFreeBlocks != null)
+            oFreeBlocks.o = blockCount - usedBlockCount;
+        if (oUsedBlocks != null)
             oUsedBlocks.o = usedBlockCount;
 
         return totalBlocks;
@@ -167,12 +163,12 @@ public abstract class AllocationFile {
      * created from the <code>startBlock</code> and <code>allocatedBlockCount</code>
      * parameters.
      * @throws java.lang.IllegalArgumentException if any of the values of <code>
-     * startBlock</code> or <code>allocatedBlockCount</code> are out of range for the
-     * implementation (16-bit signed integer value for HFS, 32-bit signed
-     * integer value for HFS+).
+     *                                            startBlock</code> or <code>allocatedBlockCount</code> are out of range for the
+     *                                            implementation (16-bit signed integer value for HFS, 32-bit signed
+     *                                            integer value for HFS+).
      */
-    protected abstract CommonHFSExtentDescriptor createExtentDescriptor(long startBlock,
-            long blockCount) throws IllegalArgumentException;
+    protected abstract CommonHFSExtentDescriptor createExtentDescriptor(
+            long startBlock, long blockCount) throws IllegalArgumentException;
 
     /**
      * Calculates an array of extents that are currently free, and that matches
@@ -186,69 +182,64 @@ public abstract class AllocationFile {
      * can be stored on disk.
      */
     public synchronized CommonHFSExtentDescriptor[] findFreeSpace(final long fileSize) {
-        if(fileSize < 0)
+        if (fileSize < 0)
             throw new IllegalArgumentException("Negative file size: " + fileSize);
 
         CommonHFSVolumeHeader vh = parentView.getVolumeHeader();
         final long blockSize = vh.getAllocationBlockSize();
         final long totalBlocks = vh.getTotalBlocks();
-        final long blocksToAllocate = fileSize / blockSize +
-                (fileSize % blockSize != 0 ? 1 : 0);
+        final long blocksToAllocate = fileSize / blockSize + (fileSize % blockSize != 0 ? 1 : 0);
         long blocksLeft = blocksToAllocate;
 
-        /*
-         * Search for the closest matching region, i.e. the smallest region that
-         * is larger than or equal to fileSize, or if none can be found, the
-         * largest region that is smaller than fileSize.
-         */
+        //
+        // Search for the closest matching region, i.e. the smallest region that
+        // is larger than or equal to fileSize, or if none can be found, the
+        // largest region that is smaller than fileSize.
+        //
 
         // Loop through the entire allocation file
         ByteRegion closestMatchAbove = new ByteRegion();
         ByteRegion closestMatchBelow = new ByteRegion();
-        LinkedList<ByteRegion> allocations =
-                new LinkedList<ByteRegion>();
+        LinkedList<ByteRegion> allocations = new LinkedList<ByteRegion>();
 
-        while(blocksLeft > 0) {
-            if(closestMatchAbove == null)
+        while (blocksLeft > 0) {
+            if (closestMatchAbove == null)
                 closestMatchAbove = new ByteRegion();
-            if(closestMatchBelow == null)
+            if (closestMatchBelow == null)
                 closestMatchBelow = new ByteRegion();
 
             closestMatchAbove.reset();
             closestMatchBelow.reset();
 
             long regionStart = -1;
-            for(int i = 0; i < totalBlocks; ++i) {
+            for (int i = 0; i < totalBlocks; ++i) {
                 // Check that we do not collide with any already allocated regions
                 int j = 0;
-                for(ByteRegion br : allocations) {
-                    if(i >= br.offset && i < (br.offset+br.length))
+                for (ByteRegion br : allocations) {
+                    if (i >= br.offset && i < (br.offset + br.length))
                         break;
                     ++j;
                 }
-                if(j != allocations.size())
+                if (j != allocations.size())
                     continue;
 
-                if(!isAllocationBlockUsed(i, vh)) {
-                    if(regionStart == -1)
+                if (!isAllocationBlockUsed(i, vh)) {
+                    if (regionStart == -1)
                         regionStart = i;
-                }
-                else {
-                    if(regionStart != -1) {
-                        long length = i-regionStart;
-                        if(length > blocksLeft) {
-                            if(closestMatchAbove.length < 0 || closestMatchAbove.length > length) {
+                } else {
+                    if (regionStart != -1) {
+                        long length = i - regionStart;
+                        if (length > blocksLeft) {
+                            if (closestMatchAbove.length < 0 || closestMatchAbove.length > length) {
                                 closestMatchAbove.offset = regionStart;
                                 closestMatchAbove.length = length;
                             }
-                        }
-                        else if(length < blocksLeft) {
-                            if(closestMatchBelow.length < 0 || closestMatchBelow.length < length) {
+                        } else if (length < blocksLeft) {
+                            if (closestMatchBelow.length < 0 || closestMatchBelow.length < length) {
                                 closestMatchBelow.offset = regionStart;
                                 closestMatchBelow.length = length;
                             }
-                        }
-                        else {
+                        } else {
                             closestMatchAbove.offset = regionStart;
                             closestMatchAbove.length = length;
                             break; // A perfect match, so we don't need to search more.
@@ -258,31 +249,27 @@ public abstract class AllocationFile {
                 }
             }
 
-            if(closestMatchAbove.isValid()) {
+            if (closestMatchAbove.isValid()) {
                 // We found a fitting region for the rest of the data
-                //result.add(createExtentDescriptor(closestMatchAbove.offset,
-                //        blocksLeft));
+//                result.add(createExtentDescriptor(closestMatchAbove.offset, blocksLeft));
                 closestMatchAbove.length = blocksLeft;
                 allocations.add(closestMatchAbove);
 
                 blocksLeft = 0;
                 closestMatchAbove = null; // It is taken
-            }
-            else if(closestMatchBelow.isValid()) {
-                //result.add(createExtentDescriptor(closestMatchBelow.offset,
-                //        closestMatchBelow.length));
+            } else if (closestMatchBelow.isValid()) {
+//                result.add(createExtentDescriptor(closestMatchBelow.offset, closestMatchBelow.length));
                 allocations.add(closestMatchBelow);
 
                 blocksLeft -= closestMatchBelow.length;
                 closestMatchBelow = null; // It is taken
-            }
-            else {
+            } else {
                 // We're out of free blocks...
                 return null;
             }
         }
 
-        if(blocksLeft != 0)
+        if (blocksLeft != 0)
             throw new RuntimeException("[INTERNAL ERROR] blocksLeft(" +
                     blocksLeft + ") != 0 [closestMatchAbove.offset=" +
                     closestMatchAbove.offset + ",closestMatchAbove.length=" +
@@ -290,7 +277,7 @@ public abstract class AllocationFile {
 
         CommonHFSExtentDescriptor[] result = new CommonHFSExtentDescriptor[allocations.size()];
         int i = 0;
-        for(ByteRegion br : allocations)
+        for (ByteRegion br : allocations)
             result[i++] = createExtentDescriptor(br.offset, br.length);
 
         return result;
@@ -301,6 +288,7 @@ public abstract class AllocationFile {
     }
 
     private class ByteRegion {
+
         public long offset;
         public long length;
 
@@ -313,5 +301,4 @@ public abstract class AllocationFile {
             return offset > 0 && length > 0;
         }
     }
-
 }

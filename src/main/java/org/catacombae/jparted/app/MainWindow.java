@@ -26,6 +26,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -53,7 +54,7 @@ public class MainWindow extends JFrame {
     }
 
     private static void setAbstractButtonListener(AbstractButton button, ActionListener listener) {
-        for(ActionListener al : button.getActionListeners())
+        for (ActionListener al : button.getActionListeners())
             button.removeActionListener(al);
         button.addActionListener(listener);
     }

@@ -25,13 +25,15 @@ import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.container.ContainerHandler;
 import org.catacombae.storage.ps.container.ContainerType;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSContainerHandler extends ContainerHandler {
-    private static final short SIGNATURE_HFS =      (short)0x4244; // ASCII: 'BD'
-    private static final short SIGNATURE_HFS_PLUS = (short)0x482B; // ASCII: 'H+'
-    private static final short SIGNATURE_HFSX =     (short)0x4858; // ASCII: 'HX'
+
+    private static final short SIGNATURE_HFS = (short) 0x4244; // ASCII: 'BD'
+    private static final short SIGNATURE_HFS_PLUS = (short) 0x482B; // ASCII: 'H+'
+    private static final short SIGNATURE_HFSX = (short) 0x4858; // ASCII: 'HX'
 
     private DataLocator partitionData;
 
@@ -62,7 +64,7 @@ public class HFSContainerHandler extends ContainerHandler {
     @Override
     public FileSystemMajorType detectFileSystemType() {
         ReadableRandomAccessStream bitstream = partitionData.createReadOnlyFile();
-        switch(HFSCommonFileSystemRecognizer.detectFileSystem(bitstream, 0)) {
+        switch (HFSCommonFileSystemRecognizer.detectFileSystem(bitstream, 0)) {
             case HFS:
                 return FileSystemMajorType.APPLE_HFS;
             case HFS_PLUS:
@@ -85,5 +87,4 @@ public class HFSContainerHandler extends ContainerHandler {
     public ContainerType detectContainerType() {
         throw new UnsupportedOperationException("An HFS container does not contain other containers.");
     }
-
 }

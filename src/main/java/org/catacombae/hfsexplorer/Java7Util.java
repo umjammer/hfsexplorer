@@ -21,14 +21,23 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class Java7Util {
+
     /**
      * Tests whether or not the current VM is a Java 7 or higher VM. This method
      * should always be invoked to check that the version number of the
@@ -38,16 +47,15 @@ public class Java7Util {
      * @return whether or not the current VM is a Java 7 or higher VM.
      */
     public static boolean isJava7OrHigher() {
-    	return System.getProperty("java.specification.version").
+        return System.getProperty("java.specification.version").
                 compareTo("1.7") >= 0;
     }
 
     public static void setFileTimes(String path, Date creationTime,
-            Date lastAccessTime, Date lastModifiedTime)
+                                    Date lastAccessTime, Date lastModifiedTime)
             throws ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchFieldException
-    {
+            InvocationTargetException, NoSuchFieldException {
         Class<?> pathClass = Class.forName("java.nio.file.Path");
         Class<?> fileSystemsClass = Class.forName("java.nio.file.FileSystems");
         Class<?> fileSystemClass = Class.forName("java.nio.file.FileSystem");
@@ -58,176 +66,127 @@ public class Java7Util {
         Class<?> fileTimeClass =
                 Class.forName("java.nio.file.attribute.FileTime");
 
-        /* FileSystem defaultFileSystem = FileSystems.getDefault(); */
-        Method fileSystemsGetDefaultMethod =
-                fileSystemsClass.getMethod("getDefault");
-        Object defaultFileSystemObject =
-                fileSystemsGetDefaultMethod.invoke(null);
+//        FileSystem defaultFileSystem = FileSystems.getDefault();
+        Method fileSystemsGetDefaultMethod = fileSystemsClass.getMethod("getDefault");
+        Object defaultFileSystemObject = fileSystemsGetDefaultMethod.invoke(null);
 
-        /* Path p = defaultFileSystem.getPath(path); */
-        Method fileSystemGetPathMethod =
-                fileSystemClass.getMethod("getPath", String.class,
-                String[].class);
-        Object pObject =
-                fileSystemGetPathMethod.invoke(defaultFileSystemObject, path,
-                new String[0]);
+//        Path p = defaultFileSystem.getPath(path);
+        Method fileSystemGetPathMethod = fileSystemClass.getMethod("getPath", String.class, String[].class);
+        Object pObject = fileSystemGetPathMethod.invoke(defaultFileSystemObject, path, new String[0]);
 
-        /* BasicFileAttributeView attrView =
-         *         Files.getFileAttributeView(p, BasicFileAttributeView.class,
-         *         LinkOption.NOFOLLOW_LINKS); */
+//        BasicFileAttributeView attrView =
+//                Files.getFileAttributeView(p, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
         Field noFollowLinksField = linkOptionClass.getField("NOFOLLOW_LINKS");
         Object noFollowLinksObject = noFollowLinksField.get(null);
 
         Object linkOptionsArray = Array.newInstance(linkOptionClass, 1);
         Array.set(linkOptionsArray, 0, noFollowLinksObject);
 
-        Method getFileAttributeViewMethod =
-                filesClass.getMethod("getFileAttributeView", pathClass,
-                Class.class, linkOptionsArray.getClass());
-        Object attrViewObject =
-                getFileAttributeViewMethod.invoke(null, pObject,
-                basicFileAttributeViewClass, linkOptionsArray);
+        Method getFileAttributeViewMethod = filesClass.getMethod("getFileAttributeView", pathClass,
+                        Class.class, linkOptionsArray.getClass());
+        Object attrViewObject = getFileAttributeViewMethod.invoke(null, pObject,
+                        basicFileAttributeViewClass, linkOptionsArray);
 
-        /*
-         * FileTime creationFileTime;
-         * if(creationTime != null) {
-         *     creationFileTime = FileTime.fromMillis(creationTime.getTime());
-         * }
-         * else {
-         *     creationFileTime = null;
-         * }
-         */
+//        FileTime creationFileTime;
+//        if (creationTime != null) {
+//            creationFileTime = FileTime.fromMillis(creationTime.getTime());
+//        } else {
+//            creationFileTime = null;
+//        }
+
         Object creationFileTimeObject;
-        if(creationTime != null) {
-            Method fileTimefromMillisMethod =
-                    fileTimeClass.getMethod("fromMillis", long.class);
-            creationFileTimeObject =
-                    fileTimefromMillisMethod.invoke(null,
-                    Long.valueOf(creationTime.getTime()));
-        }
-        else {
+        if (creationTime != null) {
+            Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
+            creationFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(creationTime.getTime()));
+        } else {
             creationFileTimeObject = null;
         }
 
-        /*
-         * FileTime lastAccessFileTime;
-         * if(lastAccessTime != null) {
-         *     lastAccessFileTime =
-         *         FileTime.fromMillis(lastAccessTime.getTime());
-         * }
-         * else {
-         *     lastAccessFileTime = null;
-         * }
-         */
+//        FileTime lastAccessFileTime;
+//        if (lastAccessTime != null) {
+//            lastAccessFileTime =
+//                    FileTime.fromMillis(lastAccessTime.getTime());
+//        } else {
+//            lastAccessFileTime = null;
+//        }
+
         Object lastAccessFileTimeObject;
-        if(lastAccessTime != null) {
-            Method fileTimefromMillisMethod =
-                    fileTimeClass.getMethod("fromMillis", long.class);
-            lastAccessFileTimeObject =
-                    fileTimefromMillisMethod.invoke(null,
-                    Long.valueOf(lastAccessTime.getTime()));
-        }
-        else {
+        if (lastAccessTime != null) {
+            Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
+            lastAccessFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(lastAccessTime.getTime()));
+        } else {
             lastAccessFileTimeObject = null;
         }
 
-        /*
-         * FileTime lastModifiedFileTime;
-         * if(lastModifiedTime != null) {
-         *     lastModifiedFileTime =
-         *         FileTime.fromMillis(lastModifiedTime.getTime());
-         * }
-         * else {
-         *     lastModifiedFileTime = null;
-         * }
-         */
+//        FileTime lastModifiedFileTime;
+//        if (lastModifiedTime != null) {
+//            lastModifiedFileTime =
+//                    FileTime.fromMillis(lastModifiedTime.getTime());
+//        } else {
+//            lastModifiedFileTime = null;
+//        }
+
         Object lastModifiedFileTimeObject;
-        if(lastModifiedTime != null) {
-            Method fileTimefromMillisMethod =
-                    fileTimeClass.getMethod("fromMillis", long.class);
-            lastModifiedFileTimeObject =
-                    fileTimefromMillisMethod.invoke(null,
-                    Long.valueOf(lastModifiedTime.getTime()));
-        }
-        else {
+        if (lastModifiedTime != null) {
+            Method fileTimefromMillisMethod = fileTimeClass.getMethod("fromMillis", long.class);
+            lastModifiedFileTimeObject = fileTimefromMillisMethod.invoke(null, Long.valueOf(lastModifiedTime.getTime()));
+        } else {
             lastModifiedFileTimeObject = null;
         }
 
-        /* attrView.setTimes(lastModifiedFileTime, lastAccessFileTime,
-         *     creationFileTime); */
+//        attrView.setTimes(lastModifiedFileTime, lastAccessFileTime, creationFileTime);
         Method basicFileAttributeViewSetTimesMethod =
-                basicFileAttributeViewClass.getMethod("setTimes", fileTimeClass,
-                fileTimeClass, fileTimeClass);
+                basicFileAttributeViewClass.getMethod("setTimes", fileTimeClass, fileTimeClass, fileTimeClass);
         try {
             basicFileAttributeViewSetTimesMethod.invoke(attrViewObject,
-                    lastModifiedFileTimeObject, lastAccessFileTimeObject,
-                    creationFileTimeObject);
-        } catch(InvocationTargetException ex) {
+                    lastModifiedFileTimeObject, lastAccessFileTimeObject, creationFileTimeObject);
+        } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if(cause instanceof ClassNotFoundException) {
+            if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
-            }
-            else if(cause instanceof NoSuchMethodException) {
+            } else if (cause instanceof NoSuchMethodException) {
                 throw (NoSuchMethodException) cause;
-            }
-            else if(cause instanceof IllegalAccessException) {
+            } else if (cause instanceof IllegalAccessException) {
                 throw (IllegalAccessException) cause;
-            }
-            else if(cause instanceof IllegalArgumentException) {
+            } else if (cause instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) cause;
-            }
-            else if(cause instanceof InvocationTargetException) {
+            } else if (cause instanceof InvocationTargetException) {
                 throw (InvocationTargetException) cause;
-            }
-            else if(cause instanceof NoSuchFieldException) {
+            } else if (cause instanceof NoSuchFieldException) {
                 throw (NoSuchFieldException) cause;
-            }
-            else if(cause instanceof RuntimeException) {
+            } else if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw ex;
             }
         }
     }
 
     public static void setPosixPermissions(String path,
-            boolean ownerRead, boolean ownerWrite, boolean ownerExecute,
-            boolean groupRead, boolean groupWrite, boolean groupExecute,
-            boolean othersRead, boolean othersWrite, boolean othersExecute)
+                                           boolean ownerRead, boolean ownerWrite, boolean ownerExecute,
+                                           boolean groupRead, boolean groupWrite, boolean groupExecute,
+                                           boolean othersRead, boolean othersWrite, boolean othersExecute)
             throws ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchFieldException
-    {
+            InvocationTargetException, NoSuchFieldException {
         Class<?> fileSystemsClass = Class.forName("java.nio.file.FileSystems");
         Class<?> fileSystemClass = Class.forName("java.nio.file.FileSystem");
         Class<?> pathClass = Class.forName("java.nio.file.Path");
-        Class<?> posixFileAttributeViewClass =
-                Class.forName("java.nio.file.attribute.PosixFileAttributeView");
+        Class<?> posixFileAttributeViewClass = Class.forName("java.nio.file.attribute.PosixFileAttributeView");
         Class<?> filesClass = Class.forName("java.nio.file.Files");
         Class<?> linkOptionClass = Class.forName("java.nio.file.LinkOption");
-        Class<?> posixFilePermissionClass =
-                Class.forName("java.nio.file.attribute.PosixFilePermission");
+        Class<?> posixFilePermissionClass = Class.forName("java.nio.file.attribute.PosixFilePermission");
 
-        /* java.nio.file.FileSystem defaultFileSystem =
-                   java.nio.file.FileSystems.getDefault(); */
-        Method fileSystemsGetDefaultMethod =
-                fileSystemsClass.getMethod("getDefault");
-        Object defaultFileSystemObject =
-                fileSystemsGetDefaultMethod.invoke(null);
+//        FileSystem defaultFileSystem = FileSystems.getDefault();
+        Method fileSystemsGetDefaultMethod = fileSystemsClass.getMethod("getDefault");
+        Object defaultFileSystemObject = fileSystemsGetDefaultMethod.invoke(null);
 
-        /* java.nio.file.Path p = defaultFileSystem.getPath(path); */
-        Method fileSystemGetPathMethod =
-                fileSystemClass.getMethod("getPath", String.class,
-                String[].class);
-        Object pObject =
-                fileSystemGetPathMethod.invoke(defaultFileSystemObject, path,
-                new String[0]);
+//        Path p = defaultFileSystem.getPath(path);
+        Method fileSystemGetPathMethod = fileSystemClass.getMethod("getPath", String.class, String[].class);
+        Object pObject = fileSystemGetPathMethod.invoke(defaultFileSystemObject, path, new String[0]);
 
-        /* java.nio.file.attribute.PosixFileAttributeView attrView =
-         *         java.nio.file.Files.getFileAttributeView(p,
-         *         java.nio.file.attribute.PosixFileAttributeView.class,
-         *         java.nio.file.LinkOption.NOFOLLOW_LINKS); */
+//        PosixFileAttributeView attrView =
+//                Files.getFileAttributeView(p, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
         Field noFollowLinksField = linkOptionClass.getField("NOFOLLOW_LINKS");
         Object noFollowLinksObject = noFollowLinksField.get(null);
 
@@ -235,106 +194,95 @@ public class Java7Util {
         Array.set(linkOptionsArray, 0, noFollowLinksObject);
 
         Method getFileAttributeViewMethod =
-                filesClass.getMethod("getFileAttributeView", pathClass,
-                Class.class, linkOptionsArray.getClass());
+                filesClass.getMethod("getFileAttributeView", pathClass, Class.class, linkOptionsArray.getClass());
         Object attrViewObject =
-                getFileAttributeViewMethod.invoke(null, pObject,
-                posixFileAttributeViewClass, linkOptionsArray);
+                getFileAttributeViewMethod.invoke(null, pObject, posixFileAttributeViewClass, linkOptionsArray);
 
-        if(attrViewObject == null) {
-            /* No PosixFileAttributeView available. Platform does not support
-             * POSIX attributes. Just return quietly here. */
+        if (attrViewObject == null) {
+            // No PosixFileAttributeView available. Platform does not support
+            // POSIX attributes. Just return quietly here.
             return;
         }
 
         HashSet<Object> perms = new HashSet<Object>();
 
-        if(ownerRead) {
+        if (ownerRead) {
             Field curField = posixFilePermissionClass.getField("OWNER_READ");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(ownerWrite) {
+        if (ownerWrite) {
             Field curField = posixFilePermissionClass.getField("OWNER_WRITE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(ownerExecute) {
+        if (ownerExecute) {
             Field curField = posixFilePermissionClass.getField("OWNER_EXECUTE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(groupRead) {
+        if (groupRead) {
             Field curField = posixFilePermissionClass.getField("GROUP_READ");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(groupWrite) {
+        if (groupWrite) {
             Field curField = posixFilePermissionClass.getField("GROUP_WRITE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(groupExecute) {
+        if (groupExecute) {
             Field curField = posixFilePermissionClass.getField("GROUP_EXECUTE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(othersRead) {
+        if (othersRead) {
             Field curField = posixFilePermissionClass.getField("OTHERS_READ");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(othersWrite) {
+        if (othersWrite) {
             Field curField = posixFilePermissionClass.getField("OTHERS_WRITE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        if(othersExecute) {
+        if (othersExecute) {
             Field curField =
                     posixFilePermissionClass.getField("OTHERS_EXECUTE");
             Object curObject = curField.get(null);
             perms.add(curObject);
         }
 
-        /* attrView.setPermissions(perms); */
+//        attrView.setPermissions(perms);
         Method posixFileAttributeViewSetPermissionMethod =
-                posixFileAttributeViewClass.getMethod("setPermissions",
-                Set.class);
+                posixFileAttributeViewClass.getMethod("setPermissions", Set.class);
         try {
-            posixFileAttributeViewSetPermissionMethod.invoke(attrViewObject,
-                    perms);
-        } catch(InvocationTargetException ex) {
+            posixFileAttributeViewSetPermissionMethod.invoke(attrViewObject, perms);
+        } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if(cause instanceof ClassNotFoundException) {
+            if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
-            }
-            else if(cause instanceof NoSuchMethodException) {
+            } else if (cause instanceof NoSuchMethodException) {
                 throw (NoSuchMethodException) cause;
-            }
-            else if(cause instanceof IllegalAccessException) {
+            } else if (cause instanceof IllegalAccessException) {
                 throw (IllegalAccessException) cause;
-            }
-            else if(cause instanceof IllegalArgumentException) {
+            } else if (cause instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) cause;
-            }
-            else if(cause instanceof InvocationTargetException) {
+            } else if (cause instanceof InvocationTargetException) {
                 throw (InvocationTargetException) cause;
-            }
-            else if(cause instanceof NoSuchFieldException) {
+            } else if (cause instanceof NoSuchFieldException) {
                 throw (NoSuchFieldException) cause;
-            }
-            else if(cause instanceof RuntimeException) {
+            } else if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw ex;
             }
         }
@@ -343,19 +291,15 @@ public class Java7Util {
     public static void setPosixOwners(String path, int ownerId, int groupId)
             throws ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchFieldException
-    {
+            InvocationTargetException, NoSuchFieldException {
         Class<?> fileSystemsClass = Class.forName("java.nio.file.FileSystems");
         Class<?> fileSystemClass = Class.forName("java.nio.file.FileSystem");
         Class<?> pathClass = Class.forName("java.nio.file.Path");
         Class<?> filesClass = Class.forName("java.nio.file.Files");
         Class<?> linkOptionClass = Class.forName("java.nio.file.LinkOption");
 
-        Method fileSystemsGetDefaultMethod =
-                fileSystemsClass.getMethod("getDefault");
-        Method fileSystemGetPathMethod =
-                fileSystemClass.getMethod("getPath", String.class,
-                String[].class);
+        Method fileSystemsGetDefaultMethod = fileSystemsClass.getMethod("getDefault");
+        Method fileSystemGetPathMethod = fileSystemClass.getMethod("getPath", String.class, String[].class);
 
         Field noFollowLinksField = linkOptionClass.getField("NOFOLLOW_LINKS");
 
@@ -363,133 +307,93 @@ public class Java7Util {
         Object linkOptionsArray = Array.newInstance(linkOptionClass, 1);
         Array.set(linkOptionsArray, 0, noFollowLinksObject);
 
-        /* java.nio.file.FileSystem defaultFileSystem =
-                   java.nio.file.FileSystems.getDefault(); */
-        Object defaultFileSystemObject =
-                fileSystemsGetDefaultMethod.invoke(null);
+//        FileSystem defaultFileSystem = FileSystems.getDefault();
+        Object defaultFileSystemObject = fileSystemsGetDefaultMethod.invoke(null);
 
-        /* java.nio.file.Path p = defaultFileSystem.getPath(path); */
-        Object pObject =
-                fileSystemGetPathMethod.invoke(defaultFileSystemObject, path,
-                new String[0]);
+//        Path p = defaultFileSystem.getPath(path);
+        Object pObject = fileSystemGetPathMethod.invoke(defaultFileSystemObject, path, new String[0]);
 
-        Method filesSetAttributeMethod =
-                filesClass.getMethod("setAttribute", pathClass,
-                String.class, Object.class, linkOptionsArray.getClass());
+        Method filesSetAttributeMethod = filesClass.getMethod("setAttribute", pathClass,
+                        String.class, Object.class, linkOptionsArray.getClass());
         try {
-            /* java.nio.file.Files.setAttribute(p, "unix:uid",
-                    Integer.valueOf(ownerId),
-                    java.nio.file.LinkOption.NOFOLLOW_LINKS);*/
+//            Files.setAttribute(p, "unix:uid", Integer.valueOf(ownerId), LinkOption.NOFOLLOW_LINKS);
             filesSetAttributeMethod.invoke(null, pObject, "unix:uid",
                     Integer.valueOf(ownerId), linkOptionsArray);
 
-            /* java.nio.file.Files.setAttribute(p, "unix:gid",
-                    Integer.valueOf(groupId),
-                    java.nio.file.LinkOption.NOFOLLOW_LINKS); */
+//            Files.setAttribute(p, "unix:gid", Integer.valueOf(groupId), LinkOption.NOFOLLOW_LINKS);
             filesSetAttributeMethod.invoke(null, pObject, "unix:gid",
                     Integer.valueOf(groupId), linkOptionsArray);
-        } catch(InvocationTargetException ex) {
+        } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if(cause instanceof UnsupportedOperationException) {
-                /* Do nothing. This is expected on non-UNIX platforms. */
-            }
-            else if(cause instanceof ClassNotFoundException) {
+            if (cause instanceof UnsupportedOperationException) {
+                // Do nothing. This is expected on non-UNIX platforms.
+            } else if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
-            }
-            else if(cause instanceof NoSuchMethodException) {
+            } else if (cause instanceof NoSuchMethodException) {
                 throw (NoSuchMethodException) cause;
-            }
-            else if(cause instanceof IllegalAccessException) {
+            } else if (cause instanceof IllegalAccessException) {
                 throw (IllegalAccessException) cause;
-            }
-            else if(cause instanceof IllegalArgumentException) {
+            } else if (cause instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) cause;
-            }
-            else if(cause instanceof InvocationTargetException) {
+            } else if (cause instanceof InvocationTargetException) {
                 throw (InvocationTargetException) cause;
-            }
-            else if(cause instanceof NoSuchFieldException) {
+            } else if (cause instanceof NoSuchFieldException) {
                 throw (NoSuchFieldException) cause;
-            }
-            else if(cause instanceof RuntimeException) {
+            } else if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw ex;
             }
         }
     }
 
-    public static void createSymbolicLink(String linkPathString,
-            String targetPathString)
+    public static void createSymbolicLink(String linkPathString, String targetPathString)
             throws ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchFieldException
-    {
+            InvocationTargetException, NoSuchFieldException {
         Class<?> fileSystemsClass = Class.forName("java.nio.file.FileSystems");
         Class<?> fileSystemClass = Class.forName("java.nio.file.FileSystem");
         Class<?> pathClass = Class.forName("java.nio.file.Path");
         Class<?> filesClass = Class.forName("java.nio.file.Files");
-        Class<?> fileAttributeClass =
-                Class.forName("java.nio.file.attribute.FileAttribute");
+        Class<?> fileAttributeClass = Class.forName("java.nio.file.attribute.FileAttribute");
 
-        Object emptyFileAttributeArray =
-                Array.newInstance(fileAttributeClass, 0);
+        Object emptyFileAttributeArray = Array.newInstance(fileAttributeClass, 0);
 
-        Method fileSystemsGetDefaultMethod =
-                fileSystemsClass.getMethod("getDefault");
-        Method fileSystemGetPathMethod =
-                fileSystemClass.getMethod("getPath", String.class,
-                String[].class);
-        Method filesCreateSymbolicLinkMethod =
-                filesClass.getMethod("createSymbolicLink", pathClass,
-                pathClass, emptyFileAttributeArray.getClass());
+        Method fileSystemsGetDefaultMethod = fileSystemsClass.getMethod("getDefault");
+        Method fileSystemGetPathMethod = fileSystemClass.getMethod("getPath", String.class, String[].class);
+        Method filesCreateSymbolicLinkMethod = filesClass.getMethod("createSymbolicLink", pathClass,
+                        pathClass, emptyFileAttributeArray.getClass());
 
-        /* java.nio.file.FileSystem defaultFileSystem =
-                   java.nio.file.FileSystems.getDefault(); */
-        Object defaultFileSystemObject =
-                fileSystemsGetDefaultMethod.invoke(null);
+//        FileSystem defaultFileSystem = FileSystems.getDefault();
+        Object defaultFileSystemObject = fileSystemsGetDefaultMethod.invoke(null);
 
-        /* java.nio.file.Path linkPath =
-                   defaultFileSystem.getPath(linkPathString); */
-        Object linkPathObject =
-                fileSystemGetPathMethod.invoke(defaultFileSystemObject,
-                linkPathString, new String[0]);
+//        Path linkPath = defaultFileSystem.getPath(linkPathString);
+        Object linkPathObject = fileSystemGetPathMethod.invoke(defaultFileSystemObject, linkPathString, new String[0]);
 
-        /* java.nio.file.Path targetPath =
-                   defaultFileSystem.getPath(targetPathString); */
-        Object targetPathObject =
-                fileSystemGetPathMethod.invoke(defaultFileSystemObject,
-                targetPathString, new String[0]);
+//        Path targetPath = defaultFileSystem.getPath(targetPathString);
+        Object targetPathObject = fileSystemGetPathMethod.invoke(defaultFileSystemObject,
+                        targetPathString, new String[0]);
 
-        /* java.nio.file.Files.createSymbolicLink(linkPath, targetPath); */
+//        Files.createSymbolicLink(linkPath, targetPath);
         try {
-            filesCreateSymbolicLinkMethod.invoke(null, linkPathObject,
-                    targetPathObject, emptyFileAttributeArray);
-        } catch(InvocationTargetException e) {
+            filesCreateSymbolicLinkMethod.invoke(null, linkPathObject, targetPathObject, emptyFileAttributeArray);
+        } catch (InvocationTargetException e) {
             final Throwable cause = e.getCause();
-            if(cause instanceof ClassNotFoundException) {
+            if (cause instanceof ClassNotFoundException) {
                 throw (ClassNotFoundException) cause;
-            }
-            else if(cause instanceof NoSuchMethodException) {
+            } else if (cause instanceof NoSuchMethodException) {
                 throw (NoSuchMethodException) cause;
-            }
-            else if(cause instanceof IllegalAccessException) {
+            } else if (cause instanceof IllegalAccessException) {
                 throw (IllegalAccessException) cause;
-            }
-            else if(cause instanceof IllegalArgumentException) {
+            } else if (cause instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) cause;
-            }
-            else if(cause instanceof InvocationTargetException) {
+            } else if (cause instanceof InvocationTargetException) {
                 throw (InvocationTargetException) cause;
-            }
-            else if(cause instanceof NoSuchFieldException) {
+            } else if (cause instanceof NoSuchFieldException) {
                 throw (NoSuchFieldException) cause;
-            }
-            else if(cause instanceof RuntimeException) {
+            } else if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw e;
             }
         }

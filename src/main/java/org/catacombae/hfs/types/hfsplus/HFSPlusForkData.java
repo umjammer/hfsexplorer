@@ -1,6 +1,6 @@
 /*-
  * Copyright (C) 2006 Erik Larsson
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,11 +17,13 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import org.catacombae.util.Util;
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -38,7 +40,7 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
      * 12   4     UInt32               totalBlocks
      * 16   64    HFSPlusExtentRecord  extents
      */
-	
+
     private final byte[] logicalSize = new byte[8];
     private final byte[] clumpSize = new byte[4];
     private final byte[] totalBlocks = new byte[4];
@@ -49,41 +51,48 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
     }
 
     private HFSPlusForkData(boolean mutable, byte[] data, int offset) {
-	System.arraycopy(data, offset+0, logicalSize, 0, 8);
-	System.arraycopy(data, offset+8, clumpSize, 0, 4);
-	System.arraycopy(data, offset+12, totalBlocks, 0, 4);
-        if(mutable)
-            extents = new HFSPlusExtentRecord.Mutable(data, offset+16);
+        System.arraycopy(data, offset + 0, logicalSize, 0, 8);
+        System.arraycopy(data, offset + 8, clumpSize, 0, 4);
+        System.arraycopy(data, offset + 12, totalBlocks, 0, 4);
+        if (mutable)
+            extents = new HFSPlusExtentRecord.Mutable(data, offset + 16);
         else
-            extents = new HFSPlusExtentRecord(data, offset+16);
+            extents = new HFSPlusExtentRecord(data, offset + 16);
     }
 
-    public static int length() { return 80; }
+    public static int length() {
+        return 80;
+    }
 
     public long getLogicalSize() {
-	return Util.readLongBE(logicalSize);
+        return Util.readLongBE(logicalSize);
     }
+
     public int getClumpSize() {
-	return Util.readIntBE(clumpSize);
+        return Util.readIntBE(clumpSize);
     }
+
     public int getTotalBlocks() {
-	return Util.readIntBE(totalBlocks);
+        return Util.readIntBE(totalBlocks);
     }
-    public HFSPlusExtentRecord getExtents() { return extents; }
-	
+
+    public HFSPlusExtentRecord getExtents() {
+        return extents;
+    }
+
     public void print(PrintStream ps, int pregap) {
-	String pregapString = "";
-	for(int i = 0; i < pregap; ++i)
-	    pregapString += " ";
-	print(ps, pregapString);
+        String pregapString = "";
+        for (int i = 0; i < pregap; ++i)
+            pregapString += " ";
+        print(ps, pregapString);
     }
-	
+
     private void _printFields(PrintStream ps, String prefix) {
-	ps.println(prefix + "logicalSize: " + getLogicalSize()/* + " (0x" + Util.byteArrayToHexString(logicalSize) + ")"*/);
-	ps.println(prefix + "clumpSize: " + getClumpSize());
-	ps.println(prefix + "totalBlocks: " + getTotalBlocks());
-	ps.println(prefix + "extents:");
-	extents.print(ps, prefix + "  ");
+        ps.println(prefix + "logicalSize: " + getLogicalSize()/* + " (0x" + Util.byteArrayToHexString(logicalSize) + ")" */);
+        ps.println(prefix + "clumpSize: " + getClumpSize());
+        ps.println(prefix + "totalBlocks: " + getTotalBlocks());
+        ps.println(prefix + "extents:");
+        extents.print(ps, prefix + "  ");
     }
 
     public void printFields(PrintStream ps, String prefix) {
@@ -97,15 +106,19 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
 
     byte[] getBytes() {
         byte[] result = new byte[length()];
-	byte[] tempData;
-	int offset = 0;
-        
-	System.arraycopy(logicalSize, 0, result, offset, logicalSize.length); offset += logicalSize.length;
-	System.arraycopy(clumpSize, 0, result, offset, clumpSize.length); offset += clumpSize.length;
-	System.arraycopy(totalBlocks, 0, result, offset, totalBlocks.length); offset += totalBlocks.length;
+        byte[] tempData;
+        int offset = 0;
+
+        System.arraycopy(logicalSize, 0, result, offset, logicalSize.length);
+        offset += logicalSize.length;
+        System.arraycopy(clumpSize, 0, result, offset, clumpSize.length);
+        offset += clumpSize.length;
+        System.arraycopy(totalBlocks, 0, result, offset, totalBlocks.length);
+        offset += totalBlocks.length;
         tempData = extents.getBytes();
-	System.arraycopy(tempData, 0, result, offset, tempData.length); offset += tempData.length;
-        
+        System.arraycopy(tempData, 0, result, offset, tempData.length);
+        offset += tempData.length;
+
         return result;
     }
 
@@ -148,6 +161,7 @@ public class HFSPlusForkData implements StructElements, PrintableStruct {
     }
 
     public static class Mutable extends HFSPlusForkData {
+
         public Mutable(byte[] data, int offset) {
             super(data, offset);
         }

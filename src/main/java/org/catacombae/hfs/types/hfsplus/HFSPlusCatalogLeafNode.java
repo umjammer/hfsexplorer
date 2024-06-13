@@ -18,34 +18,36 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.hfs.HFSException;
 import org.catacombae.hfs.types.hfsx.HFSXCatalogLeafRecord;
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusCatalogLeafNode extends BTLeafNode {
+
     protected HFSPlusCatalogLeafRecord[] leafRecords;
 
     public HFSPlusCatalogLeafNode(byte[] data, int offset, int nodeSize) {
-	this(data, offset, nodeSize, null);
+        this(data, offset, nodeSize, null);
     }
+
     protected HFSPlusCatalogLeafNode(byte[] data, int offset, int nodeSize, BTHeaderRec catalogHeaderRec) {
-	super(data, offset, nodeSize);
-	short[] offsets = new short[Util.unsign(nodeDescriptor.getNumRecords())+1];
-	for(int i = 0; i < offsets.length; ++i) {
-	    offsets[i] = Util.readShortBE(data, offset+nodeSize-((i+1)*2));
-	}
-	leafRecords = new HFSPlusCatalogLeafRecord[offsets.length-1];
-	// we loop offsets.length-1 times, since last offset is offset to free space
+        super(data, offset, nodeSize);
+        short[] offsets = new short[Util.unsign(nodeDescriptor.getNumRecords()) + 1];
+        for (int i = 0; i < offsets.length; ++i) {
+            offsets[i] = Util.readShortBE(data, offset + nodeSize - ((i + 1) * 2));
+        }
+        leafRecords = new HFSPlusCatalogLeafRecord[offsets.length - 1];
+        // we loop offsets.length-1 times, since last offset is offset to free space
         int previousOffset = 0;
-        for(int i = 0; i < leafRecords.length; ++i) {
+        for (int i = 0; i < leafRecords.length; ++i) {
             int currentOffset = Util.unsign(offsets[i]);
-            if(currentOffset < nodeDescriptor.length() ||
-                    currentOffset >= nodeSize ||
-                    (i != 0 && currentOffset <= previousOffset))
-            {
+            if (currentOffset < nodeDescriptor.length() ||
+                    currentOffset >= nodeSize || (i != 0 && currentOffset <= previousOffset)) {
                 System.err.println("Encountered invalid leaf record offset " +
                         "for record " + (i + 1) + ": " + currentOffset + " " +
                         "(node size: " + nodeSize + " current offset: " +
@@ -53,23 +55,16 @@ public class HFSPlusCatalogLeafNode extends BTLeafNode {
                         (" previous offset: " + previousOffset) : "") + ")");
                 System.err.println("Skipping record...");
                 leafRecords[i] = null;
-            }
-            else {
+            } else {
                 try {
-                    if(catalogHeaderRec == null) {
-                        leafRecords[i] =
-                                new HFSPlusCatalogLeafRecord(data,
-                                offset + currentOffset);
+                    if (catalogHeaderRec == null) {
+                        leafRecords[i] = new HFSPlusCatalogLeafRecord(data, offset + currentOffset);
+                    } else {
+                        leafRecords[i] = new HFSXCatalogLeafRecord(data, offset + currentOffset, catalogHeaderRec);
                     }
-                    else {
-                        leafRecords[i] =
-                                new HFSXCatalogLeafRecord(data,
-                                offset + currentOffset, catalogHeaderRec);
-                    }
-                } catch(HFSException e) {
+                } catch (HFSException e) {
                     System.err.println("Encountered invalid leaf record data " +
-                            "at record " + (i + 1) + "/" + leafRecords.length +
-                            ":");
+                            "at record " + (i + 1) + "/" + leafRecords.length + ":");
                     e.printStackTrace();
                     System.err.println("Skipping record...");
 
@@ -81,18 +76,21 @@ public class HFSPlusCatalogLeafNode extends BTLeafNode {
         }
     }
 
-    public HFSPlusCatalogLeafRecord getLeafRecord(int index) { return leafRecords[index]; }
+    public HFSPlusCatalogLeafRecord getLeafRecord(int index) {
+        return leafRecords[index];
+    }
+
     public HFSPlusCatalogLeafRecord[] getLeafRecords() {
-	HFSPlusCatalogLeafRecord[] copy = new HFSPlusCatalogLeafRecord[leafRecords.length];
-	for(int i = 0; i < copy.length; ++i)
-	    copy[i] = leafRecords[i];
-	return copy;
+        HFSPlusCatalogLeafRecord[] copy = new HFSPlusCatalogLeafRecord[leafRecords.length];
+        for (int i = 0; i < copy.length; ++i)
+            copy[i] = leafRecords[i];
+        return copy;
     }
 
     @Override
     public void printFields(PrintStream ps, String prefix) {
         super.printFields(ps, prefix);
-        for(int i = 0; i < leafRecords.length; ++i) {
+        for (int i = 0; i < leafRecords.length; ++i) {
             ps.println(prefix + " leafRecords[" + i + "]:");
             leafRecords[i].printFields(ps, prefix + "  ");
         }

@@ -19,14 +19,14 @@ package org.catacombae.hfs;
 
 import java.io.IOException;
 import java.io.OutputStream;
+
 import org.catacombae.hfs.io.ForkFilter;
 import org.catacombae.hfs.io.ReadableBlockCachingStream;
+import org.catacombae.hfs.original.HFSOriginalVolume;
+import org.catacombae.hfs.plus.HFSPlusVolume;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor;
-import org.catacombae.io.ReadableRandomAccessSubstream;
-import org.catacombae.io.SynchronizedReadableRandomAccess;
-import org.catacombae.io.SynchronizedReadableRandomAccessStream;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFile;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFolderRecord;
@@ -43,8 +43,15 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSExtentLeafNode;
 import org.catacombae.hfs.types.hfscommon.CommonHFSForkData;
 import org.catacombae.hfs.types.hfscommon.CommonHFSForkType;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
+import org.catacombae.hfs.x.HFSXVolume;
 import org.catacombae.io.Readable;
+import org.catacombae.io.ReadableConcatenatedStream;
 import org.catacombae.io.ReadableRandomAccessStream;
+import org.catacombae.io.ReadableRandomAccessSubstream;
+import org.catacombae.io.SynchronizedReadableRandomAccess;
+import org.catacombae.io.SynchronizedReadableRandomAccessStream;
+import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -76,37 +83,32 @@ public abstract class HFSVolume {
 
     protected volatile SynchronizedReadableRandomAccess hfsFile;
     private volatile SynchronizedReadableRandomAccessStream hfsStream;
-    //private final SynchronizedReadableRandomAccessStream backingFile;
+//    private final SynchronizedReadableRandomAccessStream backingFile;
     private final SynchronizedReadableRandomAccessStream sourceStream;
     protected final int physicalBlockSize;
 
     // Variables for reading cached files.
-    //private ReadableBlockCachingStream catalogCache = null;
+//    private ReadableBlockCachingStream catalogCache = null;
 
     protected final CatalogFile catalogFile;
     protected final ExtentsOverflowFile extentsOverflowFile;
 
     private boolean closed = false;
 
-    protected HFSVolume(ReadableRandomAccessStream hfsFile,
-            boolean cachingEnabled)
-    {
-        //System.err.println("HFSVolume(" + hfsFile + ", " +
-        //        cachingEnabled + ", " + btreeOperations + ", " +
-        //        catalogOperations + ", " + extentsOverflowOperations + ");");
-        this.sourceStream =
-                new SynchronizedReadableRandomAccessStream(hfsFile);
-        this.hfsStream =
-                new SynchronizedReadableRandomAccessStream(
-                new ReadableRandomAccessSubstream(sourceStream));
+    protected HFSVolume(ReadableRandomAccessStream hfsFile, boolean cachingEnabled) {
+//        System.err.println("HFSVolume(" + hfsFile + ", " +
+//                cachingEnabled + ", " + btreeOperations + ", " +
+//                catalogOperations + ", " + extentsOverflowOperations + ");");
+        this.sourceStream = new SynchronizedReadableRandomAccessStream(hfsFile);
+        this.hfsStream = new SynchronizedReadableRandomAccessStream(new ReadableRandomAccessSubstream(sourceStream));
         this.hfsFile = hfsStream;
 
-        /* This seems to be a built in assumption of HFSish file systems, even
-         * when using media with other physical block sizes (for instance CDs,
-         * 2 KiB). */
+        // This seems to be a built in assumption of HFSish file systems, even
+        // when using media with other physical block sizes (for instance CDs,
+        // 2 KiB).
         this.physicalBlockSize = 512;
 
-        if(cachingEnabled)
+        if (cachingEnabled)
             enableFileSystemCaching();
 
         this.catalogFile = new CatalogFile(this);
@@ -115,40 +117,33 @@ public abstract class HFSVolume {
 
         try {
             runSanityChecks();
-            //System.err.println("Sanity checks completed successfully.");
-        } catch(Exception e) {
+//            System.err.println("Sanity checks completed successfully.");
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    //public static HFSVolume open(DataLocator loc, boolean writable) {
-    //}
+//    public static HFSVolume open(DataLocator loc, boolean writable) {
+//    }
 
-    /*
-    public static HFSVolume openHFS(DataLocator loc, boolean writable,
-            String encodingName) {
-        return new HFSOriginalVolume(
-                writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
-                0, false, encodingName);
-    }
+//    public static HFSVolume openHFS(DataLocator loc, boolean writable, String encodingName) {
+//        return new HFSOriginalVolume(writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
+//                0, false, encodingName);
+//    }
 
-    public static HFSVolume openHFSPlus(DataLocator loc, boolean writable) {
-        return new HFSPlusVolume(
-                writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
-                0, false);
-    }
+//    public static HFSVolume openHFSPlus(DataLocator loc, boolean writable) {
+//        return new HFSPlusVolume(writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
+//                0, false);
+//    }
 
-    public static HFSVolume openHFSX(DataLocator loc, boolean writable) {
-        return new HFSXVolume(
-                writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
-                0, false);
-    }
+//    public static HFSVolume openHFSX(DataLocator loc, boolean writable) {
+//        return new HFSXVolume(writable ? loc.createReadWriteFile() : loc.createReadOnlyFile(),
+//                0, false);
+//    }
 
-    public static HFSVolume openHFSWrappedHFSPlus(DataLocator loc,
-            boolean writable) {
-        // TODO
-    }
-    */
+//    public static HFSVolume openHFSWrappedHFSPlus(DataLocator loc, boolean writable) {
+//        // TODO
+//    }
 
     /**
      * Performs some sanity checks, like reading from different parts of the
@@ -168,10 +163,9 @@ public abstract class HFSVolume {
         // Checks if the length of the stream is block-aligned.
         {
             long res = fsStream.length() % 512;
-            if(res != 0 && res != -1)
+            if (res != 0 && res != -1)
                 throw new Exception("Length of file system (" +
-                        fsStream.length() + ") is not block-aligned. Found " +
-                        res + " extra bytes.");
+                        fsStream.length() + ") is not block-aligned. Found " + res + " extra bytes.");
         }
 
         // Reads the first block of the file system.
@@ -179,22 +173,20 @@ public abstract class HFSVolume {
             fsStream.seek(0);
 
             int bytesRead = fsStream.read(block);
-            if(bytesRead != 512) {
+            if (bytesRead != 512) {
                 throw new Exception("Failed to read first block. Managed to " +
-                        "read " + bytesRead + " bytes from the beginning of " +
-                        "the volume.");
+                        "read " + bytesRead + " bytes from the beginning of the volume.");
             }
         }
 
         // Reads the last block of the file system.
-        if(fsStream.length() > 0) {
-            fsStream.seek(fsStream.length()-512);
+        if (fsStream.length() > 0) {
+            fsStream.seek(fsStream.length() - 512);
 
             int bytesRead = fsStream.read(block);
-            if(bytesRead != 512) {
+            if (bytesRead != 512) {
                 throw new Exception("Failed to read last block. Managed to " +
-                        "read " + bytesRead + " bytes from the end of " +
-                        "the volume.");
+                        "read " + bytesRead + " bytes from the end of the volume.");
             }
         }
 
@@ -202,7 +194,7 @@ public abstract class HFSVolume {
 
         // Check the volume header for validity.
         CommonHFSVolumeHeader vh = getVolumeHeader();
-        if(!vh.isValid()) {
+        if (!vh.isValid()) {
             System.err.println("Detected invalid volume header:");
             vh.print(System.err, "  ");
             throw new Exception("Invalid volume header!");
@@ -218,17 +210,17 @@ public abstract class HFSVolume {
      * @return a stream covering the entire file system, from start to end.
      */
     public ReadableRandomAccessStream createFSStream() {
-        ReadableRandomAccessSubstream subs =
-                new ReadableRandomAccessSubstream(hfsFile);
+        ReadableRandomAccessSubstream subs = new ReadableRandomAccessSubstream(hfsFile);
 
         return subs;
-        //long fsLength = getVolumeHeader().getFileSystemEnd();
-        //return new ReadableConcatenatedStream(subs, fsOffset, fsLength);
+//        long fsLength = getVolumeHeader().getFileSystemEnd();
+//        return new ReadableConcatenatedStream(subs, fsOffset, fsLength);
     }
 
     public abstract CommonHFSVolumeHeader getVolumeHeader();
 
-    //public abstract VolumeHeader getVolumeHeader();
+//    public abstract VolumeHeader getVolumeHeader();
+
     public CatalogFile getCatalogFile() {
         return catalogFile;
     }
@@ -240,22 +232,22 @@ public abstract class HFSVolume {
     public abstract AllocationFile getAllocationFile();
 
     public abstract boolean hasAttributesFile();
+
     public abstract boolean hasJournal();
+
     public abstract boolean hasHotFilesFile();
 
     public abstract AttributesFile getAttributesFile();
+
     public abstract Journal getJournal();
+
     public abstract HotFilesFile getHotFilesFile();
 
-    public abstract CommonHFSCatalogNodeID getCommonHFSCatalogNodeID(
-            ReservedID requestedNodeID);
+    public abstract CommonHFSCatalogNodeID getCommonHFSCatalogNodeID(ReservedID requestedNodeID);
 
-    public abstract CommonHFSCatalogNodeID createCommonHFSCatalogNodeID(
-            int cnid);
+    public abstract CommonHFSCatalogNodeID createCommonHFSCatalogNodeID(int cnid);
 
-    public CommonHFSCatalogKey createCommonHFSCatalogKey(
-            CommonHFSCatalogNodeID parentID, CommonHFSCatalogString name)
-    {
+    public CommonHFSCatalogKey createCommonHFSCatalogKey(CommonHFSCatalogNodeID parentID, CommonHFSCatalogString name) {
 
         return CommonHFSCatalogKey.create(parentID, name);
     }
@@ -263,8 +255,7 @@ public abstract class HFSVolume {
     public abstract CommonHFSExtentKey createCommonHFSExtentKey(
             boolean isResource, int cnid, long startBlock);
 
-    /*protected CommonHFSCatalogString createCommonHFSCatalogString(
-            String name);*/
+//    protected CommonHFSCatalogString createCommonHFSCatalogString(String name);
 
     /**
      * Returns an encoded representation of the empty string. This is a
@@ -273,14 +264,14 @@ public abstract class HFSVolume {
      */
     public abstract CommonHFSCatalogString getEmptyString();
 
-    /**
-     * Returns the default StringDecoder instance for this view. For HFS file
-     * systems the decoder can be set in the HFS-specific subclass, but in HFS+
-     * and HFSX file systems it will always return a UTF-16BE string decoder.
-     *
-     * @return the default StringDecoder instance for this view.
-     */
-    //public abstract StringDecoder getDefaultStringDecoder();
+//    /**
+//     * Returns the default StringDecoder instance for this view. For HFS file
+//     * systems the decoder can be set in the HFS-specific subclass, but in HFS+
+//     * and HFSX file systems it will always return a UTF-16BE string decoder.
+//     *
+//     * @return the default StringDecoder instance for this view.
+//     */
+//    public abstract StringDecoder getDefaultStringDecoder();
 
     /**
      * Decodes the supplied CommonHFSCatalogString according to the current
@@ -291,7 +282,7 @@ public abstract class HFSVolume {
      */
     public abstract String decodeString(CommonHFSCatalogString str);
 
-   /**
+    /**
      * Encodes the supplied CommonHFSCatalogString according to the current
      * settings of the view.
      *
@@ -300,13 +291,12 @@ public abstract class HFSVolume {
      */
     public abstract CommonHFSCatalogString encodeString(String str);
 
-
     /**
      * Closes the volume and flushes any data not yet committed to disk (if
      * opened in writable mode).
      */
     public synchronized void close() {
-        if(closed) {
+        if (closed) {
             throw new RuntimeException("Already closed.");
         }
 
@@ -315,13 +305,11 @@ public abstract class HFSVolume {
         closed = true;
     }
 
-    /*
-    public boolean isFileSystemCachingEnabled() {
-        ReadableRandomAccessStream currentSourceStream = hfsStream.getSourceStream();
-        return currentSourceStream != this.sourceStream &&
-                currentSourceStream instanceof ReadableBlockCachingStream;
-    }
-    */
+//    public boolean isFileSystemCachingEnabled() {
+//        ReadableRandomAccessStream currentSourceStream = hfsStream.getSourceStream();
+//        return currentSourceStream != this.sourceStream &&
+//                currentSourceStream instanceof ReadableBlockCachingStream;
+//    }
 
     public void enableFileSystemCaching() {
         enableFileSystemCaching(256 * 1024, 64); // 64 pages of 256 KiB each is the default setting
@@ -329,70 +317,52 @@ public abstract class HFSVolume {
 
     public void enableFileSystemCaching(int blockSize, int blocksInCache) {
         hfsStream.close();
-        hfsStream =
-                new SynchronizedReadableRandomAccessStream(
-                new ReadableBlockCachingStream(
-                new ReadableRandomAccessSubstream(sourceStream), blockSize,
-                blocksInCache));
+        hfsStream = new SynchronizedReadableRandomAccessStream(new ReadableBlockCachingStream(
+                new ReadableRandomAccessSubstream(sourceStream), blockSize, blocksInCache));
         hfsFile = hfsStream;
     }
 
     public void disableFileSystemCaching() {
         hfsStream.close();
-        hfsStream =
-                new SynchronizedReadableRandomAccessStream(
-                new ReadableRandomAccessSubstream(sourceStream));
+        hfsStream = new SynchronizedReadableRandomAccessStream(new ReadableRandomAccessSubstream(sourceStream));
         hfsFile = hfsStream;
     }
 
-    /*
-     /**
-     * Returns the underlying stream, serving the view with HFS+ file system
-     * data.
-     * @return the underlying stream.
-     */
-    /*
-    public ReadableRandomAccessStream getStream() {
-        return hfsFile;
-    }
-    */
-
+//    /**
+//     * Returns the underlying stream, serving the view with HFS+ file system
+//     * data.
+//     *
+//     * @return the underlying stream.
+//     */
+//    public ReadableRandomAccessStream getStream() {
+//        return hfsFile;
+//    }
 
     public long extractDataForkToStream(CommonHFSCatalogLeafRecord fileRecord,
-            OutputStream os, ProgressMonitor pm) throws IOException {
+                                        OutputStream os, ProgressMonitor pm) throws IOException {
         // = fileRecord.getData();
-        if(fileRecord instanceof CommonHFSCatalogFileRecord) {
-            CommonHFSCatalogFile catFile =
-                    ((CommonHFSCatalogFileRecord) fileRecord).getData();
+        if (fileRecord instanceof CommonHFSCatalogFileRecord) {
+            CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord) fileRecord).getData();
             CommonHFSForkData dataFork = catFile.getDataFork();
-            return extractForkToStream(ForkFilter.ForkType.DATA,
-                    catFile.getFileID().toLong(), dataFork, os, pm);
-        }
-        else
-            throw new IllegalArgumentException("fileRecord.getData() it not " +
-                    "of type RECORD_TYPE_FILE");
+            return extractForkToStream(ForkFilter.ForkType.DATA, catFile.getFileID().toLong(), dataFork, os, pm);
+        } else
+            throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
     }
 
     public long extractResourceForkToStream(
-            CommonHFSCatalogLeafRecord fileRecord, OutputStream os,
-            ProgressMonitor pm) throws IOException {
-        //CommonHFSCatalogLeafRecordData recData = fileRecord.getData();
-        if(fileRecord instanceof CommonHFSCatalogFileRecord) {
-            CommonHFSCatalogFile catFile =
-                    ((CommonHFSCatalogFileRecord) fileRecord).getData();
+            CommonHFSCatalogLeafRecord fileRecord, OutputStream os, ProgressMonitor pm) throws IOException {
+//        CommonHFSCatalogLeafRecordData recData = fileRecord.getData();
+        if (fileRecord instanceof CommonHFSCatalogFileRecord) {
+            CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord) fileRecord).getData();
             CommonHFSForkData resFork = catFile.getResourceFork();
-            return extractForkToStream(ForkFilter.ForkType.RESOURCE,
-                    catFile.getFileID().toLong(), resFork, os, pm);
-        }
-        else
-            throw new IllegalArgumentException("fileRecord.getData() it not " +
-                    "of type RECORD_TYPE_FILE");
+            return extractForkToStream(ForkFilter.ForkType.RESOURCE, catFile.getFileID().toLong(), resFork, os, pm);
+        } else
+            throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
     }
 
     private long extractForkToStream(ForkFilter.ForkType forkType,
-            long cnid, CommonHFSForkData forkData, OutputStream os,
-            ProgressMonitor pm) throws IOException
-    {
+                                     long cnid, CommonHFSForkData forkData, OutputStream os,
+                                     ProgressMonitor pm) throws IOException {
         CommonHFSVolumeHeader header = getVolumeHeader();
         ForkFilter forkFilter = new ForkFilter(forkType,
                 cnid,
@@ -403,18 +373,16 @@ public abstract class HFSVolume {
                 header.getAllocationBlockStart() * physicalBlockSize);
         long bytesToRead = forkData.getLogicalSize();
         byte[] buffer = new byte[4096];
-        while(bytesToRead > 0) {
-            if(pm.cancelSignaled())
+        while (bytesToRead > 0) {
+            if (pm.cancelSignaled())
                 break;
 
-//          System.out.print("forkFilter.read([].length=" + buffer.length +
-//                    ", 0, " +
-//                    (bytesToRead < buffer.length ? (int)bytesToRead : buffer.length) +
-//                    "...");
+//            System.out.print("forkFilter.read([].length=" + buffer.length + ", 0, " +
+//                    (bytesToRead < buffer.length ? (int) bytesToRead : buffer.length) + "...");
             int bytesRead = forkFilter.read(buffer, 0,
-                    (bytesToRead < buffer.length ? (int)bytesToRead : buffer.length));
-//          System.out.println("done. bytesRead = " + bytesRead);
-            if(bytesRead < 0)
+                    (bytesToRead < buffer.length ? (int) bytesToRead : buffer.length));
+//            System.out.println("done. bytesRead = " + bytesRead);
+            if (bytesRead < 0)
                 break;
             else {
                 pm.addDataProgress(bytesRead);
@@ -434,14 +402,12 @@ public abstract class HFSVolume {
      * @throws IllegalArgumentException if fileRecord is not a file record.
      */
     public ReadableRandomAccessStream getReadableDataForkStream(CommonHFSCatalogLeafRecord fileRecord) {
-	if(fileRecord instanceof CommonHFSCatalogFileRecord) {
-	    CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord)fileRecord).getData();
-	    CommonHFSForkData fork = catFile.getDataFork();
-	    return getReadableForkStream(ForkFilter.ForkType.DATA,
-                    catFile.getFileID().toLong(), fork);
-	}
-	else
-	    throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
+        if (fileRecord instanceof CommonHFSCatalogFileRecord) {
+            CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord) fileRecord).getData();
+            CommonHFSForkData fork = catFile.getDataFork();
+            return getReadableForkStream(ForkFilter.ForkType.DATA, catFile.getFileID().toLong(), fork);
+        } else
+            throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
     }
 
     /**
@@ -453,19 +419,16 @@ public abstract class HFSVolume {
      * @throws IllegalArgumentException if fileRecord is not a file record.
      */
     public ReadableRandomAccessStream getReadableResourceForkStream(CommonHFSCatalogLeafRecord fileRecord) {
-	if(fileRecord instanceof CommonHFSCatalogFileRecord) {
-	    CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord)fileRecord).getData();
-	    CommonHFSForkData fork = catFile.getResourceFork();
-	    return getReadableForkStream(ForkFilter.ForkType.RESOURCE,
-                    catFile.getFileID().toLong(), fork);
-	}
-	else
-	    throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
+        if (fileRecord instanceof CommonHFSCatalogFileRecord) {
+            CommonHFSCatalogFile catFile = ((CommonHFSCatalogFileRecord) fileRecord).getData();
+            CommonHFSForkData fork = catFile.getResourceFork();
+            return getReadableForkStream(ForkFilter.ForkType.RESOURCE, catFile.getFileID().toLong(), fork);
+        } else
+            throw new IllegalArgumentException("fileRecord.getData() it not of type RECORD_TYPE_FILE");
     }
 
     private ReadableRandomAccessStream getReadableForkStream(
-            ForkFilter.ForkType forkType, long cnid, CommonHFSForkData forkData)
-    {
+            ForkFilter.ForkType forkType, long cnid, CommonHFSForkData forkData) {
         CommonHFSVolumeHeader header = getVolumeHeader();
         return new ForkFilter(forkType,
                 cnid,
@@ -481,81 +444,75 @@ public abstract class HFSVolume {
         return key.getForkType() + ":" + key.getFileID().toLong() + ":" + key.getStartBlock();
     }
 
-
     // Utility methods
 
     protected long calculateDataForkSizeRecursive(CommonHFSCatalogLeafRecord[] recs) {
-	return calculateForkSizeRecursive(recs, false);
+        return calculateForkSizeRecursive(recs, false);
     }
+
     protected long calculateDataForkSizeRecursive(CommonHFSCatalogLeafRecord rec) {
-	return calculateForkSizeRecursive(rec, false);
+        return calculateForkSizeRecursive(rec, false);
     }
+
     protected long calculateResourceForkSizeRecursive(CommonHFSCatalogLeafRecord[] recs) {
-	return calculateForkSizeRecursive(recs, true);
+        return calculateForkSizeRecursive(recs, true);
     }
+
     protected long calculateResourceForkSizeRecursive(CommonHFSCatalogLeafRecord rec) {
-	return calculateForkSizeRecursive(rec, true);
+        return calculateForkSizeRecursive(rec, true);
     }
 
     /**
      * Calculates the complete size of the trees rooted in <code>recs</code>.
      */
     protected long calculateForkSizeRecursive(CommonHFSCatalogLeafRecord[] recs, boolean resourceFork) {
-	long totalSize = 0;
-	for(CommonHFSCatalogLeafRecord rec : recs)
-	    totalSize += calculateForkSizeRecursive(rec, resourceFork);
-	return totalSize;
+        long totalSize = 0;
+        for (CommonHFSCatalogLeafRecord rec : recs)
+            totalSize += calculateForkSizeRecursive(rec, resourceFork);
+        return totalSize;
     }
 
     /**
      * Calculates the complete size of the tree represented by <code>rec</code>.
      */
     protected long calculateForkSizeRecursive(CommonHFSCatalogLeafRecord rec, boolean resourceFork) {
-	if(rec instanceof CommonHFSCatalogFileRecord) {
-	    if(!resourceFork)
-		return ((CommonHFSCatalogFileRecord)rec).getData().getDataFork().getLogicalSize();
-	    else
-		return ((CommonHFSCatalogFileRecord)rec).getData().getResourceFork().getLogicalSize();
-	}
-	else if(rec instanceof CommonHFSCatalogFolderRecord) {
-	    CommonHFSCatalogNodeID requestedID =
-                    ((CommonHFSCatalogFolderRecord)rec).getData().getFolderID();
-	    CommonHFSCatalogLeafRecord[] contents = catalogFile.listRecords(requestedID);
-	    long totalSize = 0;
-	    for(CommonHFSCatalogLeafRecord outRec : contents) {
-		totalSize += calculateForkSizeRecursive(outRec, resourceFork);
-	    }
-	    return totalSize;
-	}
-	else
-	    return 0;
+        if (rec instanceof CommonHFSCatalogFileRecord) {
+            if (!resourceFork)
+                return ((CommonHFSCatalogFileRecord) rec).getData().getDataFork().getLogicalSize();
+            else
+                return ((CommonHFSCatalogFileRecord) rec).getData().getResourceFork().getLogicalSize();
+        } else if (rec instanceof CommonHFSCatalogFolderRecord) {
+            CommonHFSCatalogNodeID requestedID =
+                    ((CommonHFSCatalogFolderRecord) rec).getData().getFolderID();
+            CommonHFSCatalogLeafRecord[] contents = catalogFile.listRecords(requestedID);
+            long totalSize = 0;
+            for (CommonHFSCatalogLeafRecord outRec : contents) {
+                totalSize += calculateForkSizeRecursive(outRec, resourceFork);
+            }
+            return totalSize;
+        } else
+            return 0;
     }
 
     public int getPhysicalBlockSize() {
         return physicalBlockSize;
     }
 
-    public abstract CommonBTHeaderNode createCommonBTHeaderNode(
-            byte[] currentNodeData, int offset, int nodeSize);
+    public abstract CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData, int offset, int nodeSize);
 
     public abstract CommonBTNodeDescriptor readNodeDescriptor(Readable rd);
 
     public abstract CommonBTHeaderRecord readHeaderRecord(Readable rd);
 
-    public abstract CommonBTNodeDescriptor createCommonBTNodeDescriptor(
-            byte[] currentNodeData, int offset);
+    public abstract CommonBTNodeDescriptor createCommonBTNodeDescriptor(byte[] currentNodeData, int offset);
 
-    public abstract CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data,
-            int offset, int nodeSize);
+    public abstract CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data, int offset, int nodeSize);
 
-    public abstract CommonHFSCatalogKey newCatalogKey(
-            CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString);
+    public abstract CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString);
 
-    public abstract CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data,
-            int offset, int nodeSize);
+    public abstract CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset, int nodeSize);
 
-    public abstract CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data,
-            int offset);
+    public abstract CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data, int offset);
 
     public abstract CommonHFSExtentIndexNode createCommonHFSExtentIndexNode(
             byte[] currentNodeData, int offset, int nodeSize);
@@ -564,6 +521,5 @@ public abstract class HFSVolume {
             byte[] currentNodeData, int offset, int nodeSize);
 
     public abstract CommonHFSExtentKey createCommonHFSExtentKey(
-            CommonHFSForkType forkType, CommonHFSCatalogNodeID fileID,
-            int startBlock);
+            CommonHFSForkType forkType, CommonHFSCatalogNodeID fileID, int startBlock);
 }

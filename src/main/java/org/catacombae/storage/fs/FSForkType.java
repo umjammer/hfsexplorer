@@ -38,6 +38,5 @@ public enum FSForkType {
     /**
      * The 32-byte metadata fork FinderInfo, used by the Mac OS Finder.
      */
-    MACOS_FINDERINFO,
-    ;
+    MACOS_FINDERINFO
 }

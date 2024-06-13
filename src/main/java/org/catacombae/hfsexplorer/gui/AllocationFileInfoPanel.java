@@ -24,19 +24,21 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 import org.catacombae.csjc.structelements.ArrayBuilder;
 import org.catacombae.hfsexplorer.GUIUtil;
 import org.catacombae.util.ObjectContainer;
 import org.catacombae.hfs.types.hfscommon.CommonHFSExtentDescriptor;
 import org.catacombae.hfs.AllocationFile;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class AllocationFileInfoPanel extends javax.swing.JPanel {
+
     private final AllocationFile afView;
-    private final ObjectContainer<Boolean> stopCountBlocksProcess =
-            new ObjectContainer<Boolean>(false);
+    private final ObjectContainer<Boolean> stopCountBlocksProcess = new ObjectContainer<Boolean>(false);
 
     /** Creates new form AllocationFileInfoPanel */
     public AllocationFileInfoPanel(JFrame window, final AllocationFile afView) {
@@ -53,21 +55,18 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
         });
 
         Thread t = new Thread(new Runnable() {
-            /* @Override */
-            public void run() {
-                final ObjectContainer<Long> freeBlocks = new ObjectContainer<Long>((long)-1);
-                final ObjectContainer<Long> usedBlocks = new ObjectContainer<Long>((long)-1);
+                public void run() {
+                final ObjectContainer<Long> freeBlocks = new ObjectContainer<Long>((long) -1);
+                final ObjectContainer<Long> usedBlocks = new ObjectContainer<Long>((long) -1);
                 afView.countBlocks(freeBlocks, usedBlocks, stopCountBlocksProcess);
-                if(!stopCountBlocksProcess.o) {
+                if (!stopCountBlocksProcess.o) {
                     SwingUtilities.invokeLater(new Runnable() {
-                        /* @Override */
-                        public void run() {
+                                        public void run() {
                             allocatedBlocksField.setText(usedBlocks.o.toString());
                             freeBlocksField.setText(freeBlocks.o.toString());
                         }
                     });
-                }
-                else
+                } else
                     System.err.println("AllocationFileInfoPanel thread aborted.");
             }
         });
@@ -75,47 +74,42 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
 
         allocateButton.addActionListener(new ActionListener() {
 
-            /* @Override */
-            public void actionPerformed(ActionEvent e) {
+                public void actionPerformed(ActionEvent e) {
                 allocateButton.setEnabled(false);
                 Thread t = new Thread(new Runnable() {
-                    /* @Override */
                     public void run() {
                         try {
                             long l = Long.parseLong(allocateSizeField.getText());
                             CommonHFSExtentDescriptor[] descs = afView.findFreeSpace(l);
-                            if(descs != null) {
+                            if (descs != null) {
                                 final ArrayBuilder ab = new ArrayBuilder("CommonHFSExtentDescriptor[" +
                                         descs.length + "]");
-                                for(CommonHFSExtentDescriptor desc : descs) {
+                                for (CommonHFSExtentDescriptor desc : descs) {
                                     System.err.println("Found descriptor: ");
                                     desc.print(System.err, "  ");
                                     ab.add(desc.getStructElements());
                                 }
                                 SwingUtilities.invokeLater(new Runnable() {
-                                    /* @Override */
                                     public void run() {
                                         resultScroller.setViewportView(new StructViewPanel("Possible allocations",
                                                 ab.getResult()));
                                     }
                                 });
-                            }
-                            else {
+                            } else {
                                 JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
                                         "Not enough space on volume!", "Info",
                                         JOptionPane.INFORMATION_MESSAGE);
                             }
-                        } catch(NumberFormatException ee) {
+                        } catch (NumberFormatException ee) {
                             JOptionPane.showMessageDialog(AllocationFileInfoPanel.this,
                                     "Invalid long value.", "Error", JOptionPane.ERROR_MESSAGE);
-                        } catch(Throwable t) {
+                        } catch (Throwable t) {
                             t.printStackTrace();
                             GUIUtil.displayExceptionDialog(t, 10, AllocationFileInfoPanel.this,
                                     "Exception while trying to calculate available free extents:",
                                     "Exception", JOptionPane.ERROR_MESSAGE);
                         } finally {
                             SwingUtilities.invokeLater(new Runnable() {
-                                /* @Override */
                                 public void run() {
                                     allocateButton.setEnabled(true);
                                 }
@@ -129,12 +123,12 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
         });
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -178,12 +172,12 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout resultPanelLayout = new org.jdesktop.layout.GroupLayout(resultPanel);
         resultPanel.setLayout(resultPanelLayout);
         resultPanelLayout.setHorizontalGroup(
-            resultPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 340, Short.MAX_VALUE)
+                resultPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(0, 340, Short.MAX_VALUE)
         );
         resultPanelLayout.setVerticalGroup(
-            resultPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 194, Short.MAX_VALUE)
+                resultPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(0, 194, Short.MAX_VALUE)
         );
 
         resultScroller.setViewportView(resultPanel);
@@ -193,60 +187,59 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, resultScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(allocationHeader)
-                            .add(layout.createSequentialGroup()
-                                .add(allocateSizeLabel)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(allocateSizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(allocateUnitLabel)))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(allocateButton))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(allocatedBlocksLabel)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(allocatedBlocksField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(freeBlocksLabel)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(freeBlocksField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, resultLabel))
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, resultScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(allocationHeader)
+                                                        .add(layout.createSequentialGroup()
+                                                                .add(allocateSizeLabel)
+                                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                                .add(allocateSizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
+                                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                                .add(allocateUnitLabel)))
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(allocateButton))
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                                .add(allocatedBlocksLabel)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(allocatedBlocksField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE))
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                                .add(freeBlocksLabel)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(freeBlocksField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE))
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, resultLabel))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(allocatedBlocksLabel)
-                    .add(allocatedBlocksField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(freeBlocksLabel)
-                    .add(freeBlocksField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(18, 18, 18)
-                .add(allocationHeader)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(allocateSizeLabel)
-                    .add(allocateSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(allocateButton)
-                    .add(allocateUnitLabel))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(resultLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(resultScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(allocatedBlocksLabel)
+                                        .add(allocatedBlocksField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(freeBlocksLabel)
+                                        .add(freeBlocksField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(18, 18, 18)
+                                .add(allocationHeader)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(allocateSizeLabel)
+                                        .add(allocateSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .add(allocateButton)
+                                        .add(allocateUnitLabel))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(resultLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(resultScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
+                                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton allocateButton;
@@ -262,5 +255,4 @@ public class AllocationFileInfoPanel extends javax.swing.JPanel {
     private javax.swing.JPanel resultPanel;
     private javax.swing.JScrollPane resultScroller;
     // End of variables declaration//GEN-END:variables
-
 }

@@ -21,6 +21,8 @@ package org.catacombae.hfs.types.hfscommon;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogThread {
+
     public abstract CommonHFSCatalogNodeID getParentID();
+
     public abstract CommonHFSCatalogString getNodeName();
 }

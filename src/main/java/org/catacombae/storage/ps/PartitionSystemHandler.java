@@ -25,7 +25,9 @@ package org.catacombae.storage.ps;
 public abstract class PartitionSystemHandler {
 
     public abstract long getPartitionCount();
+
     public abstract Partition[] getPartitions();
+
     public abstract void close();
 
     /**
@@ -38,7 +40,7 @@ public abstract class PartitionSystemHandler {
      */
     public Partition getPartition(int partitionNumber) {
         Partition[] parts = getPartitions();
-        if(partitionNumber >= 0 && partitionNumber < parts.length)
+        if (partitionNumber >= 0 && partitionNumber < parts.length)
             return parts[partitionNumber];
         else
             return null;

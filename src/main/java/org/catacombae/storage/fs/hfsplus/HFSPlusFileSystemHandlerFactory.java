@@ -22,8 +22,6 @@ import java.util.logging.Logger;
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
 import org.catacombae.hfs.types.hfs.HFSPlusWrapperMDB;
 import org.catacombae.io.ReadableRandomAccessStream;
-import org.catacombae.storage.io.DataLocator;
-import org.catacombae.storage.io.SubDataLocator;
 import org.catacombae.storage.fs.DefaultFileSystemHandlerInfo;
 import org.catacombae.storage.fs.FileSystemCapability;
 import org.catacombae.storage.fs.FileSystemHandler;
@@ -33,6 +31,8 @@ import org.catacombae.storage.fs.FileSystemRecognizer;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandlerFactory;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemRecognizer.FileSystemType;
+import org.catacombae.storage.io.DataLocator;
+import org.catacombae.storage.io.SubDataLocator;
 import org.catacombae.util.Util;
 
 
@@ -40,26 +40,26 @@ import org.catacombae.util.Util;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerFactory {
+
     private static final FileSystemRecognizer recognizer = new HFSPlusFileSystemRecognizer();
 
     private static final FileSystemHandlerInfo handlerInfo =
             new DefaultFileSystemHandlerInfo("org.catacombae.hfs_plus_handler",
-            "HFS+ file system handler", "1.0", 0, "Erik Larsson, Catacombae Software");
+                    "HFS+ file system handler", "1.0", 0, "Erik Larsson, Catacombae Software");
 
 
     private static final CustomAttribute compositionEnabledAttribute =
             createCustomAttribute(AttributeType.BOOLEAN, "COMPOSE_UNICODE_FILENAMES",
                     "Decides whether Unicode filenames should be composed or " +
-                    "left in their original decomposed form.", true);
+                            "left in their original decomposed form.", true);
 
     private static final CustomAttribute hideProtectedAttribute =
             createCustomAttribute(AttributeType.BOOLEAN, "HIDE_PROTECTED_FILES",
                     "Decides whether protected files like the inode " +
-                    "directories and the journal files should show up in a " +
-                    "directory listing.", true);
+                            "directories and the journal files should show up in a " +
+                            "directory listing.", true);
 
-    private static final Logger log =
-            Logger.getLogger(HFSPlusFileSystemHandlerFactory.class.getName());
+    private static final Logger log = Logger.getLogger(HFSPlusFileSystemHandlerFactory.class.getName());
 
     public FileSystemCapability[] getCapabilities() {
         return HFSPlusFileSystemHandler.getStaticCapabilities();
@@ -67,37 +67,26 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
 
     @Override
     public FileSystemHandler createHandler(DataLocator data) {
-        boolean useCaching =
-                createAttributes.getBooleanAttribute(StandardAttribute.CACHING_ENABLED);
-        boolean posixFilenames =
-                createAttributes.getBooleanAttribute(posixFilenamesAttribute);
-        boolean sfmSubstitutions =
-                createAttributes.getBooleanAttribute(sfmSubstitutionsAttribute);
-        boolean composeFilename =
-                createAttributes.getBooleanAttribute(compositionEnabledAttribute);
-        boolean hideProtected =
-                createAttributes.getBooleanAttribute(hideProtectedAttribute);
+        boolean useCaching = createAttributes.getBooleanAttribute(StandardAttribute.CACHING_ENABLED);
+        boolean posixFilenames = createAttributes.getBooleanAttribute(posixFilenamesAttribute);
+        boolean sfmSubstitutions = createAttributes.getBooleanAttribute(sfmSubstitutionsAttribute);
+        boolean composeFilename = createAttributes.getBooleanAttribute(compositionEnabledAttribute);
+        boolean hideProtected = createAttributes.getBooleanAttribute(hideProtectedAttribute);
 
         ReadableRandomAccessStream recognizerStream = data.createReadOnlyFile();
 
         final DataLocator dataToLoad;
         try {
-            FileSystemType type =
-                    HFSCommonFileSystemRecognizer.detectFileSystem(
-                    recognizerStream, 0);
+            FileSystemType type = HFSCommonFileSystemRecognizer.detectFileSystem(recognizerStream, 0);
 
-            if(type == FileSystemType.HFS_WRAPPED_HFS_PLUS) {
+            if (type == FileSystemType.HFS_WRAPPED_HFS_PLUS) {
                 dataToLoad = hfsUnwrap(data);
-            }
-            else if(type == FileSystemType.UNKNOWN) {
-                throw new RuntimeException("No HFS file system found at " +
-                        "'data'.");
-            }
-            else {
+            } else if (type == FileSystemType.UNKNOWN) {
+                throw new RuntimeException("No HFS file system found at 'data'.");
+            } else {
                 dataToLoad = data;
             }
-        }
-        finally {
+        } finally {
             recognizerStream.close();
         }
 
@@ -106,10 +95,9 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
     }
 
     protected FileSystemHandler createHandlerInternal(DataLocator data,
-            boolean useCaching, boolean posixFilenames,
-            boolean sfmSubstitutions, boolean composeFilename,
-            boolean hideProtected)
-    {
+                                                      boolean useCaching, boolean posixFilenames,
+                                                      boolean sfmSubstitutions, boolean composeFilename,
+                                                      boolean hideProtected) {
         return new HFSPlusFileSystemHandler(data, useCaching, posixFilenames,
                 sfmSubstitutions, composeFilename, hideProtected);
     }
@@ -124,15 +112,13 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
         // Set default values for standard attributes
         setStandardAttributeDefaultValue(StandardAttribute.CACHING_ENABLED, true);
 
-        return new StandardAttribute[] { StandardAttribute.CACHING_ENABLED };
+        return new StandardAttribute[] {StandardAttribute.CACHING_ENABLED};
     }
 
     @Override
     public CustomAttribute[] getSupportedCustomAttributes() {
-        final CustomAttribute[] superAttributes =
-                super.getSupportedCustomAttributes();
-        final CustomAttribute[] result =
-                new CustomAttribute[superAttributes.length + 2];
+        final CustomAttribute[] superAttributes = super.getSupportedCustomAttributes();
+        final CustomAttribute[] result = new CustomAttribute[superAttributes.length + 2];
 
         Util.arrayCopy(superAttributes, result);
         result[superAttributes.length + 0] = compositionEnabledAttribute;
@@ -167,11 +153,9 @@ public class HFSPlusFileSystemHandlerFactory extends HFSCommonFileSystemHandlerF
         HFSPlusWrapperMDB mdb = new HFSPlusWrapperMDB(mdbData, 0);
         ExtDescriptor xd = mdb.getDrEmbedExtent();
         int hfsBlockSize = mdb.getDrAlBlkSiz();
-        long fsOffset =
-                ((long) Util.unsign(mdb.getDrAlBlSt())) * 512 +
-                ((long) Util.unsign(xd.getXdrStABN())) * hfsBlockSize;
-        long fsLength =
-                ((long) Util.unsign(xd.getXdrNumABlks())) * hfsBlockSize;
+        long fsOffset = ((long) Util.unsign(mdb.getDrAlBlSt())) * 512 +
+                        ((long) Util.unsign(xd.getXdrStABN())) * hfsBlockSize;
+        long fsLength = ((long) Util.unsign(xd.getXdrNumABlks())) * hfsBlockSize;
         log.fine("  fsOffset: " + fsOffset);
         log.fine("  fsLength: " + fsLength);
         // redetect with adjusted fsOffset

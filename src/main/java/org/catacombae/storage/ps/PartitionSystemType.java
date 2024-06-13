@@ -20,12 +20,15 @@ package org.catacombae.storage.ps;
 import org.catacombae.storage.ps.mbr.MBRHandlerFactory;
 import org.catacombae.storage.ps.gpt.GPTHandlerFactory;
 import org.catacombae.storage.ps.apm.APMHandlerFactory;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.storage.ps.ebr.EBRHandlerFactory;
+
 
 /**
  * Defines the partition system types that the library knows of, and provides a
@@ -53,23 +56,19 @@ public enum PartitionSystemType {
     private final String longName;
     private final PartitionSystemType[] overriddenPartitionSystems;
 
-    private LinkedList<Class<? extends PartitionSystemHandlerFactory>> factoryClasses =
-            new LinkedList<Class<? extends PartitionSystemHandlerFactory>>();
+    private LinkedList<Class<? extends PartitionSystemHandlerFactory>> factoryClasses = new LinkedList<Class<? extends PartitionSystemHandlerFactory>>();
 
     private PartitionSystemType(boolean pIsTopLevelCapable, String longName,
-            PartitionSystemType... overriddenPartitionSystems)
-    {
+                                PartitionSystemType... overriddenPartitionSystems) {
         this.isTopLevelCapable = pIsTopLevelCapable;
         this.longName = longName;
         this.overriddenPartitionSystems = overriddenPartitionSystems;
     }
 
     private PartitionSystemType(boolean pIsTopLevelCapable,
-            Class<? extends PartitionSystemHandlerFactory> pDefaultFactoryClass,
-            String longName, PartitionSystemType... overriddenPartitionSystems)
-    {
+                                Class<? extends PartitionSystemHandlerFactory> pDefaultFactoryClass,
+                                String longName, PartitionSystemType... overriddenPartitionSystems) {
         this(pIsTopLevelCapable, longName, overriddenPartitionSystems);
-
 
         this.factoryClasses.addLast(pDefaultFactoryClass);
     }
@@ -125,6 +124,7 @@ public enum PartitionSystemType {
     /**
      * Returns all registered factory classes for this type. The first entry in
      * the list will be the default factory class.
+     *
      * @return all registered factory classes for this type.
      */
     public List<Class<? extends PartitionSystemHandlerFactory>> getFactoryClasses() {
@@ -139,7 +139,7 @@ public enum PartitionSystemType {
      * @return a newly created factory from the type's default factory class.
      */
     public PartitionSystemHandlerFactory createDefaultHandlerFactory() {
-        if(factoryClasses.size() == 0)
+        if (factoryClasses.size() == 0)
             return null;
         else {
             Class<? extends PartitionSystemHandlerFactory> factoryClass =
@@ -156,18 +156,17 @@ public enum PartitionSystemType {
      */
     public static PartitionSystemHandlerFactory createHandlerFactory(Class<? extends PartitionSystemHandlerFactory> factoryClass) {
         try {
-            Constructor<? extends PartitionSystemHandlerFactory> c =
-                    factoryClass.getConstructor();
+            Constructor<? extends PartitionSystemHandlerFactory> c = factoryClass.getConstructor();
             return c.newInstance();
-        } catch(NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
-        } catch(InstantiationException e) {
+        } catch (InstantiationException e) {
             e.printStackTrace();
-        } catch(IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
-        } catch(InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;

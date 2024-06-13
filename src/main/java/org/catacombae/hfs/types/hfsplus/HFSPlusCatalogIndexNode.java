@@ -20,29 +20,29 @@ package org.catacombae.hfs.types.hfsplus;
 import org.catacombae.hfs.types.hfsx.HFSXCatalogKey;
 import org.catacombae.util.Util;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusCatalogIndexNode extends BTIndexNode {
-    public HFSPlusCatalogIndexNode(byte[] data, int offset, int nodeSize) {
-	this(data, offset, nodeSize, null);
-    }
-    protected HFSPlusCatalogIndexNode(byte[] data, int offset, int nodeSize, BTHeaderRec catalogHeaderRec) {
-	super(data, offset, nodeSize);
 
-	// Populate record list
-	// we loop offsets.length-1 times, since last offset is offset to free space
-	for(int i = 0; i < records.length; ++i) {
-	    int currentOffset = Util.unsign(offsets[i]);
-	    HFSPlusCatalogKey currentKey;
-	    if(catalogHeaderRec == null)
-		currentKey = new HFSPlusCatalogKey(data, offset+currentOffset);
-	    else
-                currentKey =
-                        new HFSXCatalogKey(data, offset + currentOffset,
-                        catalogHeaderRec.getKeyCompareType());
-	    records[i] = new BTIndexRecord(currentKey, data, offset+currentOffset);
-	}
+    public HFSPlusCatalogIndexNode(byte[] data, int offset, int nodeSize) {
+        this(data, offset, nodeSize, null);
     }
-    //public static
+
+    protected HFSPlusCatalogIndexNode(byte[] data, int offset, int nodeSize, BTHeaderRec catalogHeaderRec) {
+        super(data, offset, nodeSize);
+
+        // Populate record list
+        // we loop offsets.length-1 times, since last offset is offset to free space
+        for (int i = 0; i < records.length; ++i) {
+            int currentOffset = Util.unsign(offsets[i]);
+            HFSPlusCatalogKey currentKey;
+            if (catalogHeaderRec == null)
+                currentKey = new HFSPlusCatalogKey(data, offset + currentOffset);
+            else
+                currentKey = new HFSXCatalogKey(data, offset + currentOffset, catalogHeaderRec.getKeyCompareType());
+            records[i] = new BTIndexRecord(currentKey, data, offset + currentOffset);
+        }
+    }
 }

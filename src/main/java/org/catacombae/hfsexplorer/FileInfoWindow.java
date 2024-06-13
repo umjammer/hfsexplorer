@@ -29,6 +29,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
+
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
+import org.catacombae.hfs.types.hfsplus.JournalInfoBlock;
 import org.catacombae.hfsexplorer.fs.ResourceForkReader;
 import org.catacombae.hfsexplorer.gui.FileInfoPanel;
 import org.catacombae.hfsexplorer.gui.FSEntrySummaryPanel;
@@ -50,6 +53,10 @@ import org.catacombae.storage.fs.hfscommon.HFSCommonFSFile;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSFolder;
 import org.catacombae.storage.fs.hfscommon.HFSCommonFSLink;
 
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
+
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -66,12 +73,10 @@ public class FileInfoWindow extends HFSExplorerJFrame {
         // Summary panel
         try {
             final FSEntrySummaryPanel summaryPanel = new FSEntrySummaryPanel(this, fsEntry, parentPath);
-            summaryPanelScroller = new JScrollPane(summaryPanel,
-                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            summaryPanelScroller = new JScrollPane(summaryPanel, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER);
 
             tabs.addTab("Summary", summaryPanelScroller);
-        } catch(Exception e) {
+        } catch (Exception e) {
             GUIUtil.displayExceptionDialog(e, 20, this, "Exception while " +
                     "creating FSEntrySummaryPanel.");
             e.printStackTrace();
@@ -80,64 +85,62 @@ public class FileInfoWindow extends HFSExplorerJFrame {
         // Details panel
         try {
             JPanel infoPanel = null;
-            if(fsEntry instanceof HFSCommonFSFile || fsEntry instanceof HFSCommonFSLink) {
+            if (fsEntry instanceof HFSCommonFSFile || fsEntry instanceof HFSCommonFSLink) {
                 CommonHFSCatalogFile hfsFile;
-                if(fsEntry instanceof HFSCommonFSFile)
+                if (fsEntry instanceof HFSCommonFSFile)
                     hfsFile = ((HFSCommonFSFile) fsEntry).getInternalCatalogFile();
-                else if(fsEntry instanceof HFSCommonFSLink)
+                else if (fsEntry instanceof HFSCommonFSLink)
                     hfsFile = ((HFSCommonFSLink) fsEntry).getInternalCatalogFileRecord().getData();
                 else
                     throw new RuntimeException();
 
-                if(hfsFile instanceof CommonHFSCatalogFile.HFSPlusImplementation) {
+                if (hfsFile instanceof CommonHFSCatalogFile.HFSPlusImplementation) {
                     FileInfoPanel fip = new FileInfoPanel();
                     fip.setFields(((CommonHFSCatalogFile.HFSPlusImplementation) hfsFile).getUnderlying());
                     infoPanel = fip;
-                }
-                else {
+                } else {
                     StructViewPanel svp = new StructViewPanel("File", hfsFile.getStructElements());
                     infoPanel = svp;
                 }
-            }
-            else if(fsEntry instanceof HFSCommonFSFolder) {
+            } else if (fsEntry instanceof HFSCommonFSFolder) {
                 CommonHFSCatalogFolder fld = ((HFSCommonFSFolder) fsEntry).getInternalCatalogFolder();
-                if(fld instanceof CommonHFSCatalogFolder.HFSPlusImplementation) {
+                if (fld instanceof CommonHFSCatalogFolder.HFSPlusImplementation) {
                     FolderInfoPanel fip = new FolderInfoPanel();
                     fip.setFields(((CommonHFSCatalogFolder.HFSPlusImplementation) fld).getUnderlying());
                     infoPanel = fip;
-                }
-                else {
+                } else {
                     StructViewPanel svp = new StructViewPanel("Folder", fld.getStructElements());
                     infoPanel = svp;
                 }
             }
 
-            if(infoPanel != null) {
-                infoPanelScroller = new JScrollPane(infoPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            if (infoPanel != null) {
+                infoPanelScroller = new JScrollPane(infoPanel, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER);
 
                 tabs.addTab("Detailed", infoPanelScroller);
             }
 
-        } catch(Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Resource fork panel
         JPanel resffPanel = null;
         ResourceForkReader resffReader = null;
         try {
-            if(fsEntry instanceof FSFile) {
+            if (fsEntry instanceof FSFile) {
                 FSFile fsFile = (FSFile) fsEntry;
                 FSFork resourceFork = fsFile.getForkByType(FSForkType.MACOS_RESOURCE);
-                if(resourceFork != null && resourceFork.getLength() > 0) {
+                if (resourceFork != null && resourceFork.getLength() > 0) {
                     ReadableRandomAccessStream s =
                             resourceFork.getReadableRandomAccessStream();
                     try {
                         resffReader = new ResourceForkReader(s);
                         resffPanel = new ResourceForkViewPanel(resffReader);
-                    } catch(Exception e) {
-                        if(resffReader != null) {
+                    } catch (Exception e) {
+                        if (resffReader != null) {
                             resffReader.close();
-                        }
-                        else if(s != null) {
+                        } else if (s != null) {
                             s.close();
                         }
 
@@ -145,59 +148,53 @@ public class FileInfoWindow extends HFSExplorerJFrame {
                     }
                 }
             }
-        } catch(MalformedResourceForkException e) {
+        } catch (MalformedResourceForkException e) {
             System.err.println("Malformed resource fork:");
             e.printStackTrace(System.err);
 
             resffPanel = new JPanel();
             resffPanel.setLayout(new BorderLayout());
 
-            resffPanel.add(new JLabel("Invalid resource fork data",
-                    SwingConstants.CENTER), BorderLayout.CENTER);
+            resffPanel.add(new JLabel("Invalid resource fork data", SwingConstants.CENTER), BorderLayout.CENTER);
 
             JButton saveDataButton = new JButton("Save data...");
             saveDataButton.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         final JFileChooser fc = new JFileChooser();
-                        if(fc.showSaveDialog(fc) == JFileChooser.APPROVE_OPTION)
-                        {
+                        if (fc.showSaveDialog(fc) == JFileChooser.APPROVE_OPTION) {
                             final ReadableRandomAccessStream rs =
-                                    ((FSFile) fsEntry).
-                                    getForkByType(FSForkType.MACOS_RESOURCE).
-                                    getReadableRandomAccessStream();
-                            final FileStream fs =
-                                    new FileStream(fc.getSelectedFile());
+                                    ((FSFile) fsEntry).getForkByType(FSForkType.MACOS_RESOURCE).
+                                            getReadableRandomAccessStream();
+                            final FileStream fs = new FileStream(fc.getSelectedFile());
 
-                            IOUtil.streamCopy(rs, fs, 1024*1024);
+                            IOUtil.streamCopy(rs, fs, 1024 * 1024);
                         }
-                    } catch(Throwable t) {
-                        System.err.println("Exception while extracting " +
-                                "resource fork to file:");
+                    } catch (Throwable t) {
+                        System.err.println("Exception while extracting resource fork to file:");
                         t.printStackTrace(System.err);
 
                         GUIUtil.displayExceptionDialog(t, 20,
                                 FileInfoWindow.this,
-                                "Exception while extracting resource fork to " +
-                                "file:");
+                                "Exception while extracting resource fork to file:");
                     }
                 }
             });
             resffPanel.add(saveDataButton, BorderLayout.SOUTH);
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             GUIUtil.displayExceptionDialog(e, 20, this, "Exception while creating ResourceForkViewPanel.");
         }
 
-        if(resffPanel != null) {
+        if (resffPanel != null) {
             tabs.addTab("Resource fork", resffPanel);
         }
 
         add(tabs, BorderLayout.CENTER);
 
-        if(summaryPanelScroller != null)
+        if (summaryPanelScroller != null)
             summaryPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
-        if(infoPanelScroller != null)
+        if (infoPanelScroller != null)
             infoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -206,51 +203,44 @@ public class FileInfoWindow extends HFSExplorerJFrame {
         int height = getSize().height;
         int adjustedHeight = width + width / 2;
 
-        if(adjustedHeight < height)
+        if (adjustedHeight < height)
             setSize(width, adjustedHeight);
 
         setLocationRelativeTo(null);
 
         final ResourceForkReader resffReaderFinal = resffReader;
         addWindowListener(new WindowAdapter() {
-            /* @Override */
-            public void windowClosed(WindowEvent we) {
-                /* We know that this window won't be reused. It's recreated
-                 * every time, so under that assumption we can close the
-                 * ResourceForkReader passed to the ResourceForkViewerPanel. */
-                if(resffReaderFinal != null) {
+                public void windowClosed(WindowEvent we) {
+                // We know that this window won't be reused. It's recreated
+                // every time, so under that assumption we can close the
+                // ResourceForkReader passed to the ResourceForkViewerPanel.
+                if (resffReaderFinal != null) {
                     resffReaderFinal.close();
                 }
             }
         });
     }
 
-    /*
-    public void setFields(FSFile file) {
-        if(file instanceof HFSCommonFSFile) {
-            CommonHFSCatalogFile hfsFile = ((HFSCommonFSFile) file).getInternalCatalogFile();
-            if(hfsFile instanceof CommonHFSCatalogFile.HFSPlusImplementation) {
-                FileInfoPanel infoPanel = new FileInfoPanel();
-                infoPanel.setFields(((CommonHFSCatalogFile.HFSPlusImplementation)hfsFile).getUnderlying());
-                infoPanelScroller.setViewportView(infoPanel);
-            }
-            else {
-                StructViewPanel svp = new StructViewPanel("Folder:", hfsFile.getStructElements());
-                infoPanelScroller.setViewportView(svp);
-            }
-        }
-        else
-            throw new RuntimeException("FSFolder type " + file.getClass() +
-                    " not yet supported!");
-    }
-     * */
+//    public void setFields(FSFile file) {
+//        if (file instanceof HFSCommonFSFile) {
+//            CommonHFSCatalogFile hfsFile = ((HFSCommonFSFile) file).getInternalCatalogFile();
+//            if (hfsFile instanceof CommonHFSCatalogFile.HFSPlusImplementation) {
+//                FileInfoPanel infoPanel = new FileInfoPanel();
+//                infoPanel.setFields(((CommonHFSCatalogFile.HFSPlusImplementation) hfsFile).getUnderlying());
+//                infoPanelScroller.setViewportView(infoPanel);
+//            } else {
+//                StructViewPanel svp = new StructViewPanel("Folder:", hfsFile.getStructElements());
+//                infoPanelScroller.setViewportView(svp);
+//            }
+//        } else
+//            throw new RuntimeException("FSFolder type " + file.getClass() + " not yet supported!");
+//    }
 
-    /*
-    public void setFields(HFSPlusCatalogFile vh) {
-	infoPanel.setFields(vh);
-    }
-     * */
-//     public void setJournalFields(JournalInfoBlock jib) {
-// 	journalInfoPanel.setFields(jib);
-//     }
+//    public void setFields(HFSPlusCatalogFile vh) {
+//        infoPanel.setFields(vh);
+//    }
+
+//    public void setJournalFields(JournalInfoBlock jib) {
+//        journalInfoPanel.setFields(jib);
+//    }
 }

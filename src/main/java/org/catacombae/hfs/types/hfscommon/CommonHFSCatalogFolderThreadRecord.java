@@ -18,25 +18,25 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
 import org.catacombae.hfs.types.hfs.CatKeyRec;
 import org.catacombae.hfs.types.hfs.CdrThdRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class CommonHFSCatalogFolderThreadRecord
-        extends CommonHFSCatalogThreadRecord<CommonHFSCatalogFolderThread>
-        implements PrintableStruct
-{
+public class CommonHFSCatalogFolderThreadRecord extends CommonHFSCatalogThreadRecord<CommonHFSCatalogFolderThread>
+        implements PrintableStruct {
+
     private CommonHFSCatalogKey key;
     private CommonHFSCatalogFolderThread data;
 
-    private CommonHFSCatalogFolderThreadRecord(CommonHFSCatalogKey key,
-            CommonHFSCatalogFolderThread data) {
+    private CommonHFSCatalogFolderThreadRecord(CommonHFSCatalogKey key, CommonHFSCatalogFolderThread data) {
         this.key = key;
         this.data = data;
     }
@@ -50,13 +50,11 @@ public class CommonHFSCatalogFolderThreadRecord
         return data;
     }
 
-    /* @Override */
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolderThreadRecord.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
-    /* @Override */
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "key:");
         key.print(ps, prefix + " ");
@@ -64,11 +62,9 @@ public class CommonHFSCatalogFolderThreadRecord
         data.print(ps, prefix + " ");
     }
 
-    /* @Override */
     public Dictionary getStructElements() {
-        DictionaryBuilder db =
-                new DictionaryBuilder(CommonHFSCatalogFolderThreadRecord.class.getSimpleName(),
-                "Folder thread record");
+        DictionaryBuilder db = new DictionaryBuilder(CommonHFSCatalogFolderThreadRecord.class.getSimpleName(),
+                        "Folder thread record");
 
         db.add("key", key.getStructElements(), "Catalog key");
         db.add("data", data.getStructElements(), "Folder thread data");
@@ -76,8 +72,7 @@ public class CommonHFSCatalogFolderThreadRecord
         return db.getResult();
     }
 
-    public static CommonHFSCatalogFolderThreadRecord create(HFSPlusCatalogKey key,
-            HFSPlusCatalogThread data) {
+    public static CommonHFSCatalogFolderThreadRecord create(HFSPlusCatalogKey key, HFSPlusCatalogThread data) {
         return new CommonHFSCatalogFolderThreadRecord(CommonHFSCatalogKey.create(key),
                 CommonHFSCatalogFolderThread.create(data));
     }
@@ -86,7 +81,6 @@ public class CommonHFSCatalogFolderThreadRecord
         return new CommonHFSCatalogFolderThreadRecord(CommonHFSCatalogKey.create(key),
                 CommonHFSCatalogFolderThread.create(data));
     }
-
 
     @Override
     public int getSize() {

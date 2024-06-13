@@ -36,15 +36,16 @@ public abstract class BasicFSEntry implements FSEntry {
         this.parentFileSystem = iParentFileSystem;
     }
 
-    /**
-     * Gets the internal ID of this file in the context of the associated
-     * file system. This may be an internal node ID that has no relevance
-     * except for uniquely identifying an entry in a file system.
-     * @return the internal ID of this file.
-     */
-    /*public byte[] getFileSystemID() {
-        return Util.createCopy(fsId);
-    }*/
+//    /**
+//     * Gets the internal ID of this file in the context of the associated
+//     * file system. This may be an internal node ID that has no relevance
+//     * except for uniquely identifying an entry in a file system.
+//     *
+//     * @return the internal ID of this file.
+//     */
+//    public byte[] getFileSystemID() {
+//        return Util.createCopy(fsId);
+//    }
 
     protected FileSystemHandler getParentFileSystem() {
         return parentFileSystem;
@@ -85,7 +86,7 @@ public abstract class BasicFSEntry implements FSEntry {
      * @return this object as an FSFile object, if possible.
      */
     public FSFile asFile() {
-        if(this instanceof FSFile)
+        if (this instanceof FSFile)
             return (FSFile) this;
         else
             throw new RuntimeException("Not a file!");
@@ -99,43 +100,39 @@ public abstract class BasicFSEntry implements FSEntry {
      * @return this object as an FSFolder object, if possible.
      */
     public FSFolder asFolder() {
-        if(this instanceof FSFolder)
+        if (this instanceof FSFolder)
             return (FSFolder) this;
         else
             throw new RuntimeException("Not a folder!");
     }
 
-    /**
-     * Returns the absolute path to this entry in the context of its file system.
-     * @return the absolute path to this entry in the context of its file system.
-     */
-    /*
-    public String[] getAbsolutePath() {
-        LinkedList<String> pathBuilder = new LinkedList<String>();
-        getCanonicalPathInternal(pathBuilder);
-        return pathBuilder.toArray(new String[pathBuilder.size()]);
-    }
+//    /**
+//     * Returns the absolute path to this entry in the context of its file system.
+//     * @return the absolute path to this entry in the context of its file system.
+//     */
+//    public String[] getAbsolutePath() {
+//        LinkedList<String> pathBuilder = new LinkedList<String>();
+//        getCanonicalPathInternal(pathBuilder);
+//        return pathBuilder.toArray(new String[pathBuilder.size()]);
+//    }
 
-    void getCanonicalPathInternal(LinkedList<String> components) {
-        FSFolder parentFolder = getParent();
-        if(parentFolder != null)
-            parentFolder.getCanonicalPathInternal(components);
+//    void getCanonicalPathInternal(LinkedList<String> components) {
+//        FSFolder parentFolder = getParent();
+//        if (parentFolder != null)
+//            parentFolder.getCanonicalPathInternal(components);
+//
+//        components.addLast(getName());
+//    }
 
-        components.addLast(getName());
-    }
-     * */
-
-    /*
-    public String getAbsolutePosixPath() {
-        String[] fsPath = getAbsolutePath();
-        StringBuilder sb = new StringBuilder();
-
-        for(String s : fsPath) {
-            sb.append("/");
-            sb.append(parentFileSystem.generatePosixPathnameComponent(s));
-        }
-
-        return sb.toString();
-    }
-     * */
+//    public String getAbsolutePosixPath() {
+//        String[] fsPath = getAbsolutePath();
+//        StringBuilder sb = new StringBuilder();
+//
+//        for (String s : fsPath) {
+//            sb.append("/");
+//            sb.append(parentFileSystem.generatePosixPathnameComponent(s));
+//        }
+//
+//        return sb.toString();
+//    }
 }

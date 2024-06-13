@@ -19,7 +19,9 @@ package org.catacombae.hfs.original;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
+
 import org.catacombae.util.Util;
+
 
 /**
  * Generic string codec for single-byte codepage encodings (simple table with
@@ -28,72 +30,53 @@ import org.catacombae.util.Util;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class SingleByteCodepageStringCodec implements StringCodec {
+
     private final char[] codepageData;
-    private final HashMap<Character, Byte> unicodeToCodepageMap =
-            new HashMap<Character, Byte>();
+    private final HashMap<Character, Byte> unicodeToCodepageMap = new HashMap<Character, Byte>();
 
     protected SingleByteCodepageStringCodec(char[] codepageData) {
-        if(codepageData.length != 256) {
-            throw new RuntimeException("Unexpected size of codepage data: " +
-                    codepageData.length);
+        if (codepageData.length != 256) {
+            throw new RuntimeException("Unexpected size of codepage data: " + codepageData.length);
         }
 
         this.codepageData = codepageData;
 
-        for(int i = 0; i < 256; ++i) {
+        for (int i = 0; i < 256; ++i) {
             this.unicodeToCodepageMap.put(codepageData[i], (byte) i);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String decode(byte[] data) {
         return decode(data, 0, data.length);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
-    public String decode(byte[] data, int off, int len)
-    {
+    public String decode(byte[] data, int off, int len) {
         StringBuilder sb = new StringBuilder();
 
-        for(int i = 0; i < len; ++i) {
+        for (int i = 0; i < len; ++i) {
             sb.append(codepageData[data[off + i] & 0xFF]);
         }
 
         return sb.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str) {
         return encode(str, 0, str.length());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str, int off, int len) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
 
-        for(int i = 0; i < len; ++i) {
+        for (int i = 0; i < len; ++i) {
             char curChar;
             Byte replacement;
 
             curChar = str.charAt(off + i);
 
             replacement = unicodeToCodepageMap.get(curChar);
-            if(replacement == null) {
+            if (replacement == null) {
                 throw new StringCodecException("Unable to encode sequence at " +
-                        "character " + i + ": " +
-                        "0x" + Util.toHexStringBE(curChar));
+                        "character " + i + ": 0x" + Util.toHexStringBE(curChar));
             }
 
             os.write(replacement & 0xFF);

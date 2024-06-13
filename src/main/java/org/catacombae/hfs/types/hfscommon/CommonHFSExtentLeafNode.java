@@ -17,17 +17,16 @@
 
 package org.catacombae.hfs.types.hfscommon;
 
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentRecord;
 import org.catacombae.hfs.types.hfs.ExtDataRec;
 import org.catacombae.hfs.types.hfs.ExtKeyRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentRecord;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSExtentLeafNode
-        extends CommonBTKeyedNode<CommonHFSExtentLeafRecord>
-{
+public abstract class CommonHFSExtentLeafNode extends CommonBTKeyedNode<CommonHFSExtentLeafRecord> {
 
     protected CommonHFSExtentLeafNode(byte[] data, int offset, int nodeSize, FSType type) {
         super(data, offset, nodeSize, type);
@@ -46,6 +45,7 @@ public abstract class CommonHFSExtentLeafNode
     }
 
     public static class HFSPlusImplementation extends CommonHFSExtentLeafNode {
+
         public HFSPlusImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS_PLUS);
         }
@@ -53,13 +53,14 @@ public abstract class CommonHFSExtentLeafNode
         @Override
         protected CommonHFSExtentLeafRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
             final HFSPlusExtentKey key = new HFSPlusExtentKey(data, offset);
-            final HFSPlusExtentRecord recordData = new HFSPlusExtentRecord(data, offset+key.length());
+            final HFSPlusExtentRecord recordData = new HFSPlusExtentRecord(data, offset + key.length());
 
             return CommonHFSExtentLeafRecord.create(key, recordData);
         }
     }
 
     public static class HFSImplementation extends CommonHFSExtentLeafNode {
+
         public HFSImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS);
         }
@@ -67,7 +68,7 @@ public abstract class CommonHFSExtentLeafNode
         @Override
         protected CommonHFSExtentLeafRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
             final ExtKeyRec key = new ExtKeyRec(data, offset);
-            final ExtDataRec recordData = new ExtDataRec(data, offset+key.length());
+            final ExtDataRec recordData = new ExtDataRec(data, offset + key.length());
 
             return CommonHFSExtentLeafRecord.create(key, recordData);
         }

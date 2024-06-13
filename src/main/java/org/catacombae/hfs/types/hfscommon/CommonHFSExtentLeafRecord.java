@@ -18,22 +18,22 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentRecord;
 import org.catacombae.hfs.types.hfs.ExtDataRec;
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
 import org.catacombae.hfs.types.hfs.ExtKeyRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentRecord;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSExtentLeafRecord
-        extends CommonBTLeafRecord<CommonHFSExtentKey>
-        implements StructElements
-{
+public abstract class CommonHFSExtentLeafRecord extends CommonBTLeafRecord<CommonHFSExtentKey>
+        implements StructElements {
 
     public static CommonHFSExtentLeafRecord create(ExtKeyRec key, ExtDataRec recordData) {
         return new HFSImplementation(key, recordData);
@@ -47,7 +47,6 @@ public abstract class CommonHFSExtentLeafRecord
 
     public abstract CommonHFSExtentDescriptor[] getRecordData();
 
-    /* @Override */
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -58,6 +57,7 @@ public abstract class CommonHFSExtentLeafRecord
     }*/
 
     private static class HFSImplementation extends CommonHFSExtentLeafRecord {
+
         private final ExtKeyRec key;
         private final ExtDataRec recordData;
 
@@ -76,7 +76,7 @@ public abstract class CommonHFSExtentLeafRecord
             ExtDescriptor[] extDescs = recordData.getExtDataRecs();
             CommonHFSExtentDescriptor[] res = new CommonHFSExtentDescriptor[extDescs.length];
 
-            for(int i = 0; i < res.length; ++i) {
+            for (int i = 0; i < res.length; ++i) {
                 res[i] = CommonHFSExtentDescriptor.create(extDescs[i]);
             }
 
@@ -85,7 +85,7 @@ public abstract class CommonHFSExtentLeafRecord
 
         @Override
         public int getSize() {
-            return key.length()+recordData.length();
+            return key.length() + recordData.length();
         }
 
         @Override
@@ -95,17 +95,18 @@ public abstract class CommonHFSExtentLeafRecord
             int i = 0;
 
             tempArray = key.getBytes();
-            System.arraycopy(tempArray, 0, res, i, tempArray.length); i += tempArray.length;
+            System.arraycopy(tempArray, 0, res, i, tempArray.length);
+            i += tempArray.length;
             tempArray = recordData.getBytes();
-            System.arraycopy(tempArray, 0, res, 0, tempArray.length); i += tempArray.length;
+            System.arraycopy(tempArray, 0, res, 0, tempArray.length);
+            i += tempArray.length;
 
-            if(i != res.length)
+            if (i != res.length)
                 throw new RuntimeException("Internal error. See stacktrace.");
 
             return res;
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
@@ -113,7 +114,6 @@ public abstract class CommonHFSExtentLeafRecord
             recordData.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             DictionaryBuilder db = new DictionaryBuilder("CommonHFSExtentLeafRecord.HFSImplementation",
                     "HFS extents overflow file leaf record");
@@ -126,6 +126,7 @@ public abstract class CommonHFSExtentLeafRecord
     }
 
     private static class HFSPlusImplementation extends CommonHFSExtentLeafRecord {
+
         private final HFSPlusExtentKey key;
         private final HFSPlusExtentRecord recordData;
 
@@ -144,7 +145,7 @@ public abstract class CommonHFSExtentLeafRecord
             HFSPlusExtentDescriptor[] extDescs = recordData.getExtentDescriptors();
             CommonHFSExtentDescriptor[] res = new CommonHFSExtentDescriptor[extDescs.length];
 
-            for(int i = 0; i < res.length; ++i) {
+            for (int i = 0; i < res.length; ++i) {
                 res[i] = CommonHFSExtentDescriptor.create(extDescs[i]);
             }
 
@@ -153,7 +154,7 @@ public abstract class CommonHFSExtentLeafRecord
 
         @Override
         public int getSize() {
-            return key.length()+recordData.length();
+            return key.length() + recordData.length();
         }
 
         @Override
@@ -163,17 +164,18 @@ public abstract class CommonHFSExtentLeafRecord
             int i = 0;
 
             tempArray = key.getBytes();
-            System.arraycopy(tempArray, 0, res, i, tempArray.length); i += tempArray.length;
+            System.arraycopy(tempArray, 0, res, i, tempArray.length);
+            i += tempArray.length;
             tempArray = recordData.getBytes();
-            System.arraycopy(tempArray, 0, res, 0, tempArray.length); i += tempArray.length;
+            System.arraycopy(tempArray, 0, res, 0, tempArray.length);
+            i += tempArray.length;
 
-            if(i != res.length)
+            if (i != res.length)
                 throw new RuntimeException("Internal error. See stacktrace.");
 
             return res;
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
@@ -181,7 +183,6 @@ public abstract class CommonHFSExtentLeafRecord
             recordData.print(ps, prefix + " ");
         }
 
-        /* @Override */
         public Dictionary getStructElements() {
             DictionaryBuilder db = new DictionaryBuilder("CommonHFSExtentLeafRecord.HFSPlusImplementation",
                     "HFS+ extents overflow file leaf record");

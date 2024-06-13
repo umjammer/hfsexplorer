@@ -19,10 +19,12 @@ package org.catacombae.storage.fs;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import org.catacombae.io.RandomAccessStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.TruncatableRandomAccessStream;
 import org.catacombae.io.WritableRandomAccessStream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -82,7 +84,7 @@ public interface FSFork {
 
     /**
      * Returns whether or not the fork is compressed on disk.
-     *
+     * <p>
      * This does not affect the way that this fork can be used, so this is
      * purely advisory information that upper layers can use to indicate whether
      * compression is applied.
@@ -150,11 +152,10 @@ public interface FSFork {
      *
      * @return a WritableRandomAccessStream with access to the fork contents.
      * @throws java.lang.UnsupportedOperationException if the implementation
-     * does not support writing to files. You can check this using
-     * <code>isWritable()</code>.
+     *                                                 does not support writing to files. You can check this using
+     *                                                 <code>isWritable()</code>.
      */
-    public abstract WritableRandomAccessStream getWritableRandomAccessStream()
-            throws UnsupportedOperationException;
+    public abstract WritableRandomAccessStream getWritableRandomAccessStream() throws UnsupportedOperationException;
 
     /**
      * Opens a RandomAccessStream with access to the fork contents (optional
@@ -163,11 +164,10 @@ public interface FSFork {
      *
      * @return a RandomAccessStream with access to the fork contents.
      * @throws java.lang.UnsupportedOperationException if the implementation
-     * does not support writing to files. You can check this using
-     * <code>isWritable()</code>.
+     *                                                 does not support writing to files. You can check this using
+     *                                                 <code>isWritable()</code>.
      */
-    public abstract RandomAccessStream getRandomAccessStream()
-            throws UnsupportedOperationException;
+    public abstract RandomAccessStream getRandomAccessStream() throws UnsupportedOperationException;
 
     /**
      * Truncates the file to length 0 and opens a new output stream where you
@@ -175,11 +175,10 @@ public interface FSFork {
      *
      * @return a new output stream where you can write the new fork contents.
      * @throws java.lang.UnsupportedOperationException if the implementation
-     * does not support writing to files or changing their size. You can check
-     * this using <code>isTruncatable()</code>.
+     *                                                 does not support writing to files or changing their size. You can check
+     *                                                 this using <code>isTruncatable()</code>.
      */
-    public abstract OutputStream getOutputStream()
-            throws UnsupportedOperationException;
+    public abstract OutputStream getOutputStream() throws UnsupportedOperationException;
 
     /**
      * Opens a read/write TruncatableRandomAccessStream with access to the fork
@@ -189,10 +188,9 @@ public interface FSFork {
      *
      * @return a TruncatableRandomAccessStream with access to the fork contents.
      * @throws java.lang.UnsupportedOperationException if the implementation
-     * does not support writing to files or changing their size. You can check
-     * this using <code>isTruncatable()</code>.
+     *                                                 does not support writing to files or changing their size. You can check
+     *                                                 this using <code>isTruncatable()</code>.
      */
-    public abstract TruncatableRandomAccessStream getForkStream()
-            throws UnsupportedOperationException;
+    public abstract TruncatableRandomAccessStream getForkStream() throws UnsupportedOperationException;
 
 }

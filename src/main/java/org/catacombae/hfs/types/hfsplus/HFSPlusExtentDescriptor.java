@@ -17,17 +17,18 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import org.catacombae.util.Util;
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class HFSPlusExtentDescriptor implements StructElements,
-        PrintableStruct {
+public class HFSPlusExtentDescriptor implements StructElements, PrintableStruct {
     /*
      * struct HFSPlusExtentDescriptor
      * size: 8 bytes
@@ -55,12 +56,17 @@ public class HFSPlusExtentDescriptor implements StructElements,
         return 8;
     }
 
-    public int getStartBlock() { return Util.readIntBE(startBlock); }
-    public int getBlockCount() { return Util.readIntBE(blockCount); }
+    public int getStartBlock() {
+        return Util.readIntBE(startBlock);
+    }
+
+    public int getBlockCount() {
+        return Util.readIntBE(blockCount);
+    }
 
     public void print(PrintStream ps, int pregap) {
         String pregapString = "";
-        for(int i = 0; i < pregap; ++i)
+        for (int i = 0; i < pregap; ++i)
             pregapString += " ";
         print(ps, pregapString);
     }
@@ -79,8 +85,10 @@ public class HFSPlusExtentDescriptor implements StructElements,
         byte[] result = new byte[getSize()];
         int offset = 0;
 
-        System.arraycopy(startBlock, 0, result, offset, startBlock.length); offset += startBlock.length;
-        System.arraycopy(blockCount, 0, result, offset, blockCount.length); offset += blockCount.length;
+        System.arraycopy(startBlock, 0, result, offset, startBlock.length);
+        offset += startBlock.length;
+        System.arraycopy(blockCount, 0, result, offset, blockCount.length);
+        offset += blockCount.length;
 
         return result;
     }
@@ -108,6 +116,7 @@ public class HFSPlusExtentDescriptor implements StructElements,
     }
 
     public static class Mutable extends HFSPlusExtentDescriptor {
+
         public Mutable(byte[] data, int offset) {
             super(data, offset);
         }
@@ -130,19 +139,19 @@ public class HFSPlusExtentDescriptor implements StructElements,
     }
 }
 
-/* Maxium file size in HFS+ has got to be blockSize*2^32*8.
- * I.e. for block size 4096:
- * 140737488355328 B
- * 137438953472 KiB
- * 134217728 MiB
- * 131072 GiB
- * 128 TiB
- *
- * ...and for block size 32768:
- * 1125899906842624 B
- * 1099511627776 KiB
- * 1073741824 MiB
- * 1048576 GiB
- * 1024 TiB
- * 1 PiB
- */
+// Maxium file size in HFS+ has got to be blockSize*2^32*8.
+// I.e. for block size 4096:
+// 140737488355328 B
+// 137438953472 KiB
+// 134217728 MiB
+// 131072 GiB
+// 128 TiB
+//
+// ...and for block size 32768:
+// 1125899906842624 B
+// 1099511627776 KiB
+// 1073741824 MiB
+// 1048576 GiB
+// 1024 TiB
+// 1 PiB
+//

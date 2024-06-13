@@ -28,16 +28,19 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+
 import org.catacombae.hfs.Journal;
 import org.catacombae.hfs.Journal.Transaction;
 import org.catacombae.hfs.types.hfsplus.JournalHeader;
 import org.catacombae.hfs.types.hfsplus.JournalInfoBlock;
 import org.catacombae.util.Util;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class JournalInfoPanel extends JPanel {
+
     private JTabbedPane tabbedPane;
     private JPanel contentsPanel;
     private JournalInfoBlockPanel infoBlockPanel;
@@ -49,60 +52,57 @@ public class JournalInfoPanel extends JPanel {
 
     public JournalInfoPanel(Journal journal) {
         tabbedPane = new JTabbedPane();
-	contentsPanel = new JPanel();
-	infoBlockPanel = new JournalInfoBlockPanel();
+        contentsPanel = new JPanel();
+        infoBlockPanel = new JournalInfoBlockPanel();
         journalHeaderPanel = null;
         journalContentsPanel = null;
-	noJournalPanel = new JPanel();
-	noJournalLabel = new JLabel("No journal present", SwingConstants.CENTER);
-	layout = new CardLayout();
+        noJournalPanel = new JPanel();
+        noJournalLabel = new JLabel("No journal present", SwingConstants.CENTER);
+        layout = new CardLayout();
 
-	contentsPanel.setLayout(new BorderLayout());
-	contentsPanel.add(infoBlockPanel, BorderLayout.CENTER);
+        contentsPanel.setLayout(new BorderLayout());
+        contentsPanel.add(infoBlockPanel, BorderLayout.CENTER);
         tabbedPane.insertTab("Info block", null, contentsPanel, "The journal " +
                 "info block, describing the location of the journal.", 0);
 
-	noJournalPanel.setLayout(new BorderLayout());
-	noJournalPanel.add(noJournalLabel, BorderLayout.CENTER);
+        noJournalPanel.setLayout(new BorderLayout());
+        noJournalPanel.add(noJournalLabel, BorderLayout.CENTER);
 
-	setLayout(layout);
-	add(noJournalPanel, "A");
+        setLayout(layout);
+        add(noJournalPanel, "A");
         add(tabbedPane, "B");
-	layout.show(this, "A");
+        layout.show(this, "A");
 
-	//pack();
+        //pack();
         _setFields(journal);
     }
 
     private void _setFields(Journal journal) {
         JournalInfoBlock infoBlock = journal.getJournalInfoBlock();
 
-        if(journalContentsPanel != null) {
+        if (journalContentsPanel != null) {
             tabbedPane.remove(2);
         }
 
-        if(journalHeaderPanel != null) {
+        if (journalHeaderPanel != null) {
             tabbedPane.remove(1);
         }
 
         infoBlockPanel.setFields(infoBlock);
 
         final JournalHeader journalHeader = journal.getJournalHeader();
-        if(journalHeader == null) {
-            if(infoBlock.getFlagJournalNeedInit()) {
+        if (journalHeader == null) {
+            if (infoBlock.getFlagJournalNeedInit()) {
                 noJournalLabel.setText("Journal not initialized.");
-            }
-            else if(infoBlock.getFlagJournalOnOtherDevice()) {
+            } else if (infoBlock.getFlagJournalOnOtherDevice()) {
                 noJournalLabel.setText("Journal is located on other device " +
                         "(0x" +
                         Util.toHexStringBE(infoBlock.getDeviceSignature()) +
                         ").");
-            }
-            else if(!infoBlock.getFlagJournalInFS()) {
+            } else if (!infoBlock.getFlagJournalInFS()) {
                 noJournalLabel.setText("Journal is not located inside the " +
                         "filesystem (but where?).");
-            }
-            else {
+            } else {
                 noJournalLabel.setText("Unknown error while loading the " +
                         "journal header.\n");
             }
@@ -113,8 +113,8 @@ public class JournalInfoPanel extends JPanel {
 
         journalHeaderPanel =
                 new StructViewPanel("Journal header",
-                (journalHeader.isLittleEndian() ? "Little" : "Big") +
-                "-endian fields", journalHeader.getStructElements());
+                        (journalHeader.isLittleEndian() ? "Little" : "Big") +
+                                "-endian fields", journalHeader.getStructElements());
         tabbedPane.insertTab("Header", null, journalHeaderPanel, "The " +
                 "journal header, describing the data inside the journal.", 1);
 
@@ -123,10 +123,10 @@ public class JournalInfoPanel extends JPanel {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PrintStream ps = new PrintStream(baos, false, "UTF-8");
 
-            for(int i = 0; i < transactions.length; ++i) {
+            for (int i = 0; i < transactions.length; ++i) {
                 final Transaction t = transactions[i];
                 ps.println("Transaction " + i + ":");
-                for(int j = 0; j < t.blockLists.length; ++j) {
+                for (int j = 0; j < t.blockLists.length; ++j) {
                     ps.println(" blockLists[" + j + "]:");
                     t.blockLists[j].print(ps, "  ");
                 }
@@ -144,11 +144,11 @@ public class JournalInfoPanel extends JPanel {
             journalContentsPanel = new JScrollPane(transactionsTextArea);
             tabbedPane.insertTab("Transactions", null, journalContentsPanel,
                     "The journal's pending transactions.", 2);
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-	layout.show(this, "B");
+        layout.show(this, "B");
     }
 
     public void setFields(Journal journal) {

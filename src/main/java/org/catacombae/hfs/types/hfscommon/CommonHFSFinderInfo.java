@@ -18,11 +18,13 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.hfs.types.hfs.CdrDirRec;
 import org.catacombae.hfs.types.hfs.CdrFilRec;
 import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
 import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -42,9 +44,8 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
      * must be exactly 32 bytes, or an InvalidArgumentException will be thrown.
      *
      * @param finderInfo the new FinderInfo data.
-     *
      * @throws IllegalArgumentException if <code>finderInfo</code> is not 32
-     * elements in length.
+     *                                  elements in length.
      */
     public abstract void setBytes(byte[] finderInfo);
 
@@ -89,7 +90,9 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
     }
 
     private static class HFSFileImplementation extends CommonHFSFinderInfo {
+
         private CdrFilRec filRec;
+
         public HFSFileImplementation(CdrFilRec filRec) {
             this.filRec = filRec;
         }
@@ -109,18 +112,17 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             filRec.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             filRec.printFields(ps, prefix);
         }
     }
 
     private static class HFSFolderImplementation extends CommonHFSFinderInfo {
+
         private CdrDirRec dirRec;
 
         public HFSFolderImplementation(CdrDirRec dirRec) {
@@ -142,18 +144,17 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             dirRec.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             dirRec.printFields(ps, prefix);
         }
     }
 
     private static class HFSPlusFileImplementation extends CommonHFSFinderInfo {
+
         private HFSPlusCatalogFile file;
 
         public HFSPlusFileImplementation(HFSPlusCatalogFile file) {
@@ -175,18 +176,17 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             file.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             file.printFields(ps, prefix);
         }
     }
 
     private static class HFSPlusFolderImplementation extends CommonHFSFinderInfo {
+
         private HFSPlusCatalogFolder folder;
 
         public HFSPlusFolderImplementation(HFSPlusCatalogFolder folder) {
@@ -208,12 +208,10 @@ public abstract class CommonHFSFinderInfo implements PrintableStruct {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        /* @Override */
         public void print(PrintStream ps, String prefix) {
             folder.print(ps, prefix);
         }
 
-        /* @Override */
         public void printFields(PrintStream ps, String prefix) {
             folder.printFields(ps, prefix);
         }

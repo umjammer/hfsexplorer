@@ -18,17 +18,19 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.text.DateFormat;
+
 import org.catacombae.csjc.structelements.FieldType;
 import org.catacombae.csjc.structelements.StringRepresentableField;
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusDateField extends StringRepresentableField {
+
     private static final Object dtiSync = new Object();
-    private static final DateFormat dti =
-            DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+    private static final DateFormat dti = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 
     private final byte[] data;
     private final int offset;
@@ -53,8 +55,8 @@ public class HFSPlusDateField extends StringRepresentableField {
 
     @Override
     public String getValueAsString() {
-        synchronized(dtiSync) {
-            if(localTime)
+        synchronized (dtiSync) {
+            if (localTime)
                 return dti.format(HFSPlusDate.localTimestampToDate(Util.readIntBE(data, offset)));
             else
                 return dti.format(HFSPlusDate.gmtTimestampToDate(Util.readIntBE(data, offset)));

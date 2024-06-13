@@ -23,6 +23,7 @@ import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -60,14 +61,13 @@ public class MBRHandler extends PartitionSystemHandler {
             llf.readFully(firstBlock);
 
             MBRPartitionTable mbt = new MBRPartitionTable(firstBlock, 0);
-            if(mbt.isValid())
+            if (mbt.isValid())
                 return mbt;
             else
                 return null;
         } finally {
-            if(llf != null)
+            if (llf != null)
                 llf.close();
         }
     }
-
 }

@@ -26,12 +26,14 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
+
 /**
  * StringCodec that uses a CharsetDecoder internally.
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CharsetStringCodec implements StringCodec {
+
     private final String charsetName;
     private final CharsetDecoder decoder;
     private final CharsetEncoder encoder;
@@ -41,9 +43,9 @@ public class CharsetStringCodec implements StringCodec {
      *
      * @param charsetName the name of the charset, for instance "ISO-8859-1", "UTF-16BE", "KOI8-R"
      * @throws java.nio.charset.IllegalCharsetNameException if the charset name doesn't match any
-     * known charset.
+     *                                                      known charset.
      * @throws java.nio.charset.UnsupportedCharsetException if the requested charset is unsupported
-     * by the Java libraries.
+     *                                                      by the Java libraries.
      */
     public CharsetStringCodec(String charsetName) throws IllegalCharsetNameException, UnsupportedCharsetException {
         this.charsetName = charsetName;
@@ -52,51 +54,35 @@ public class CharsetStringCodec implements StringCodec {
         this.encoder = cs.newEncoder();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String decode(byte[] data) {
         return decode(data, 0, data.length);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String decode(byte[] data, int off, int len) {
         try {
             return decoder.decode(ByteBuffer.wrap(data, off, len)).toString();
-        } catch(CharacterCodingException e) {
+        } catch (CharacterCodingException e) {
             throw new StringCodecException("Could not decode data!", e);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str) {
         return encode(str, 0, str.length());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str, int off, int len) {
         try {
             return encoder.encode(CharBuffer.wrap(str.toCharArray(), off, len)).array();
-        } catch(CharacterCodingException e) {
+        } catch (CharacterCodingException e) {
             throw new StringCodecException("Could not encode data!", e);
         }
     }
 
     /**
      * Returns the charset name as it was passed to the constructor.
+     *
      * @return the charset name as it was passed to the constructor.
      */
-    /* @Override */
     public String getCharsetName() {
         return charsetName;
     }

@@ -17,122 +17,108 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
-import org.catacombae.util.IOUtil;
-import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.fs.FSAttributes;
 import org.catacombae.storage.fs.FSEntry;
+import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSLink;
+import org.catacombae.util.IOUtil;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
+
     private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
             "org.catacombae.debug",
             "org.catacombae.storage.debug",
             "org.catacombae.storage.fs.debug",
             "org.catacombae.storage.fs.hfscommon.debug",
             "org.catacombae.storage.fs.hfscommon." +
-            HFSCommonFSLink.class.getSimpleName() + ".debug");
+                    HFSCommonFSLink.class.getSimpleName() + ".debug");
 
     private final CommonHFSCatalogFileRecord linkRecord;
 
     public HFSCommonFSLink(HFSCommonFileSystemHandler fsHandler,
-            CommonHFSCatalogFileRecord linkRecord) {
+                           CommonHFSCatalogFileRecord linkRecord) {
         super(fsHandler, linkRecord);
 
         this.linkRecord = linkRecord;
 
-        if(!linkRecord.getData().isSymbolicLink())
+        if (!linkRecord.getData().isSymbolicLink())
             throw new IllegalArgumentException("linkRecord is no symbolic link!");
     }
 
     public String getLinkTargetPosixPath() {
         // Read the data associated with the link.
-        ReadableRandomAccessStream linkDataStream =
-                fsHandler.getReadableDataForkStream(linkRecord);
+        ReadableRandomAccessStream linkDataStream = fsHandler.getReadableDataForkStream(linkRecord);
         byte[] linkBytes = IOUtil.readFully(linkDataStream);
         linkDataStream.close();
 
         return Util.readString(linkBytes, "UTF-8");
     }
-    /*
-    String[] getLinkTargetPath() {
-        // Read the data associated with the link.
-        ReadableRandomAccessStream linkDataStream =
-                fsHandler.getReadableDataForkStream(linkRecord);
-        byte[] linkBytes = new byte[(int)linkDataStream.length()];
-        linkDataStream.readFully(linkBytes);
-        linkDataStream.close();
 
-        return HFSCommonFileSystemHandler.splitPOSIXUTF8Path(linkBytes);
-    }
-     * */
+//    String[] getLinkTargetPath() {
+//        // Read the data associated with the link.
+//        ReadableRandomAccessStream linkDataStream = fsHandler.getReadableDataForkStream(linkRecord);
+//        byte[] linkBytes = new byte[(int) linkDataStream.length()];
+//        linkDataStream.readFully(linkBytes);
+//        linkDataStream.close();
+//
+//        return HFSCommonFileSystemHandler.splitPOSIXUTF8Path(linkBytes);
+//    }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public FSEntry getLinkTarget(String[] parentDir) {
-        /*
-        String prefix = parentFileSystem.globalPrefix;
-        parentFileSystem.globalPrefix += "   ";
-        try {
-        */
-        //parentFileSystem.log(prefix + "getLinkTarget(" + Util.concatenateStrings(parentDir, "/") + ");");
-        //System.err.println();
+//        String prefix = parentFileSystem.globalPrefix;
+//        parentFileSystem.globalPrefix += "   ";
+//        try {
+//        parentFileSystem.log(prefix + "getLinkTarget(" + Util.concatenateStrings(parentDir, "/") + ");");
+//        System.err.println();
         String posixPath = getLinkTargetPosixPath();
-        //parentFileSystem.log(prefix + "  getLinkTarget(): posixPath=\"" + posixPath + "\"");
-        //System.err.println("getLinkTarget(): " + linkRecord.getKey().getParentID().toLong() + ":\"" +
-        //            fsHandler.getProperNodeName(linkRecord) + "\" getting true path for \"" + posixPath + "\"...");
+//        parentFileSystem.log(prefix + "  getLinkTarget(): posixPath=\"" + posixPath + "\"");
+//        System.err.println("getLinkTarget(): " + linkRecord.getKey().getParentID().toLong() + ":\"" +
+//                fsHandler.getProperNodeName(linkRecord) + "\" getting true path for \"" + posixPath + "\"...");
         String[] targetPath = fsHandler.getTruePathFromPosixPath(posixPath, parentDir);
         FSEntry res;
-        if(targetPath != null) {
-            //parentFileSystem.log(prefix + "getLinkTarget(): got true path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
+        if (targetPath != null) {
+//            parentFileSystem.log(prefix + "getLinkTarget(): got true path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
             res = fsHandler.getEntry(targetPath);
-            if(res != null && res instanceof FSLink) {
-                //String[] targetParentDir = Util.arrayCopy(targetPath, 0, new String[targetPath.length-1], 0, targetPath.length-1);
-                //System.err.println("getLinkTarget(): trying to resolve inner link using link path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
-                res = fsHandler.resolveLinks(targetPath, (FSLink)res);
-                if(res == null) {
-                    if(DEBUG) {
-                        System.err.println("\ngetLinkTarget(): Could not " +
-                                "resolve inner link \"" +
-                                Util.concatenateStrings(targetPath, "/") +
-                                "\"");
+            if (res != null && res instanceof FSLink) {
+//                String[] targetParentDir = Util.arrayCopy(targetPath, 0, new String[targetPath.length-1], 0, targetPath.length-1);
+//                System.err.println("getLinkTarget(): trying to resolve inner link using link path \"" + Util.concatenateStrings(targetPath, "/") + "\"");
+                res = fsHandler.resolveLinks(targetPath, (FSLink) res);
+                if (res == null) {
+                    if (DEBUG) {
+                        System.err.println("\ngetLinkTarget(): Could not resolve inner link \"" +
+                                Util.concatenateStrings(targetPath, "/") + "\"");
                     }
                 }
-            }
-            else if(res == null) {
-                if(DEBUG) {
-                    System.err.println("\ngetLinkTarget(): Could not get " +
-                            "entry for true path \"" +
+            } else if (res == null) {
+                if (DEBUG) {
+                    System.err.println("\ngetLinkTarget(): Could not get entry for true path \"" +
                             Util.concatenateStrings(targetPath, "/") + "\"");
                 }
             }
 
-            if(res != null && res instanceof FSLink)
+            if (res != null && res instanceof FSLink)
                 throw new RuntimeException("res still instanceof FSLink!");
-        }
-        else {
-            if(DEBUG) {
-                System.err.println("\ngetLinkTarget(): Could not get true " +
-                        "path!");
+        } else {
+            if (DEBUG) {
+                System.err.println("\ngetLinkTarget(): Could not get true path!");
             }
 
             res = null;
         }
 
-        if(res == null) {
-            if(DEBUG) {
-                System.err.println("getLinkTarget(): FAILED to get entry by " +
-                        "posix path for link " +
+        if (res == null) {
+            if (DEBUG) {
+                System.err.println("getLinkTarget(): FAILED to get entry by posix path for link " +
                         linkRecord.getKey().getParentID().toLong() + ":\"" +
                         fsHandler.getProperNodeName(linkRecord) + "\":");
-                System.err.println("getLinkTarget():   posixPath=\"" +
-                        posixPath + "\"");
+                System.err.println("getLinkTarget():   posixPath=\"" + posixPath + "\"");
                 System.err.println("getLinkTarget():   parentDir=\"" +
                         Util.concatenateStrings(parentDir, "/") + "\"");
                 System.err.println();
@@ -140,31 +126,29 @@ public class HFSCommonFSLink extends HFSCommonAbstractFile implements FSLink {
         }
 
         return res;
-        //} finally { parentFileSystem.log(prefix + "Returning from getLinkTarget."); parentFileSystem.globalPrefix = prefix; }
+//        } finally {
+//            parentFileSystem.log(prefix + "Returning from getLinkTarget.");
+//            parentFileSystem.globalPrefix = prefix;
+//        }
     }
 
-    /* @Override */
     public FSAttributes getAttributes() {
         return new HFSCommonFSAttributes(this, linkRecord.getData());
     }
 
-    /* @Override */
     public String getName() {
         return fsHandler.getProperNodeName(linkRecord);
     }
 
-    /*
-    @Override
-    public FSFolder getParent() {
-        return fsHandler.lookupParentFolder(linkRecord);
-    }
-     * */
+//    @Override
+//    public FSFolder getParent() {
+//        return fsHandler.lookupParentFolder(linkRecord);
+//    }
 
     public CommonHFSCatalogFileRecord getInternalCatalogFileRecord() {
         return linkRecord;
     }
 
-    /* @Override */
     public String getLinkTargetString() {
         return getLinkTargetPosixPath();
     }

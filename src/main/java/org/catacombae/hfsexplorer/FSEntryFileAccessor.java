@@ -24,6 +24,7 @@ import org.catacombae.storage.fs.FSFile;
 import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSFork;
 
+
 /**
  * Bridge class between an {@link FSEntry} and a sparse bundle
  * {@link FileAccessor}.
@@ -39,14 +40,14 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public FileAccessor[] listFiles() {
-        if(!(e instanceof FSFolder)) {
+        if (!(e instanceof FSFolder)) {
             return null;
         }
 
         FSFolder f = (FSFolder) e;
         FSEntry[] subEntries = f.listEntries();
         FileAccessor[] subAccessors = new FileAccessor[subEntries.length];
-        for(int i = 0; i < subEntries.length; ++i) {
+        for (int i = 0; i < subEntries.length; ++i) {
             subAccessors[i] = new FSEntryFileAccessor(subEntries[i]);
         }
 
@@ -66,10 +67,10 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public String getAbsolutePath() {
-        /*
-         * We don't actually have access to the full path, but it's only used
-         * for error reporting purposes so we can just return the name here.
-         */
+        //
+        // We don't actually have access to the full path, but it's only used
+        // for error reporting purposes so we can just return the name here.
+        //
         return getName();
     }
 
@@ -78,7 +79,7 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public FileAccessor lookupChild(String name) {
-        if(!(e instanceof FSFolder)) {
+        if (!(e instanceof FSFolder)) {
             return null;
         }
 
@@ -87,13 +88,13 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public long length() {
-        if(!(e instanceof FSFile)) {
+        if (!(e instanceof FSFile)) {
             return 0;
         }
 
         FSFile f = (FSFile) e;
         FSFork mainFork = f.getMainFork();
-        if(mainFork == null) {
+        if (mainFork == null) {
             return 0;
         }
 
@@ -101,7 +102,7 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public ReadableRandomAccessStream createReadableStream() {
-        if(!(e instanceof FSFile)) {
+        if (!(e instanceof FSFile)) {
             throw new RuntimeException("Can only create a stream for files.");
         }
 
@@ -112,16 +113,16 @@ public class FSEntryFileAccessor implements FileAccessor {
     }
 
     public void lock() {
-        /* Note: No-op now. Would be needed if we ever implemented write
-         * support. */
+        // Note: No-op now. Would be needed if we ever implemented write
+        // support.
     }
 
     public void unlock() {
-        /* Note: No-op now. Would be needed if we ever implemented write
-         * support. */
+        // Note: No-op now. Would be needed if we ever implemented write
+        // support.
     }
 
     public void close() {
-        /* Note: No-op now and possibly forever. */
+        // Note: No-op now and possibly forever.
     }
 }

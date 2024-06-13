@@ -19,6 +19,7 @@ package org.catacombae.storage.ps.ebr;
 
 import org.catacombae.storage.ps.mbr.types.MBRPartition;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -27,11 +28,10 @@ public class EBRPartition extends MBRPartition {
     private final long baseOffset;
 
     /**
-     *
      * @param data
-     * @param offset offset in <code>data</code> to the EBR partition data.
+     * @param offset     offset in <code>data</code> to the EBR partition data.
      * @param baseOffset the base offset which we will resolve startOffset
-     * against.
+     *                   against.
      * @param sectorSize
      */
     public EBRPartition(byte[] data, int offset, long baseOffset, int sectorSize) {
@@ -47,5 +47,7 @@ public class EBRPartition extends MBRPartition {
 
     // Defined in Partition
     @Override
-    public long getStartOffset() { return super.getStartOffset()+baseOffset; }
+    public long getStartOffset() {
+        return super.getStartOffset() + baseOffset;
+    }
 }

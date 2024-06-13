@@ -23,6 +23,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.DecimalFormat;
 import javax.swing.SwingUtilities;
+
 import org.catacombae.util.ObjectContainer;
 import org.catacombae.hfsexplorer.SpeedUnitUtils;
 import org.catacombae.util.Util;
@@ -32,16 +33,18 @@ import org.catacombae.storage.fs.FSFile;
 import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSLink;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPanel {
+
     private static final boolean DEBUG = Util.booleanEnabledByProperties(false,
             "org.catacombae.debug",
             "org.catacombae.hfsexplorer.debug",
             "org.catacombae.hfsexplorer.gui.debug",
             "org.catacombae.hfsexplorer.gui." +
-            FSEntrySummaryPanel.class.getSimpleName() + ".debug");
+                    FSEntrySummaryPanel.class.getSimpleName() + ".debug");
 
     private volatile boolean cancelSignaled = false;
     private DecimalFormat sizeFormatter = new DecimalFormat("0.00");
@@ -133,50 +136,44 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
         final String typeString;
         final String sizeString;
         final String occupiedSizeString;
-        if(entry instanceof FSFile) {
+        if (entry instanceof FSFile) {
             FSFile file = (FSFile) entry;
             typeString = "File";
             sizeString = getSizeString(file.getMainFork().getLength());
             occupiedSizeString =
                     getSizeString(file.getMainFork().getOccupiedSize());
-        }
-        else if(entry instanceof FSFolder) {
+        } else if (entry instanceof FSFolder) {
             FSFolder folder = (FSFolder) entry;
             typeString = "Folder";
             sizeString = "Calculating...";
             occupiedSizeString = "Calculating...";
             startFolderSizeCalculation(folder);
-        }
-        else if(entry instanceof FSLink) {
+        } else if (entry instanceof FSLink) {
             FSLink link = (FSLink) entry;
             FSEntry linkTarget = link.getLinkTarget(parentPath);
-            if(linkTarget == null) {
+            if (linkTarget == null) {
                 typeString = "Symbolic link (broken)";
                 sizeString = "- (broken link)";
                 occupiedSizeString = "- (broken link)";
-            }
-            else if(linkTarget instanceof FSFile) {
+            } else if (linkTarget instanceof FSFile) {
                 FSFile file = (FSFile) linkTarget;
                 typeString = "Symbolic link (file)";
                 sizeString = getSizeString(file.getMainFork().getLength());
                 occupiedSizeString =
                         getSizeString(file.getMainFork().getOccupiedSize());
-            }
-            else if(linkTarget instanceof FSFolder) {
+            } else if (linkTarget instanceof FSFolder) {
                 FSFolder folder = (FSFolder) linkTarget;
                 typeString = "Symbolic link (folder)";
                 sizeString = "Calculating...";
                 occupiedSizeString = "Calculating...";
                 startFolderSizeCalculation(folder);
-            }
-            else {
+            } else {
                 typeString = "Symbolic link (unknown [" +
                         linkTarget.getClass() + "])";
                 sizeString = "- (unknown type)";
                 occupiedSizeString = "- (unknown type)";
             }
-        }
-        else {
+        } else {
             typeString = "Unknown [" + entry.getClass() + "]";
             sizeString = "- (unknown type)";
             occupiedSizeString = "- (unknown type)";
@@ -190,8 +187,8 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
 
         ChainedPanel currentChain = this;
 
-        if(entry instanceof FSLink) {
-            LinkTargetPanel ltp = new LinkTargetPanel((FSLink)entry);
+        if (entry instanceof FSLink) {
+            LinkTargetPanel ltp = new LinkTargetPanel((FSLink) entry);
             currentChain.setChainedContents(ltp);
             currentChain = ltp;
         }
@@ -200,7 +197,7 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
         currentChain.setChainedContents(dsp);
         currentChain = dsp;
 
-        if(attrs.hasPOSIXFileAttributes()) {
+        if (attrs.hasPOSIXFileAttributes()) {
             POSIXAttributesPanel attributesPanel =
                     new POSIXAttributesPanel(attrs.getPOSIXFileAttributes());
             currentChain.setChainedContents(attributesPanel);
@@ -208,13 +205,13 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
         }
     }
 
-    /* @Override */
     public void setChainedContents(Component c) {
         extendedInfoStackPanel.removeAll();
         extendedInfoStackPanel.add(c);
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -266,50 +263,50 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, extendedInfoStackPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jSeparator1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel1)
-                            .add(jLabel2)
-                            .add(jLabel3)
-                            .add(occupiedSizeLabel))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(occupiedSizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
-                            .add(sizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
-                            .add(typeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
-                            .add(nameField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE))))
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, extendedInfoStackPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, jSeparator1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(jLabel1)
+                                                        .add(jLabel2)
+                                                        .add(jLabel3)
+                                                        .add(occupiedSizeLabel))
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(occupiedSizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                                                        .add(sizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                                                        .add(typeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                                                        .add(nameField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE))))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel1)
-                    .add(nameField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel2)
-                    .add(typeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel3)
-                    .add(sizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(occupiedSizeLabel)
-                    .add(occupiedSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(extendedInfoStackPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel1)
+                                        .add(nameField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel2)
+                                        .add(typeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel3)
+                                        .add(sizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(occupiedSizeLabel)
+                                        .add(occupiedSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(extendedInfoStackPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
+                                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -329,61 +326,56 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
 
     private String getSizeString(long result) {
         String baseString = Long.toString(result);
-        if(result >= 1000) {
+        if (result >= 1000) {
             String spacedString = Util.addUnitSpaces(baseString, 3);
 
-            if(result >= 1024) {
+            if (result >= 1024) {
                 return SpeedUnitUtils.bytesToBinaryUnit(result, sizeFormatter) + " (" +
-                        spacedString + " bytes" + ")";
-            }
-            else
+                        spacedString + " bytes)";
+            } else
                 return spacedString + " bytes";
-        }
-        else
+        } else
             return baseString + " bytes";
     }
 
     private void startFolderSizeCalculation(final FSFolder folder) {
-        Runnable r = new Runnable () {
+        Runnable r = new Runnable() {
 
-            /* @Override */
-            public void run() {
+                public void run() {
                 String sizeResultString;
                 String occupiedSizeResultString;
                 try {
                     ObjectContainer<Long> sizeResult =
-                            new ObjectContainer<Long>((long)0);
+                            new ObjectContainer<Long>((long) 0);
                     ObjectContainer<Long> occupiedSizeResult =
-                            new ObjectContainer<Long>((long)0);
+                            new ObjectContainer<Long>((long) 0);
                     calculateFolderSize(folder, sizeResult, occupiedSizeResult);
                     sizeResultString = getSizeString(sizeResult.o);
                     occupiedSizeResultString =
                             getSizeString(occupiedSizeResult.o);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     sizeResultString =
                             "Exception while calculating! See debug console " +
-                            "for info...";
+                                    "for info...";
                     occupiedSizeResultString =
                             "Exception while calculating! See debug console " +
-                            "for info...";
+                                    "for info...";
                 }
 
                 final String finalSizeResultString;
                 final String finalOccupiedSizeResultString;
-                if(!cancelSignaled) {
+                if (!cancelSignaled) {
                     finalSizeResultString = sizeResultString;
                     finalOccupiedSizeResultString = occupiedSizeResultString;
-                }
-                else {
+                } else {
                     finalSizeResultString = "Canceled";
                     finalOccupiedSizeResultString = "Canceled";
                 }
 
                 SwingUtilities.invokeLater(new Runnable() {
 
-                    /* @Override */
-                    public void run() {
+                                public void run() {
                         sizeField.setText(finalSizeResultString);
                         occupiedSizeField.setText(
                                 finalOccupiedSizeResultString);
@@ -397,11 +389,10 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
     }
 
     private void calculateFolderSize(FSFolder folder,
-            ObjectContainer<Long> sizeResult,
-            ObjectContainer<Long> occupiedSizeResult)
-    {
-        if(cancelSignaled) {
-            if(DEBUG) {
+                                     ObjectContainer<Long> sizeResult,
+                                     ObjectContainer<Long> occupiedSizeResult) {
+        if (cancelSignaled) {
+            if (DEBUG) {
                 System.err.println("Calculate process stopping for folder " +
                         "\"" + folder.getName() + "\"");
             }
@@ -409,9 +400,9 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
             return;
         }
 
-        for(FSEntry entry : folder.listEntries()) {
-            if(cancelSignaled) {
-                if(DEBUG) {
+        for (FSEntry entry : folder.listEntries()) {
+            if (cancelSignaled) {
+                if (DEBUG) {
                     System.err.println("Calculate process stopping for " +
                             "folder \"" + folder.getName() + "\", entry " +
                             "\"" + entry.getName() + "\"");
@@ -420,20 +411,17 @@ public class FSEntrySummaryPanel extends javax.swing.JPanel implements ChainedPa
                 return;
             }
 
-            if(entry instanceof FSFile) {
+            if (entry instanceof FSFile) {
                 sizeResult.o = sizeResult.o +
                         ((FSFile) entry).getMainFork().getLength();
                 occupiedSizeResult.o = occupiedSizeResult.o +
                         ((FSFile) entry).getMainFork().getOccupiedSize();
-            }
-            else if(entry instanceof FSFolder) {
+            } else if (entry instanceof FSFolder) {
                 calculateFolderSize((FSFolder) entry, sizeResult,
                         occupiedSizeResult);
-            }
-            else if(entry instanceof FSLink) {
+            } else if (entry instanceof FSLink) {
                 /* Do nothing. Symbolic link targets aren't part of the folder. */
-            }
-            else
+            } else
                 System.err.println("FSEntrySummaryPanel.calculateFolderSize():" +
                         " unexpected type " + entry.getClass());
         }

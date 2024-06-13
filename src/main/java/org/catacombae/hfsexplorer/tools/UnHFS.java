@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
+
 import org.catacombae.dmg.encrypted.ReadableCEncryptedEncodingStream;
 import org.catacombae.dmg.sparsebundle.ReadableSparseBundleStream;
 import org.catacombae.dmg.sparseimage.ReadableSparseImageStream;
@@ -63,6 +64,9 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
 import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.PartitionType;
+import org.catacombae.storage.ps.container.ContainerHandler;
+import org.catacombae.storage.ps.container.ContainerHandlerFactory;
+
 
 /**
  * Command line program which extracts all or part of the contents of a
@@ -71,6 +75,7 @@ import org.catacombae.storage.ps.PartitionType;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class UnHFS {
+
     private static boolean debug = false;
 
     private static final int RETVAL_NEED_PASSWORD = 10;
@@ -85,7 +90,7 @@ public class UnHFS {
         //     80 <-------------------------------------------------------------------------------->
         ps.println("unhfs " + HFSExplorer.VERSION);
         ps.println(HFSExplorer.COPYRIGHT.replaceAll("\u00A9", "(C)"));
-        for(String s : HFSExplorer.NOTICES) {
+        for (String s : HFSExplorer.NOTICES) {
             ps.println(s.replaceAll("\u00A9", "(C)"));
         }
         ps.println();
@@ -150,79 +155,68 @@ public class UnHFS {
         char[] password = null;
 
         int i;
-        for(i = 0; i < args.length; ++i) {
+        for (i = 0; i < args.length; ++i) {
             String curArg = args[i];
 
-            if(curArg.equals("-o")) {
-                if(i+1 < args.length)
+            if (curArg.equals("-o")) {
+                if (i + 1 < args.length)
                     outputDirname = args[++i];
                 else {
                     printUsage(System.err);
                     System.exit(1);
                 }
-            }
-            else if(curArg.equals("-fsroot")) {
-                if(i+1 < args.length)
+            } else if (curArg.equals("-fsroot")) {
+                if (i + 1 < args.length)
                     fsRoot = args[++i];
                 else {
                     printUsage(System.err);
                     System.exit(1);
                 }
-            }
-            else if(curArg.equals("-create")) {
+            } else if (curArg.equals("-create")) {
                 extractFolderDirectly = false;
-            }
-            else if(curArg.equals("-resforks")) {
-                if(i+1 < args.length) {
+            } else if (curArg.equals("-resforks")) {
+                if (i + 1 < args.length) {
                     String value = args[++i];
-                    if(value.equalsIgnoreCase("NONE")) {
+                    if (value.equalsIgnoreCase("NONE")) {
                         extractResourceForks = false;
-                    }
-                    else if(value.equalsIgnoreCase("APPLEDOUBLE")) {
+                    } else if (value.equalsIgnoreCase("APPLEDOUBLE")) {
                         extractResourceForks = true;
-                    }
-                    else {
+                    } else {
                         System.err.println("Error: Invalid value \"" + value +
                                 "\" for -resforks!");
                         printUsage(System.err);
                         System.exit(1);
                     }
-                }
-                else {
+                } else {
                     printUsage(System.err);
                     System.exit(1);
                 }
-            }
-            else if(curArg.equals("-partition")) {
-                if(i+1 < args.length) {
+            } else if (curArg.equals("-partition")) {
+                if (i + 1 < args.length) {
                     try {
                         partitionNumber = Integer.parseInt(args[++i]);
-                    } catch(NumberFormatException nfe) {
+                    } catch (NumberFormatException nfe) {
                         System.err.println("Error: Invalid partition number \"" +
                                 args[i] + "\"!");
                         printUsage(System.err);
                         System.exit(1);
                     }
-                }
-                else {
+                } else {
                     printUsage(System.err);
                     System.exit(1);
                 }
-            }
-            else if(curArg.equals("-password")) {
-                if(i+1 < args.length) {
+            } else if (curArg.equals("-password")) {
+                if (i + 1 < args.length) {
                     password = args[++i].toCharArray();
 
-                    if(password.length == 1 && password[0] == '-') {
-                        /* Read password from stdin. */
+                    if (password.length == 1 && password[0] == '-') {
+                        // Read password from stdin.
                         InputStreamReader r = new InputStreamReader(System.in);
                         char[] tmp = new char[4096];
                         int offset = 0;
                         int readLength = 0;
                         try {
-                            while((readLength = r.read(tmp, offset,
-                                    tmp.length - offset)) > 0)
-                            {
+                            while ((readLength = r.read(tmp, offset, tmp.length - offset)) > 0) {
                                 System.err.println("readLength: " + readLength);
 
                                 char[] newTmp = new char[tmp.length * 2];
@@ -231,32 +225,25 @@ public class UnHFS {
                                 offset += readLength;
                                 tmp = newTmp;
                             }
-                        } catch(IOException ex) {
-                            System.err.println("Got IOException while " +
-                                    "reading password from stdin:");
+                        } catch (IOException ex) {
+                            System.err.println("Got IOException while reading password from stdin:");
                             ex.printStackTrace();
                         }
 
                         int passwordLength = offset;
-                        char[] lineSeparator =
-                                System.getProperty("line.separator").
-                                        toCharArray();
+                        char[] lineSeparator = System.getProperty("line.separator").toCharArray();
                         boolean trailingLineSeparator = true;
-                        for(int j = 0; j < lineSeparator.length; ++j) {
-                            int lineSeparatorIndex =
-                                    lineSeparator.length - 1 - j;
-                            int tmpIndex =
-                                    passwordLength - 1 - j;
+                        for (int j = 0; j < lineSeparator.length; ++j) {
+                            int lineSeparatorIndex = lineSeparator.length - 1 - j;
+                            int tmpIndex = passwordLength - 1 - j;
 
-                            if(tmp[tmpIndex] !=
-                                    lineSeparator[lineSeparatorIndex])
-                            {
+                            if (tmp[tmpIndex] != lineSeparator[lineSeparatorIndex]) {
                                 trailingLineSeparator = false;
                                 break;
                             }
                         }
 
-                        if(trailingLineSeparator) {
+                        if (trailingLineSeparator) {
                             passwordLength -= lineSeparator.length;
                         }
 
@@ -264,53 +251,45 @@ public class UnHFS {
                         System.arraycopy(tmp, 0, password, 0, passwordLength);
                         Arrays.fill(tmp, '\0');
                     }
-                }
-                else {
+                } else {
                     printUsage(System.err);
                     System.exit(1);
                 }
-            }
-            else if(curArg.equals("-sfm-substitutions")) {
+            } else if (curArg.equals("-sfm-substitutions")) {
                 sfmSubstitutions = true;
-            }
-            else if(curArg.equals("-v")) {
+            } else if (curArg.equals("-v")) {
                 verbose = true;
-            }
-            else if(curArg.equals("--")) {
+            } else if (curArg.equals("--")) {
                 ++i;
                 break;
-            }
-            else
+            } else
                 break;
         }
 
-        if(i != args.length-1) {
+        if (i != args.length - 1) {
             printUsage(System.err);
             System.exit(1);
         }
 
         String inputFilename = args[i];
         File inputFile = new File(inputFilename);
-        if(!inputFile.isDirectory() &&
-                !(inputFile.exists() && inputFile.canRead()))
-        {
+        if (!inputFile.isDirectory() && !(inputFile.exists() && inputFile.canRead())) {
             System.err.println("Error: Input file \"" + inputFilename + "\" can not be read!");
             printUsage(System.err);
             System.exit(1);
         }
 
         File outputDir = new File(outputDirname);
-        if(!(outputDir.exists() && outputDir.isDirectory())) {
+        if (!(outputDir.exists() && outputDir.isDirectory())) {
             System.err.println("Error: Invalid output directory \"" + outputDirname + "\"!");
             printUsage(System.err);
             System.exit(1);
         }
 
         ReadableRandomAccessStream inputStream;
-        if(inputFile.isDirectory()) {
+        if (inputFile.isDirectory()) {
             inputStream = new ReadableSparseBundleStream(inputFile);
-        }
-        else if(ReadableWin32FileStream.isSystemSupported())
+        } else if (ReadableWin32FileStream.isSystemSupported())
             inputStream = new ReadableWin32FileStream(inputFilename);
         else
             inputStream = new ReadableFileStream(inputFilename);
@@ -320,7 +299,7 @@ public class UnHFS {
                     extractFolderDirectly, extractResourceForks,
                     partitionNumber, verbose, sfmSubstitutions);
             System.exit(0);
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             System.err.println("Exception while executing main routine:");
             e.printStackTrace();
             System.exit(1);
@@ -332,12 +311,12 @@ public class UnHFS {
      * parsing is complete. The routine expects all arguments to be fully parsed
      * and valid.
      *
-     * @param outputStream the PrintStream where all the messages will go
-     * (should normally be System.out).
-     * @param inFileStream the stream containing the file system data.
+     * @param outputStream          the PrintStream where all the messages will go
+     *                              (should normally be System.out).
+     * @param inFileStream          the stream containing the file system data.
      * @param outputDir
      * @param fsRoot
-     * @param password the password used to unlock an encrypted image.
+     * @param password              the password used to unlock an encrypted image.
      * @param extractFolderDirectly if fsRoot is a folder, extract directly into outputDir?
      * @param extractResourceForks
      * @param partitionNumber
@@ -345,53 +324,50 @@ public class UnHFS {
      * @throws org.catacombae.io.RuntimeIOException
      */
     public static void unhfs(PrintStream outputStream,
-            ReadableRandomAccessStream inFileStream, File outputDir,
-            String fsRoot, char[] password, boolean extractFolderDirectly,
-            boolean extractResourceForks, int partitionNumber, boolean verbose,
-            boolean sfmSubstitutions)
+                             ReadableRandomAccessStream inFileStream, File outputDir,
+                             String fsRoot, char[] password, boolean extractFolderDirectly,
+                             boolean extractResourceForks, int partitionNumber, boolean verbose,
+                             boolean sfmSubstitutions)
             throws RuntimeIOException {
 
         // First detect any outer layers of UDIF and/or encryption.
         logDebug("Trying to detect encrypted structure...");
-        if(ReadableCEncryptedEncodingStream.isCEncryptedEncoding(inFileStream)) {
-            if(password != null) {
+        if (ReadableCEncryptedEncodingStream.isCEncryptedEncoding(inFileStream)) {
+            if (password != null) {
                 try {
                     ReadableCEncryptedEncodingStream stream =
                             new ReadableCEncryptedEncodingStream(inFileStream, password);
                     inFileStream = stream;
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // TODO: Differentiate between exceptions...
                     System.err.println("Incorrect password for encrypted image.");
                     System.exit(RETVAL_INCORRECT_PASSWORD);
                 }
-            }
-            else {
+            } else {
                 System.err.println("Image is encrypted, and no password was specified.");
                 System.exit(RETVAL_NEED_PASSWORD);
             }
         }
 
         logDebug("Trying to detect sparseimage structure...");
-        if(SparseImageRecognizer.isSparseImage(inFileStream)) {
+        if (SparseImageRecognizer.isSparseImage(inFileStream)) {
             try {
-                ReadableSparseImageStream stream =
-                        new ReadableSparseImageStream(inFileStream);
+                ReadableSparseImageStream stream = new ReadableSparseImageStream(inFileStream);
                 inFileStream = stream;
-            } catch(Exception e) {
-                System.err.println("Exception while creating readable " +
-                        "sparseimage stream:");
+            } catch (Exception e) {
+                System.err.println("Exception while creating readable sparseimage stream:");
                 e.printStackTrace();
                 System.exit(1);
             }
         }
 
         logDebug("Trying to detect UDIF structure...");
-        if(UDIFDetector.isUDIFEncoded(inFileStream)) {
+        if (UDIFDetector.isUDIFEncoded(inFileStream)) {
             UDIFRandomAccessStream stream = null;
             try {
                 stream = new UDIFRandomAccessStream(inFileStream);
                 inFileStream = stream;
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println("Unhandled exception while trying to load UDIF wrapper.");
                 System.exit(1);
@@ -401,61 +377,53 @@ public class UnHFS {
         DataLocator inputDataLocator = new ReadableStreamDataLocator(inFileStream);
 
         PartitionSystemType[] psTypes =
-                PartitionSystemDetector.detectPartitionSystem(inputDataLocator,
-                false);
-        if(psTypes.length >= 1) {
+                PartitionSystemDetector.detectPartitionSystem(inputDataLocator, false);
+        if (psTypes.length >= 1) {
 
-            outer:
-            for(PartitionSystemType chosenType : psTypes) {
+outer:
+            for (PartitionSystemType chosenType : psTypes) {
 
                 PartitionSystemHandlerFactory fact = chosenType.createDefaultHandlerFactory();
-                PartitionSystemHandler psHandler =
-                        fact.createHandler(inputDataLocator);
+                PartitionSystemHandler psHandler = fact.createHandler(inputDataLocator);
 
-                if(psHandler.getPartitionCount() > 0) {
+                if (psHandler.getPartitionCount() > 0) {
                     Partition[] partitionsToProbe;
-                    if(partitionNumber >= 0) {
-                        if(partitionNumber < psHandler.getPartitionCount()) {
-                            partitionsToProbe = new Partition[] { psHandler.getPartition(partitionNumber) };
-                        }
-                        else {
+                    if (partitionNumber >= 0) {
+                        if (partitionNumber < psHandler.getPartitionCount()) {
+                            partitionsToProbe = new Partition[] {psHandler.getPartition(partitionNumber)};
+                        } else {
                             break;
                         }
-                    }
-                    else if(partitionNumber == -1) {
+                    } else if (partitionNumber == -1) {
                         partitionsToProbe = psHandler.getPartitions();
-                    }
-                    else {
+                    } else {
                         System.err.println("Invalid partition number: " + partitionNumber);
                         System.exit(1);
                         return;
                     }
 
-                    for(Partition p : partitionsToProbe) {
-                        if(p.getType() == PartitionType.APPLE_HFS_CONTAINER) {
-                            // DataLocator subDataLocator =
-                            //         new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
-                            // ContainerHandlerFactory chFact =
-                            //         p.getType().getAssociatedContainerType().createDefaultHandlerFactory();
-                            // ContainerHandler ch = chFact.createHandler(subDataLocator);
-                            // if(ch.containsFileSystem()) {
-                            //     FileSystemMajorType fsType = ch.detectFileSystemType();
-                            //     switch(fsType) {
-                            //         case APPLE_HFS:
-                            //         case APPLE_HFS_PLUS:
-                            //         case APPLE_HFSX:
-                            //             inputDataLocator = subDataLocator;
-                            //             break outer;
-                            //         default:
-                            //     }
-                            // }
-                            inputDataLocator =
-                                    new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
+                    for (Partition p : partitionsToProbe) {
+                        if (p.getType() == PartitionType.APPLE_HFS_CONTAINER) {
+//                            DataLocator subDataLocator =
+//                                    new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
+//                            ContainerHandlerFactory chFact =
+//                                    p.getType().getAssociatedContainerType().createDefaultHandlerFactory();
+//                            ContainerHandler ch = chFact.createHandler(subDataLocator);
+//                            if (ch.containsFileSystem()) {
+//                                FileSystemMajorType fsType = ch.detectFileSystemType();
+//                                switch (fsType) {
+//                                    case APPLE_HFS:
+//                                    case APPLE_HFS_PLUS:
+//                                    case APPLE_HFSX:
+//                                        inputDataLocator = subDataLocator;
+//                                        break outer;
+//                                    default:
+//                                }
+//                            }
+                            inputDataLocator = new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
                             break outer;
-                        }
-                        else if(p.getType() == PartitionType.APPLE_HFSX) {
-                            inputDataLocator =
-                                    new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
+                        } else if (p.getType() == PartitionType.APPLE_HFSX) {
+                            inputDataLocator = new SubDataLocator(inputDataLocator, p.getStartOffset(), p.getLength());
                             break outer;
                         }
                     }
@@ -463,13 +431,12 @@ public class UnHFS {
             }
         }
 
-
         FileSystemMajorType[] fsTypes = FileSystemDetector.detectFileSystem(inputDataLocator);
 
         FileSystemHandlerFactory fact = null;
-        outer:
-        for(FileSystemMajorType type : fsTypes) {
-            switch(type) {
+outer:
+        for (FileSystemMajorType type : fsTypes) {
+            switch (type) {
                 case APPLE_HFS:
                 case APPLE_HFS_PLUS:
                 case APPLE_HFSX:
@@ -479,16 +446,14 @@ public class UnHFS {
             }
         }
 
-        if(fact == null) {
+        if (fact == null) {
             System.err.println("No HFS file system found.");
             System.exit(1);
         }
 
-        CustomAttribute posixFilenamesAttribute =
-                fact.getCustomAttribute("POSIX_FILENAMES");
-        if(posixFilenamesAttribute == null) {
-            System.err.println("Unexpected: HFS-ish file system handler does " +
-                    "not support POSIX_FILENAMES attribute.");
+        CustomAttribute posixFilenamesAttribute = fact.getCustomAttribute("POSIX_FILENAMES");
+        if (posixFilenamesAttribute == null) {
+            System.err.println("Unexpected: HFS-ish file system handler does not support POSIX_FILENAMES attribute.");
             System.exit(1);
             return;
         }
@@ -496,173 +461,148 @@ public class UnHFS {
         fact.getCreateAttributes().setBooleanAttribute(posixFilenamesAttribute,
                 true);
 
-        CustomAttribute sfmSubstitutionsAttribute =
-                fact.getCustomAttribute("SFM_SUBSTITUTIONS");
-        if(sfmSubstitutionsAttribute == null) {
-            System.err.println("Unexpected: HFS-ish file system handler does " +
-                    "not support SFM_SUBSTITUTIONS attribute.");
+        CustomAttribute sfmSubstitutionsAttribute = fact.getCustomAttribute("SFM_SUBSTITUTIONS");
+        if (sfmSubstitutionsAttribute == null) {
+            System.err.println("Unexpected: HFS-ish file system handler does not support SFM_SUBSTITUTIONS attribute.");
             System.exit(1);
             return;
         }
 
-        fact.getCreateAttributes().setBooleanAttribute(
-                sfmSubstitutionsAttribute, sfmSubstitutions);
+        fact.getCreateAttributes().setBooleanAttribute(sfmSubstitutionsAttribute, sfmSubstitutions);
 
         FileSystemHandler fsHandler = fact.createHandler(inputDataLocator);
 
         logDebug("Getting entry by posix path: \"" + fsRoot + "\"");
         FSEntry entry = fsHandler.getEntryByPosixPath(fsRoot);
-        if(entry instanceof FSFolder) {
-            FSFolder folder = (FSFolder)entry;
+        if (entry instanceof FSFolder) {
+            FSFolder folder = (FSFolder) entry;
             File dirForFolder;
             String folderName = folder.getName();
-            if(extractFolderDirectly || folderName.equals("/") || folderName.length() == 0) {
+            if (extractFolderDirectly || folderName.equals("/") || folderName.length() == 0) {
                 dirForFolder = outputDir;
-            }
-            else {
+            } else {
                 dirForFolder = getFileForFolder(outputDir, folder, verbose);
             }
-            if(dirForFolder != null) {
+            if (dirForFolder != null) {
                 extractFolder(folder, dirForFolder, extractResourceForks, verbose);
             }
-        }
-        else if(entry instanceof FSFile) {
-            FSFile file = (FSFile)entry;
+        } else if (entry instanceof FSFile) {
+            FSFile file = (FSFile) entry;
             extractFile(file, outputDir, extractResourceForks, verbose);
-        }
-        else {
+        } else {
             System.err.println("Requested path is not a folder or a file!");
             System.exit(1);
         }
     }
 
-    private static void setFileTimes(File file, FSEntry entry, String fileType)
-    {
+    private static void setFileTimes(File file, FSEntry entry, String fileType) {
         Long createdTime = null;
         Long lastAccessedTime = null;
         Long lastModifiedTime = null;
 
-        if(entry.getAttributes().hasCreateDate()) {
+        if (entry.getAttributes().hasCreateDate()) {
             createdTime = entry.getAttributes().getCreateDate().getTime();
         }
 
-        if(entry.getAttributes().hasAccessDate()) {
+        if (entry.getAttributes().hasAccessDate()) {
             lastAccessedTime = entry.getAttributes().getAccessDate().getTime();
         }
 
-        if(entry.getAttributes().hasModifyDate()) {
+        if (entry.getAttributes().hasModifyDate()) {
             lastModifiedTime = entry.getAttributes().getModifyDate().getTime();
         }
 
         boolean fileTimesSet = false;
-        if(Java7Util.isJava7OrHigher()) {
+        if (Java7Util.isJava7OrHigher()) {
             try {
                 Java7Util.setFileTimes(file.getPath(),
                         createdTime != null ? new Date(createdTime) : null,
-                        lastAccessedTime != null ? new Date(lastAccessedTime) :
-                        null,
-                        lastModifiedTime != null ? new Date(lastModifiedTime) :
-                        null);
+                        lastAccessedTime != null ? new Date(lastAccessedTime) : null,
+                        lastModifiedTime != null ? new Date(lastModifiedTime) : null);
                 fileTimesSet = true;
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        if(!fileTimesSet && lastModifiedTime != null) {
+        if (!fileTimesSet && lastModifiedTime != null) {
             boolean setLastModifiedResult;
 
-            if(lastModifiedTime < 0) {
+            if (lastModifiedTime < 0) {
                 System.err.println("Warning: Can not set " + fileType + "'s " +
-                        "last modified timestamp to pre-1970 date " +
-                        new Date(lastModifiedTime) + " " + "(raw: " +
-                        lastModifiedTime + "). Setting to earliest possible " +
-                        "timestamp (" + new Date(0) + ").");
+                        "last modified timestamp to pre-1970 date " + new Date(lastModifiedTime) + " (raw: " +
+                        lastModifiedTime + "). Setting to earliest possible timestamp (" + new Date(0) + ").");
 
                 lastModifiedTime = (long) 0;
             }
 
             setLastModifiedResult = file.setLastModified(lastModifiedTime);
-            if(!setLastModifiedResult) {
-                System.err.println("Warning: Failed to set last modified " +
-                        "timestamp (" + lastModifiedTime + ") for " +
-                        fileType + " \"" + file.getPath() + "\" after " +
-                        "extraction.");
+            if (!setLastModifiedResult) {
+                System.err.println("Warning: Failed to set last modified timestamp (" + lastModifiedTime + ") for " +
+                        fileType + " \"" + file.getPath() + "\" after extraction.");
             }
         }
     }
 
-    private static void extractFolder(FSFolder folder, File targetDir,
-            boolean extractResourceForks, boolean verbose) {
+    private static void extractFolder(FSFolder folder, File targetDir, boolean extractResourceForks, boolean verbose) {
         boolean wasEmpty = targetDir.list().length == 0;
-        for(FSEntry e : folder.listEntries()) {
-            if(e instanceof FSFile) {
-                FSFile file = (FSFile)e;
+        for (FSEntry e : folder.listEntries()) {
+            if (e instanceof FSFile) {
+                FSFile file = (FSFile) e;
                 extractFile(file, targetDir, extractResourceForks, verbose);
-            }
-            else if(e instanceof FSFolder) {
-                FSFolder subFolder = (FSFolder)e;
+            } else if (e instanceof FSFolder) {
+                FSFolder subFolder = (FSFolder) e;
                 File subFolderFile = getFileForFolder(targetDir, subFolder, verbose);
-                if(subFolderFile != null) {
+                if (subFolderFile != null) {
                     extractFolder(subFolder, subFolderFile, extractResourceForks, verbose);
                 }
-            }
-            else if(e instanceof FSLink) {
+            } else if (e instanceof FSLink) {
                 // We don't currently handle links.
             }
         }
-        if(wasEmpty) {
+        if (wasEmpty) {
             setFileTimes(targetDir, folder, "folder");
         }
     }
 
-    private static void extractFile(FSFile file, File targetDir,
-            boolean extractResourceForks, boolean verbose)
+    private static void extractFile(FSFile file, File targetDir, boolean extractResourceForks, boolean verbose)
             throws RuntimeIOException {
         File dataFile = new File(targetDir, scrub(file.getName()));
-        if(!extractRawForkToFile(file.getMainFork(), dataFile)) {
-            System.err.println("Failed to extract data " +
-                    "fork to " + dataFile.getPath());
-        }
-        else {
-            if(verbose) {
+        if (!extractRawForkToFile(file.getMainFork(), dataFile)) {
+            System.err.println("Failed to extract data fork to " + dataFile.getPath());
+        } else {
+            if (verbose) {
                 System.out.println(dataFile.getPath());
             }
 
             setFileTimes(dataFile, file, "data file");
         }
 
-        if(extractResourceForks) {
+        if (extractResourceForks) {
             FSFork resourceFork = file.getForkByType(FSForkType.MACOS_RESOURCE);
 
-            if(resourceFork != null) {
+            if (resourceFork != null) {
                 File resFile = new File(targetDir, "._" + scrub(file.getName()));
-                if(!extractResourceForkToAppleDoubleFile(resourceFork, resFile)) {
-                    System.err.println("Failed to extract resource " +
-                            "fork to " + resFile.getPath());
-                }
-                else {
-                    if(verbose) {
+                if (!extractResourceForkToAppleDoubleFile(resourceFork, resFile)) {
+                    System.err.println("Failed to extract resource fork to " + resFile.getPath());
+                } else {
+                    if (verbose) {
                         System.out.println(resFile.getPath());
                     }
 
-                    setFileTimes(resFile, file,
-                            "resource fork AppleDouble file");
+                    setFileTimes(resFile, file, "resource fork AppleDouble file");
                 }
             }
         }
     }
 
-    private static File getFileForFolder(File targetDir, FSFolder folder,
-            boolean verbose) {
+    private static File getFileForFolder(File targetDir, FSFolder folder, boolean verbose) {
         File folderFile = new File(targetDir, scrub(folder.getName()));
-        if(folderFile.isDirectory() || folderFile.mkdir()) {
-            if(verbose)
+        if (folderFile.isDirectory() || folderFile.mkdir()) {
+            if (verbose)
                 System.out.println(folderFile.getPath());
-        }
-        else {
-            System.err.println("Failed to create directory " +
-                    folderFile.getPath());
+        } else {
+            System.err.println("Failed to create directory " + folderFile.getPath());
             folderFile = null;
         }
         return folderFile;
@@ -677,28 +617,31 @@ public class UnHFS {
 
             in = fork.getReadableRandomAccessStream();
 
-            long extractedBytes = IOUtil.streamCopy(in, os, 128*1024);
-            if(extractedBytes != fork.getLength()) {
+            long extractedBytes = IOUtil.streamCopy(in, os, 128 * 1024);
+            if (extractedBytes != fork.getLength()) {
                 System.err.println("WARNING: Did not extract intended number of bytes to \"" +
-                        targetFile.getPath() + "\"! Intended: " + fork.getLength() +
-                        " Extracted: " + extractedBytes);
+                        targetFile.getPath() + "\"! Intended: " + fork.getLength() + " Extracted: " + extractedBytes);
             }
 
             return true;
-        } catch(FileNotFoundException fnfe) {
+        } catch (FileNotFoundException fnfe) {
             return false;
-        } catch(Exception ioe) {
+        } catch (Exception ioe) {
             ioe.printStackTrace();
             return false;
-            //throw new RuntimeIOException(ioe);
+//            throw new RuntimeIOException(ioe);
         } finally {
-            if(os != null) {
-                try { os.close(); }
-                catch(Exception e) {}
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (Exception e) {
+                }
             }
-            if(in != null) {
-                try { in.close(); }
-                catch(Exception e) {}
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
@@ -712,8 +655,8 @@ public class UnHFS {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             in = resourceFork.getReadableRandomAccessStream();
-            long extractedBytes = IOUtil.streamCopy(in, baos, 128*1024);
-            if(extractedBytes != resourceFork.getLength()) {
+            long extractedBytes = IOUtil.streamCopy(in, baos, 128 * 1024);
+            if (extractedBytes != resourceFork.getLength()) {
                 System.err.println("WARNING: Did not extract intended number of bytes to \"" +
                         targetFile.getPath() + "\"! Intended: " + resourceFork.getLength() +
                         " Extracted: " + extractedBytes);
@@ -724,35 +667,39 @@ public class UnHFS {
             os = new FileOutputStream(targetFile);
             os.write(builder.getResult());
             return true;
-        } catch(FileNotFoundException fnfe) {
+        } catch (FileNotFoundException fnfe) {
             return false;
-        } catch(Exception ioe) {
+        } catch (Exception ioe) {
             ioe.printStackTrace();
             return false;
-            //throw new RuntimeIOException(ioe);
+//            throw new RuntimeIOException(ioe);
         } finally {
-            if(os != null) {
-                try { os.close(); }
-                catch(Exception e) {}
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (Exception e) {
+                }
             }
-            if(in != null) {
-                try { in.close(); }
-                catch(Exception e) {}
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
 
     /**
      * Scrubs away all control characters from a string and replaces them with '_'.
+     *
      * @param s the string to be processed.
      * @return a scrubbed string.
      */
     private static String scrub(String s) {
         char[] cdata = s.toCharArray();
-        for(int i = 0; i < cdata.length; ++i) {
-            if((cdata[i] >= 0 && cdata[i] <= 31) ||
-               (cdata[i] == 127))
-            {
+        for (int i = 0; i < cdata.length; ++i) {
+            if ((cdata[i] >= 0 && cdata[i] <= 31) ||
+                    (cdata[i] == 127)) {
                 cdata[i] = '_';
             }
         }
@@ -760,7 +707,7 @@ public class UnHFS {
     }
 
     private static void logDebug(String s) {
-        if(debug)
+        if (debug)
             System.err.println("DEBUG: " + s);
     }
 }

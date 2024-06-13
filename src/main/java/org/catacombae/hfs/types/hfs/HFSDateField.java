@@ -19,10 +19,12 @@ package org.catacombae.hfs.types.hfs;
 
 import org.catacombae.hfs.types.hfsplus.HFSPlusDateField;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSDateField extends HFSPlusDateField {
+
     public HFSDateField(byte[] data) {
         this(data, 0, data.length);
     }

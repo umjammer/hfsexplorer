@@ -27,6 +27,7 @@ package org.catacombae.hfs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSException extends RuntimeException {
+
     public HFSException(String message) {
         super(message);
     }

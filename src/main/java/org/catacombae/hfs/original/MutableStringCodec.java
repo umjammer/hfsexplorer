@@ -24,52 +24,32 @@ package org.catacombae.hfs.original;
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class MutableStringCodec <A extends StringCodec> implements StringCodec {
+public class MutableStringCodec<A extends StringCodec> implements StringCodec {
+
     private A underlying;
 
     public MutableStringCodec(A initialDecoder) {
-        if(initialDecoder == null)
-            throw new IllegalArgumentException("Can not construct a MutableStringDecoder with a " +
-                    "null initial decoder.");
+        if (initialDecoder == null)
+            throw new IllegalArgumentException("Can not construct a MutableStringDecoder with a null initial decoder.");
         this.underlying = initialDecoder;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String decode(byte[] data) {
         return underlying.decode(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String decode(byte[] data, int off, int len) {
         return underlying.decode(data, off, len);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str) {
         return underlying.encode(str);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public byte[] encode(String str, int off, int len) {
         return underlying.encode(str, off, len);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    /* @Override */
     public String getCharsetName() {
         return underlying.getCharsetName();
     }

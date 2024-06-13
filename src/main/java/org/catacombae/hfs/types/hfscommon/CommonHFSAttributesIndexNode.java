@@ -19,37 +19,31 @@ package org.catacombae.hfs.types.hfscommon;
 
 import org.catacombae.hfs.types.hfsplus.HFSPlusAttributesKey;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSAttributesIndexNode
-        extends CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSAttributesKey>>
-{
-    protected CommonHFSAttributesIndexNode(byte[] data, int offset,
-            int nodeSize, FSType type)
-    {
+        extends CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSAttributesKey>> {
+
+    protected CommonHFSAttributesIndexNode(byte[] data, int offset, int nodeSize, FSType type) {
         super(data, offset, nodeSize, type);
     }
 
-    public static CommonHFSAttributesIndexNode createHFSPlus(byte[] data,
-            int offset, int nodeSize)
-    {
+    public static CommonHFSAttributesIndexNode createHFSPlus(byte[] data, int offset, int nodeSize) {
         return new HFSPlusImplementation(data, offset, nodeSize);
     }
 
-    public static class HFSPlusImplementation
-            extends CommonHFSAttributesIndexNode
-    {
+    public static class HFSPlusImplementation extends CommonHFSAttributesIndexNode {
+
         public HFSPlusImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS_PLUS);
         }
 
         @Override
         protected CommonBTIndexRecord<CommonHFSAttributesKey> createBTRecord(
-                int recordNumber, byte[] data, int offset, int length)
-        {
-            final CommonHFSAttributesKey key = CommonHFSAttributesKey.create(
-                    new HFSPlusAttributesKey(data, offset));
+                int recordNumber, byte[] data, int offset, int length) {
+            final CommonHFSAttributesKey key = CommonHFSAttributesKey.create(new HFSPlusAttributesKey(data, offset));
 
             return CommonBTIndexRecord.createHFSPlus(key, data, offset);
         }

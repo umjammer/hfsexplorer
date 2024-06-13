@@ -19,12 +19,12 @@ package org.catacombae.hfs.types.hfscommon;
 
 import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSCatalogLeafNode
-        extends CommonBTKeyedNode<CommonHFSCatalogLeafRecord>
-{
+public abstract class CommonHFSCatalogLeafNode extends CommonBTKeyedNode<CommonHFSCatalogLeafRecord> {
+
     protected CommonHFSCatalogLeafNode(byte[] data, int offset, int nodeSize, FSType type) {
         super(data, offset, nodeSize, type);
     }
@@ -38,8 +38,7 @@ public abstract class CommonHFSCatalogLeafNode
     }
 
     public static CommonHFSCatalogLeafNode createHFSX(byte[] data, int offset,
-            int nodeSize, byte keyCompareType)
-    {
+                                                      int nodeSize, byte keyCompareType) {
         return new HFSXImplementation(data, offset, nodeSize, keyCompareType).
                 getInternal();
     }
@@ -49,6 +48,7 @@ public abstract class CommonHFSCatalogLeafNode
     }
 
     private static class HFSPlusImplementation extends CommonHFSCatalogLeafNode {
+
         public HFSPlusImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS_PLUS);
         }
@@ -64,31 +64,34 @@ public abstract class CommonHFSCatalogLeafNode
     }
 
     public static class HFSXImplementation {
+
         private final byte keyCompareType;
         private final Internal internal;
 
         private class Internal extends CommonHFSCatalogLeafNode {
+
             public Internal(byte[] data, int offset, int nodeSize) {
                 super(data, offset, nodeSize, FSType.HFS_PLUS);
             }
 
             @Override
             protected CommonHFSCatalogLeafRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
-                return CommonHFSCatalogLeafRecord.createHFSX(data, offset,
-                        length, keyCompareType);
+                return CommonHFSCatalogLeafRecord.createHFSX(data, offset, length, keyCompareType);
             }
         }
 
-        public HFSXImplementation(byte[] data, int offset, int nodeSize,
-                byte keyCompareType) {
+        public HFSXImplementation(byte[] data, int offset, int nodeSize, byte keyCompareType) {
             this.keyCompareType = keyCompareType;
             this.internal = new Internal(data, offset, nodeSize);
         }
 
-        private Internal getInternal() { return internal; }
+        private Internal getInternal() {
+            return internal;
+        }
     }
 
     public static class HFSImplementation extends CommonHFSCatalogLeafNode {
+
         public HFSImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS);
         }

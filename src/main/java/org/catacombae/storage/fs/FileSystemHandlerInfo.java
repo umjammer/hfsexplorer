@@ -24,6 +24,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface FileSystemHandlerInfo {
+
     /**
      * Returns the handler name. This is the name of the handler, and not
      * necessarily the name of the file system itself. If a NTFS file system
@@ -46,6 +47,7 @@ public interface FileSystemHandlerInfo {
 
     /**
      * Returns a free-form user readable version string for this handler.
+     *
      * @return a free-form user readable version string for this handler.
      */
     public String getHandlerVersion();

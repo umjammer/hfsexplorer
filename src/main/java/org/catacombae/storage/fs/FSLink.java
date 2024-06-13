@@ -33,7 +33,7 @@ public interface FSLink extends FSEntry {
      * invalid, this method will return null.
      *
      * @param parentDir a path to the parent directory of the link (needed for links that use
-     * relative pathnames).
+     *                  relative pathnames).
      * @return the target of this link, if possible, or <code>null</code> if the link was invalid.
      */
     public FSEntry getLinkTarget(String[] parentDir);

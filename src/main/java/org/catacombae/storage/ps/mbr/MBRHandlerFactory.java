@@ -23,6 +23,7 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
 import org.catacombae.storage.ps.PartitionSystemImplementationInfo;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -45,5 +46,4 @@ public class MBRHandlerFactory extends PartitionSystemHandlerFactory {
     public PartitionSystemRecognizer getRecognizer() {
         return recognizer;
     }
-
 }

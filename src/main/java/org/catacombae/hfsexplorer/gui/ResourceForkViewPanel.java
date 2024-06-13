@@ -31,6 +31,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import org.catacombae.hfsexplorer.GUIUtil;
 import org.catacombae.hfsexplorer.IOUtil;
 import org.catacombae.util.Util;
@@ -42,10 +43,12 @@ import org.catacombae.hfsexplorer.types.resff.ResourceType;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.util.Util.Pair;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ResourceForkViewPanel extends javax.swing.JPanel {
+
     private ResourceForkReader reader = null;
 
     /**
@@ -53,15 +56,16 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
      * Its toString method decides how it is displayed to the user.
      */
     private class ListItem {
+
         ResourceType type;
         ReferenceListEntry entry;
         ResourceName name;
         long size;
 
         public ListItem(ResourceType type,
-                ReferenceListEntry entry,
-                ResourceName name,
-                long size) {
+                        ReferenceListEntry entry,
+                        ResourceName name,
+                        long size) {
             this.type = type;
             this.entry = entry;
             this.name = name;
@@ -74,10 +78,10 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
                 StringBuilder sb = new StringBuilder();
                 sb.append(new String(type.getType(), "MacRoman"));
 
-                if(name != null)
+                if (name != null)
                     sb.append(" \"").append(new String(name.getName(), "MacRoman")).append("\"");
                 return sb.toString();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 return "{" + e.getClass().getSimpleName() + " in resource id " + entry.getResourceID() + "}";
             }
@@ -95,9 +99,9 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
 
             public void valueChanged(ListSelectionEvent e) {
                 Object o = resourceList.getSelectedValue();
-                if(o instanceof ListItem)
-                    setSelectedItem((ListItem)o);
-                else if(o != null)
+                if (o instanceof ListItem)
+                    setSelectedItem((ListItem) o);
+                else if (o != null)
                     JOptionPane.showMessageDialog(resourceList, "Unexpected type in list: " + o.getClass());
             }
         });
@@ -106,7 +110,7 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
 
             public void actionPerformed(ActionEvent e) {
                 Object selection = resourceList.getSelectedValue();
-                if(selection != null && selection instanceof ListItem) {
+                if (selection != null && selection instanceof ListItem) {
                     ListItem selectedItem = (ListItem) selection;
                     JDialog d = new JDialog(JOptionPane.getFrameForComponent(ResourceForkViewPanel.this),
                             selection.toString(), true);
@@ -125,23 +129,25 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
 
         extractButton.addActionListener(new ActionListener() {
             private JFileChooser fileChooser = new JFileChooser();
+
             {
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fileChooser.setMultiSelectionEnabled(false);
             }
+
             public void actionPerformed(ActionEvent e) {
                 Object selection = resourceList.getSelectedValue();
-                if(selection != null && selection instanceof ListItem) {
+                if (selection != null && selection instanceof ListItem) {
                     ListItem selectedItem = (ListItem) selection;
 
-                    if(fileChooser.showSaveDialog(ResourceForkViewPanel.this) == JFileChooser.APPROVE_OPTION) {
+                    if (fileChooser.showSaveDialog(ResourceForkViewPanel.this) == JFileChooser.APPROVE_OPTION) {
                         File saveFile = fileChooser.getSelectedFile();
-                        if(saveFile.exists()) {
+                        if (saveFile.exists()) {
                             int res = JOptionPane.showConfirmDialog(ResourceForkViewPanel.this,
                                     "The file already exists. Do you want to overwrite?",
                                     "Confirm overwrite", JOptionPane.YES_NO_OPTION,
                                     JOptionPane.QUESTION_MESSAGE);
-                            if(res != JOptionPane.YES_OPTION)
+                            if (res != JOptionPane.YES_OPTION)
                                 return;
                         }
 
@@ -152,20 +158,20 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
                             fos = new FileOutputStream(saveFile);
 
                             IOUtil.streamCopy(in, fos, 65536);
-                        } catch(FileNotFoundException fnfe) {
+                        } catch (FileNotFoundException fnfe) {
                             JOptionPane.showMessageDialog(ResourceForkViewPanel.this,
                                     "Could not open file \"" + saveFile.getPath() + "\" for writing...",
                                     "Error", JOptionPane.ERROR_MESSAGE);
-                        } catch(IOException ioe) {
+                        } catch (IOException ioe) {
                             ioe.printStackTrace();
                             GUIUtil.displayExceptionDialog(ioe, ResourceForkViewPanel.this);
                         } finally {
-                            if(in != null)
+                            if (in != null)
                                 in.close();
-                            if(fos != null) {
+                            if (fos != null) {
                                 try {
                                     fos.close();
-                                } catch(IOException ex) {
+                                } catch (IOException ex) {
                                     ex.printStackTrace();
                                     GUIUtil.displayExceptionDialog(ex, ResourceForkViewPanel.this);
                                 }
@@ -179,13 +185,12 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
     }
 
     public final void loadResourceFork(ResourceForkReader reader) {
-        if(reader != null) {
+        if (reader != null) {
             ListItem[] allItems = listAllItems(reader);
             resourceList.setEnabled(true);
             resourceList.setListData(allItems);
             resourceListLabel.setText("Resource list (" + allItems.length + " items):");
-        }
-        else {
+        } else {
             resourceList.setEnabled(false);
             resourceList.setListData(new Object[0]);
             resourceListLabel.setText("Resource list:");
@@ -202,9 +207,9 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
 
         //System.err.println("listAllItems(): getting reference list for " + resMap);
         List<Pair<ResourceType, ReferenceListEntry[]>> refList = resMap.getReferenceList();
-        for(Pair<ResourceType, ReferenceListEntry[]> p : refList) {
+        for (Pair<ResourceType, ReferenceListEntry[]> p : refList) {
             ResourceType type = p.getA();
-            for(ReferenceListEntry entry : p.getB()) {
+            for (ReferenceListEntry entry : p.getB()) {
                 //System.err.println("listAllItems(): getting name by reflist entry " + entry);
                 ResourceName name = resMap.getNameByReferenceListEntry(entry);
                 long size = reader.getDataLength(entry);
@@ -218,7 +223,7 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
 
     private void setSelectedItem(ListItem li) {
         final boolean enabled;
-        if(li == null)
+        if (li == null)
             enabled = false;
         else
             enabled = true;
@@ -231,40 +236,37 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
         sizeField.setEnabled(enabled);
         attributesField.setEnabled(enabled);
 
-        if(!enabled) {
+        if (!enabled) {
             nameField.setText("");
             typeField.setText("");
             idField.setText("");
             sizeField.setText("");
             attributesField.setText("");
-        }
-        else {
+        } else {
             String nameString;
-            if(li.name != null) {
+            if (li.name != null) {
                 try {
                     nameString = new String(li.name.getName(), "MacRoman");
-                } catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     nameString = "[Could not decode: " + e.toString() + "]";
                 }
-            }
-            else {
+            } else {
                 nameString = null;
             }
 
             String typeString;
             try {
                 typeString = new String(li.type.getType(), "MacRoman");
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 typeString = "[Could not decode: " + e.toString() + "]";
             }
 
-            if(nameField == null) {
+            if (nameField == null) {
                 nameField.setEnabled(false);
                 nameField.setName("");
-            }
-            else
+            } else
                 nameField.setText(nameString);
 
             typeField.setText(typeString);
@@ -274,7 +276,8 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
         }
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -303,9 +306,15 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
         resourceListLabel.setText("[This label is set programmatically]");
 
         resourceList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
+            String[] strings = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"};
+
+            public int getSize() {
+                return strings.length;
+            }
+
+            public Object getElementAt(int i) {
+                return strings[i];
+            }
         });
         resourceListScroller.setViewportView(resourceList);
 
@@ -342,44 +351,44 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout fieldsPanelLayout = new org.jdesktop.layout.GroupLayout(fieldsPanel);
         fieldsPanel.setLayout(fieldsPanelLayout);
         fieldsPanelLayout.setHorizontalGroup(
-            fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(fieldsPanelLayout.createSequentialGroup()
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(nameLabel)
-                    .add(typeLabel)
-                    .add(idLabel)
-                    .add(sizeLabel)
-                    .add(attributesLabel))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(attributesField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                    .add(sizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                    .add(idField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                    .add(nameField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                    .add(typeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)))
+                fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(fieldsPanelLayout.createSequentialGroup()
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(nameLabel)
+                                        .add(typeLabel)
+                                        .add(idLabel)
+                                        .add(sizeLabel)
+                                        .add(attributesLabel))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(attributesField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                                        .add(sizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                                        .add(idField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                                        .add(nameField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                                        .add(typeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)))
         );
         fieldsPanelLayout.setVerticalGroup(
-            fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(fieldsPanelLayout.createSequentialGroup()
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(nameLabel)
-                    .add(nameField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(typeLabel)
-                    .add(typeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(idLabel)
-                    .add(idField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(sizeLabel)
-                    .add(sizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(attributesLabel)
-                    .add(attributesField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(fieldsPanelLayout.createSequentialGroup()
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(nameLabel)
+                                        .add(nameField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(typeLabel)
+                                        .add(typeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(idLabel)
+                                        .add(idField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(sizeLabel)
+                                        .add(sizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(attributesLabel)
+                                        .add(attributesField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
         );
 
         extractButton.setText("Save to file...");
@@ -389,33 +398,33 @@ public class ResourceForkViewPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, resourceListScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, resourceListLabel)
-                    .add(layout.createSequentialGroup()
-                        .add(viewButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(extractButton))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, resourceListScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, resourceListLabel)
+                                        .add(layout.createSequentialGroup()
+                                                .add(viewButton)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(extractButton))
+                                        .add(org.jdesktop.layout.GroupLayout.LEADING, fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(resourceListLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(resourceListScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(extractButton)
-                    .add(viewButton))
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(resourceListLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(resourceListScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(extractButton)
+                                        .add(viewButton))
+                                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 

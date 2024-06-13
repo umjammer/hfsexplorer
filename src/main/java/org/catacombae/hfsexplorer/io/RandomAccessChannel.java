@@ -21,17 +21,15 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface RandomAccessChannel extends ReadableByteChannel {
 
-    public abstract long position()
-            throws IOException;
+    public abstract long position() throws IOException;
 
-    public abstract FileChannel position(long newPosition)
-            throws IOException;
+    public abstract FileChannel position(long newPosition) throws IOException;
 
-    public abstract long size()
-            throws IOException;
+    public abstract long size() throws IOException;
 }

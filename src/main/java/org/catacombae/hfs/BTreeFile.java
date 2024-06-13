@@ -19,6 +19,7 @@ package org.catacombae.hfs;
 
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTIndexRecord;
@@ -29,18 +30,18 @@ import org.catacombae.hfs.types.hfscommon.CommonBTLeafRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor;
 import org.catacombae.hfs.types.hfscommon.CommonBTNodeDescriptor.NodeType;
+import org.catacombae.hfs.types.hfscommon.CommonHFSExtentKey;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.Readable;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class BTreeFile<K extends CommonBTKey<K>,
-        L extends CommonBTLeafRecord<K>>
-        implements Limits
-{
+public abstract class BTreeFile<K extends CommonBTKey<K>, L extends CommonBTLeafRecord<K>> implements Limits {
+
     final HFSVolume vol;
 
     BTreeFile(HFSVolume vol) {
@@ -48,6 +49,7 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
     }
 
     abstract class BTreeFileSession {
+
         final CommonHFSVolumeHeader header;
         final CommonBTNodeDescriptor btnd;
         final CommonBTHeaderRecord bthr;
@@ -55,99 +57,86 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
 
         public BTreeFileSession() {
             this.header = vol.getVolumeHeader();
-            //header.print(System.err, "    ");
+//            header.print(System.err, "    ");
             this.btreeStream = getBTreeStream(header);
 
             this.btreeStream.seek(0);
 
             this.btnd = readNodeDescriptor(this.btreeStream);
-            //this.btnd.print(System.err, "    ");
-            if(btnd.getNodeType() != NodeType.HEADER) {
-                throw new RuntimeIOException("Invalid node type for header " +
-                        "node.");
+//            this.btnd.print(System.err, "    ");
+            if (btnd.getNodeType() != NodeType.HEADER) {
+                throw new RuntimeIOException("Invalid node type for header node.");
             }
 
             this.bthr = readHeaderRecord(this.btreeStream);
-            //this.bthr.print(System.err, "    ");
+//            this.bthr.print(System.err, "    ");
         }
 
         public final void close() {
             this.btreeStream.close();
         }
 
-        protected abstract ReadableRandomAccessStream getBTreeStream(
-                CommonHFSVolumeHeader header);
+        protected abstract ReadableRandomAccessStream getBTreeStream(CommonHFSVolumeHeader header);
     }
 
-    protected <R extends CommonBTKeyedRecord<K>> R findLEKey(
-            CommonBTKeyedNode<R> indexNode, K searchKey)
-    {
-	/*
-	 * Algorithm:
-	 *   input: Key searchKey
-	 *   variables: Key greatestMatchingKey
-	 *   For each n : records
-	 *     If n.key <= searchKey && n.key > greatestMatchingKey
-	 *       greatestMatchingKey = n.key
-	 */
-	R largestMatchingRecord = null;
+    protected <R extends CommonBTKeyedRecord<K>> R findLEKey(CommonBTKeyedNode<R> indexNode, K searchKey) {
+        //
+        // Algorithm:
+        //   input: Key searchKey
+        //   variables: Key greatestMatchingKey
+        //     For each n : records
+        //     If n.key <= searchKey && n.key > greatestMatchingKey
+        //       greatestMatchingKey = n.key
+        //
+        R largestMatchingRecord = null;
 
-        //System.err.println("findLEKey(): Entering loop...");
-        for(R record : indexNode.getBTKeyedRecords()) {
+//        System.err.println("findLEKey(): Entering loop...");
+        for (R record : indexNode.getBTKeyedRecords()) {
             K recordKey = record.getKey();
 
-            //System.err.print("findLEKey():   Processing record");
-            //if(recordKey instanceof CommonHFSExtentKey)
-            //    System.err.print(" with key " + getDebugString((CommonHFSExtentKey)recordKey));
-            //System.err.print("...");
+//            System.err.print("findLEKey():   Processing record");
+//            if (recordKey instanceof CommonHFSExtentKey)
+//                System.err.print(" with key " + getDebugString((CommonHFSExtentKey) recordKey));
+//            System.err.print("...");
 
-	    if(recordKey.compareTo(searchKey) <= 0 &&
+            if (recordKey.compareTo(searchKey) <= 0 &&
                     (largestMatchingRecord == null ||
-                    recordKey.compareTo(largestMatchingRecord.getKey()) > 0)) {
+                            recordKey.compareTo(largestMatchingRecord.getKey()) > 0)) {
 
-		largestMatchingRecord = record;
-                //System.err.print("match!");
-	    }
-            //else
-            //    System.err.print("no match.");
-            //System.err.println();
-	}
+                largestMatchingRecord = record;
+//                System.err.print("match!");
+            }
+//            else
+//                System.err.print("no match.");
+//            System.err.println();
+        }
 
-        //System.err.println("findLEKey(): Returning...");
-	return largestMatchingRecord;
+//        System.err.println("findLEKey(): Returning...");
+        return largestMatchingRecord;
     }
 
     /**
      * Find records with keys <code>k</code> in the range
      * <code>minKeyInclusive</code> &lt;= <code>k</code> &lt;
      * <code>maxKeyExclusive</code> that exist in <code>keyedNode</code>.<br>
-     *
+     * <p>
      * If no matching records are found, then the record with the largest key
      * that is less than <code>minKeyInclusive</code> (if any such record
      * exists) is returned in <code>result</code>. If no such record exists,
      * nothing is added to <code>result</code>.
      *
-     * @param <R> The type of the records that we operate on.
-     *
-     * @param keyedNode
-     *      <b>(in)</b> The keyed node to search.
-     * @param minKeyInclusive
-     *      <b>(in)</b> The smallest key in the range (inclusive).
-     * @param maxKeyExclusive
-     *      <b>(in)</b> The largest key in the range (exclusive).
-     * @param strict
-     *      <b>(in)</b> If <code>false</code>, then the record before the first
-     *      match is always included in the result. This is appropriate when
-     *      searching index nodes, but not for leaf nodes.
-     *
-     * @return
-     *      A {@link java.util.List} of records.
+     * @param <R>             The type of the records that we operate on.
+     * @param keyedNode       <b>(in)</b> The keyed node to search.
+     * @param minKeyInclusive <b>(in)</b> The smallest key in the range (inclusive).
+     * @param maxKeyExclusive <b>(in)</b> The largest key in the range (exclusive).
+     * @param strict          <b>(in)</b> If <code>false</code>, then the record before the first
+     *                        match is always included in the result. This is appropriate when
+     *                        searching index nodes, but not for leaf nodes.
+     * @return A {@link java.util.List} of records.
      */
     protected <R extends CommonBTKeyedRecord<K>> List<R> findLEKeys(
-            CommonBTKeyedNode<R> keyedNode, K minKeyInclusive,
-            K maxKeyExclusive, boolean strict)
-    {
-	final LinkedList<R> result = new LinkedList<R>();
+            CommonBTKeyedNode<R> keyedNode, K minKeyInclusive, K maxKeyExclusive, boolean strict) {
+        final LinkedList<R> result = new LinkedList<R>();
 
         findLEKeys(keyedNode, minKeyInclusive, maxKeyExclusive, strict, result);
 
@@ -158,65 +147,54 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
      * Find records with keys <code>k</code> in the range
      * <code>minKeyInclusive</code> &lt;= <code>k</code> &lt;
      * <code>maxKeyExclusive</code>) that exist in <code>keyedNode</code>.<br>
-     *
+     * <p>
      * If no matching records are found, then the record with the largest key
      * that is less than <code>minKeyInclusive</code> (if any such record
      * exists) is returned in <code>result</code> and the function returns
      * <code>false</code>. If no such record exists, nothing is added to
      * <code>result</code> (and <code>false</code> is still returned).
      *
-     * @param <R> The type of the records that we operate on.
-     *
-     * @param keyedNode
-     *      <b>(in)</b> The keyed node to search.
-     * @param minKeyInclusive
-     *      <b>(in)</b> The smallest key in the range (inclusive).
-     * @param maxKeyExclusive
-     *      <b>(in)</b> The largest key in the range (exclusive).
-     * @param strict
-     *      <b>(in)</b> If <code>false</code>, then the record before the first
-     *      match is always included in the result. This is appropriate when
-     *      searching index nodes, but not for leaf nodes.
-     * @param result
-     *      <b>(out)</b> A {@link java.util.LinkedList} that will receive the
-     *      matching keys.
-     *
-     * @return
-     *      <code>true</code> if at least one key matching the specified
-     *      conditions was found, and <code>false</code> otherwise.
+     * @param <R>             The type of the records that we operate on.
+     * @param keyedNode       <b>(in)</b> The keyed node to search.
+     * @param minKeyInclusive <b>(in)</b> The smallest key in the range (inclusive).
+     * @param maxKeyExclusive <b>(in)</b> The largest key in the range (exclusive).
+     * @param strict          <b>(in)</b> If <code>false</code>, then the record before the first
+     *                        match is always included in the result. This is appropriate when
+     *                        searching index nodes, but not for leaf nodes.
+     * @param result          <b>(out)</b> A {@link java.util.LinkedList} that will receive the
+     *                        matching keys.
+     * @return <code>true</code> if at least one key matching the specified
+     * conditions was found, and <code>false</code> otherwise.
      */
     protected <R extends CommonBTKeyedRecord<K>> boolean findLEKeys(
             CommonBTKeyedNode<R> keyedNode, K minKeyInclusive,
-            K maxKeyExclusive, boolean strict, LinkedList<R> result)
-    {
+            K maxKeyExclusive, boolean strict, LinkedList<R> result) {
         boolean found = false;
-	K largestLEKey = null;
-	R largestLERecord = null;
+        K largestLEKey = null;
+        R largestLERecord = null;
 
-        /* TODO: Iteration could be optimized to binary search since keys are
-         *       (supposed to be) ordered. */
-	for(R record : keyedNode.getBTKeyedRecords()) {
+        // TODO Iteration could be optimized to binary search since keys are
+        //  (supposed to be) ordered.
+        for (R record : keyedNode.getBTKeyedRecords()) {
             K key = record.getKey();
 
-            if(key.compareTo(minKeyInclusive) < 0) {
-                if(largestLEKey == null ||
-                        key.compareTo(largestLEKey) > 0)
-                {
+            if (key.compareTo(minKeyInclusive) < 0) {
+                if (largestLEKey == null ||
+                        key.compareTo(largestLEKey) > 0) {
                     largestLEKey = key;
                     largestLERecord = record;
                 }
-            }
-            else if(key.compareTo(maxKeyExclusive) < 0) {
-                if(result != null) {
+            } else if (key.compareTo(maxKeyExclusive) < 0) {
+                if (result != null) {
                     result.addLast(record);
                 }
 
                 found = true;
             }
-	}
+        }
 
-        if(largestLEKey != null && (!found || !strict)) {
-            if(result != null) {
+        if (largestLEKey != null && (!found || !strict)) {
+            if (result != null) {
                 result.addFirst(largestLERecord);
             }
         }
@@ -224,16 +202,14 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
         return found;
     }
 
-    protected CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData,
-            int offset, int nodeSize) {
+    protected CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData, int offset, int nodeSize) {
         return vol.createCommonBTHeaderNode(currentNodeData, offset, nodeSize);
     }
 
     protected abstract CommonBTKeyedNode<? extends CommonBTIndexRecord<K>>
-            createIndexNode(byte[] nodeData, int offset, int nodeSize);
+    createIndexNode(byte[] nodeData, int offset, int nodeSize);
 
-    protected abstract CommonBTKeyedNode<L> createLeafNode(byte[] nodeData,
-            int offset, int nodeSize);
+    protected abstract CommonBTKeyedNode<L> createLeafNode(byte[] nodeData, int offset, int nodeSize);
 
     protected CommonBTNodeDescriptor readNodeDescriptor(Readable rd) {
         return vol.readNodeDescriptor(rd);
@@ -267,16 +243,13 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
         try {
             long rootNode = ses.bthr.getRootNodeNumber();
 
-            if(rootNode == 0) {
+            if (rootNode == 0) {
                 // There is no index node, or other content. So the node we
                 // seek does not exist. Return null.
                 return null;
-            }
-            else if(rootNode < 0 || rootNode > UINT32_MAX) {
-                throw new RuntimeException("Internal error - rootNode out of " +
-                        "range: " + rootNode);
-            }
-            else {
+            } else if (rootNode < 0 || rootNode > UINT32_MAX) {
+                throw new RuntimeException("Internal error - rootNode out of range: " + rootNode);
+            } else {
                 return getNode(rootNode, ses);
             }
         } finally {
@@ -304,21 +277,17 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
         try {
             ses.btreeStream.seek(nodeNumber * nodeSize);
             ses.btreeStream.readFully(nodeData);
-        } catch(RuntimeException e) {
-            System.err.println("RuntimeException in " + METHOD + ". Printing " +
-                    "additional information:");
+        } catch (RuntimeException e) {
+            System.err.println("RuntimeException in " + METHOD + ". Printing additional information:");
             System.err.println("  nodeNumber=" + nodeNumber);
             System.err.println("  nodeSize=" + nodeSize);
-            System.err.println("  init.btreeStream.length()=" +
-                    ses.btreeStream.length());
-            System.err.println("  (currentNodeNumber * nodeSize)=" +
-                    (nodeNumber * nodeSize));
+            System.err.println("  init.btreeStream.length()=" + ses.btreeStream.length());
+            System.err.println("  (currentNodeNumber * nodeSize)=" + (nodeNumber * nodeSize));
             throw e;
         }
 
-        CommonBTNodeDescriptor nodeDescriptor =
-                createCommonBTNodeDescriptor(nodeData, 0);
-        switch(nodeDescriptor.getNodeType()) {
+        CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(nodeData, 0);
+        switch (nodeDescriptor.getNodeType()) {
             case HEADER:
                 node = createCommonBTHeaderNode(nodeData, 0, nodeSize);
                 break;
@@ -356,13 +325,12 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
 
     /**
      * Get a record from the B* tree with the specified key.<br>
-     *
+     * <p>
      * If none is found, the method returns <code>null</code>.<br>
      * Tis method should execute in <code>O(log n)</code> time, where
      * <code>n</code> is the number of elements in the tree.
      *
      * @param searchKey the key of the record that we are looking for.
-     *
      * @return the requested record, if any, or <code>null</code> if no such
      * record was found.
      */
@@ -377,45 +345,38 @@ public abstract class BTreeFile<K extends CommonBTKey<K>,
             byte[] currentNodeData = new byte[nodeSize];
             ses.btreeStream.seek(currentNodeOffset);
             ses.btreeStream.readFully(currentNodeData);
-            CommonBTNodeDescriptor nodeDescriptor =
-                    createCommonBTNodeDescriptor(currentNodeData, 0);
+            CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
 
-            /* Search down through the layers of indices (O(log n) steps, where
-             * n is the size of the tree) */
-            while(nodeDescriptor.getNodeType() == NodeType.INDEX) {
-                CommonBTKeyedNode<? extends CommonBTIndexRecord<K>>
-                        currentNode =
+            // Search down through the layers of indices (O(log n) steps, where
+            // n is the size of the tree)
+            while (nodeDescriptor.getNodeType() == NodeType.INDEX) {
+                CommonBTKeyedNode<? extends CommonBTIndexRecord<K>> currentNode =
                         createIndexNode(currentNodeData, 0, nodeSize);
-                CommonBTIndexRecord<K> matchingRecord =
-                        findLEKey(currentNode, searchKey);
+                CommonBTIndexRecord<K> matchingRecord = findLEKey(currentNode, searchKey);
 
-                if(matchingRecord == null) {
+                if (matchingRecord == null) {
                     return null;
                 }
 
                 currentNodeOffset = matchingRecord.getIndex() * nodeSize;
                 ses.btreeStream.seek(currentNodeOffset);
                 ses.btreeStream.readFully(currentNodeData);
-                nodeDescriptor =
-                        createCommonBTNodeDescriptor(currentNodeData, 0);
+                nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
             }
 
-            /* Leaf node reached. Find record. */
-            if(nodeDescriptor.getNodeType() == NodeType.LEAF) {
-                CommonBTKeyedNode<L> leaf =
-                        createLeafNode(currentNodeData, 0, nodeSize);
+            // Leaf node reached. Find record.
+            if (nodeDescriptor.getNodeType() == NodeType.LEAF) {
+                CommonBTKeyedNode<L> leaf = createLeafNode(currentNodeData, 0, nodeSize);
 
-                for(L rec : leaf.getBTRecords()) {
-                    if(rec.getKey().compareTo(searchKey) == 0) {
+                for (L rec : leaf.getBTRecords()) {
+                    if (rec.getKey().compareTo(searchKey) == 0) {
                         return rec;
                     }
                 }
 
                 return null;
-            }
-            else {
-                throw new RuntimeException("Expected leaf node. Found other " +
-                        "kind: " + nodeDescriptor.getNodeType());
+            } else {
+                throw new RuntimeException("Expected leaf node. Found other kind: " + nodeDescriptor.getNodeType());
             }
         } finally {
             ses.close();

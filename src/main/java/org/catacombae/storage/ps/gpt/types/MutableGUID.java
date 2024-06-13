@@ -21,15 +21,17 @@ package org.catacombae.storage.ps.gpt.types;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MutableGUID extends GUID {
-    public MutableGUID() {}
+
+    public MutableGUID() {
+    }
+
     public MutableGUID(GUID guid) {
         super(guid);
     }
 
     public void setBytes(byte[] data, int offset) {
-        if(data.length - offset < length())
-            throw new IllegalArgumentException("Not enough data (need > 16, " +
-                    "got " + (data.length - offset) + ").");
+        if (data.length - offset < length())
+            throw new IllegalArgumentException("Not enough data (need > 16, got " + (data.length - offset) + ").");
 
         copyBytes(data, 0);
     }

@@ -21,6 +21,7 @@ package org.catacombae.storage.ps.gpt.types;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MutableGUIDPartitionTable extends GUIDPartitionTable {
+
     protected MutableGPTHeader mutableHeader;
     protected MutableGPTEntry[] mutableEntries;
     protected MutableGPTHeader mutableBackupHeader;
@@ -31,45 +32,62 @@ public class MutableGUIDPartitionTable extends GUIDPartitionTable {
                 new MutableGPTHeader(source.backupHeader),
                 source.entries.length, source.backupEntries.length);
 
-	this.mutableHeader = (MutableGPTHeader)header;
-	this.mutableEntries = new MutableGPTEntry[source.entries.length];
-	for(int i = 0; i < this.entries.length; ++i) {
-	    this.mutableEntries[i] = new MutableGPTEntry(source.entries[i]);
-	    this.entries[i] = this.mutableEntries[i];
-	}
+        this.mutableHeader = (MutableGPTHeader) header;
+        this.mutableEntries = new MutableGPTEntry[source.entries.length];
+        for (int i = 0; i < this.entries.length; ++i) {
+            this.mutableEntries[i] = new MutableGPTEntry(source.entries[i]);
+            this.entries[i] = this.mutableEntries[i];
+        }
 
-	this.mutableBackupHeader = (MutableGPTHeader)backupHeader;
-	this.mutableBackupEntries = new MutableGPTEntry[source.backupEntries.length];
-	for(int i = 0; i < this.backupEntries.length; ++i) {
-	    this.mutableBackupEntries[i] = new MutableGPTEntry(source.backupEntries[i]);
-	    this.backupEntries[i] = this.mutableBackupEntries[i];
-	}
+        this.mutableBackupHeader = (MutableGPTHeader) backupHeader;
+        this.mutableBackupEntries = new MutableGPTEntry[source.backupEntries.length];
+        for (int i = 0; i < this.backupEntries.length; ++i) {
+            this.mutableBackupEntries[i] = new MutableGPTEntry(source.backupEntries[i]);
+            this.backupEntries[i] = this.mutableBackupEntries[i];
+        }
     }
 
-    public MutableGPTHeader getMutablePrimaryHeader() { return mutableHeader; }
-    public MutableGPTHeader getMutableBackupHeader() { return mutableBackupHeader; }
-    public MutableGPTEntry getMutablePrimaryEntry(int index) { return mutableEntries[index]; }
-    public MutableGPTEntry getMutableBackupEntry(int index) { return mutableBackupEntries[index]; }
-    public MutableGPTEntry[] getMutablePrimaryEntries() { return mutableEntries; }
-    public MutableGPTEntry[] getMutableBackupEntries() { return mutableBackupEntries; }
+    public MutableGPTHeader getMutablePrimaryHeader() {
+        return mutableHeader;
+    }
+
+    public MutableGPTHeader getMutableBackupHeader() {
+        return mutableBackupHeader;
+    }
+
+    public MutableGPTEntry getMutablePrimaryEntry(int index) {
+        return mutableEntries[index];
+    }
+
+    public MutableGPTEntry getMutableBackupEntry(int index) {
+        return mutableBackupEntries[index];
+    }
+
+    public MutableGPTEntry[] getMutablePrimaryEntries() {
+        return mutableEntries;
+    }
+
+    public MutableGPTEntry[] getMutableBackupEntries() {
+        return mutableBackupEntries;
+    }
 
     public void setMutablePrimaryHeader(MutableGPTHeader mutableHeader) {
-	this.mutableHeader = mutableHeader;
-	this.header = mutableHeader;
+        this.mutableHeader = mutableHeader;
+        this.header = mutableHeader;
     }
 
     public void setMutableBackupHeader(MutableGPTHeader mutableBackupHeader) {
-	this.mutableBackupHeader = mutableBackupHeader;
-	this.backupHeader = mutableBackupHeader;
+        this.mutableBackupHeader = mutableBackupHeader;
+        this.backupHeader = mutableBackupHeader;
     }
 
     public void setMutablePrimaryEntries(MutableGPTEntry[] mutableEntries) {
-	this.mutableEntries = mutableEntries;
-	this.entries = mutableEntries;
+        this.mutableEntries = mutableEntries;
+        this.entries = mutableEntries;
     }
 
     public void setMutableBackupEntries(MutableGPTEntry[] mutableBackupEntries) {
-	this.mutableBackupEntries = mutableBackupEntries;
-	this.backupEntries = mutableBackupEntries;
+        this.mutableBackupEntries = mutableBackupEntries;
+        this.backupEntries = mutableBackupEntries;
     }
 }

@@ -18,12 +18,14 @@
 package org.catacombae.storage.fs.hfscommon;
 
 import java.util.Date;
-import org.catacombae.util.Util;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogAttributes;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfsplus.HFSPlusBSDInfo;
 import org.catacombae.storage.fs.FSAttributes;
 import org.catacombae.storage.fs.WindowsFileAttributes;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -46,8 +48,8 @@ class HFSCommonFSAttributes extends FSAttributes {
 
     @Override
     public POSIXFileAttributes getPOSIXFileAttributes() {
-        if(attributes.hasPermissions()) {
-            if(posixAttributes == null) {
+        if (attributes.hasPermissions()) {
+            if (posixAttributes == null) {
                 HFSPlusBSDInfo permissions = attributes.getPermissions();
 
                 posixAttributes = new DefaultPOSIXFileAttributes(
@@ -57,8 +59,7 @@ class HFSCommonFSAttributes extends FSAttributes {
                         attributes.getCatalogNodeID().toLong());
             }
             return posixAttributes;
-        }
-        else
+        } else
             throw new UnsupportedOperationException("Not supported.");
     }
 
@@ -125,9 +126,9 @@ class HFSCommonFSAttributes extends FSAttributes {
 
     @Override
     public boolean hasLinkCount() {
-        if(attributes instanceof CommonHFSCatalogFileRecord) {
+        if (attributes instanceof CommonHFSCatalogFileRecord) {
             CommonHFSCatalogFileRecord fr = (CommonHFSCatalogFileRecord) attributes;
-            if(fr.getData().isHardFileLink() /* || fr.getData().isHardDirectoryLink() */ )
+            if (fr.getData().isHardFileLink() /* || fr.getData().isHardDirectoryLink() */)
                 return true;
         }
 
@@ -136,12 +137,11 @@ class HFSCommonFSAttributes extends FSAttributes {
 
     @Override
     public Long getLinkCount() {
-        if(attributes instanceof CommonHFSCatalogFileRecord) {
+        if (attributes instanceof CommonHFSCatalogFileRecord) {
             return parentEntry.getFileSystemHandler().getLinkCount(
                     (CommonHFSCatalogFileRecord) attributes);
         }
 
         return null;
     }
-
 }

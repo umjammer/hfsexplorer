@@ -18,22 +18,25 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class BTIndexNode extends BTNode {
+
     protected final BTIndexRecord[] records;
     protected final short[] offsets;
 
     protected BTIndexNode(byte[] data, int offset, int nodeSize) {
-	super(data, offset, nodeSize);
-	this.offsets = new short[Util.unsign(nodeDescriptor.getNumRecords())+1]; //Last one is free space index
-	for(int i = 0; i < this.offsets.length; ++i) {
-	    this.offsets[i] = Util.readShortBE(data, offset+nodeSize-((i+1)*2));
-	}
-	this.records = new BTIndexRecord[this.offsets.length-1];
+        super(data, offset, nodeSize);
+        this.offsets = new short[Util.unsign(nodeDescriptor.getNumRecords()) + 1]; // Last one is free space index
+        for (int i = 0; i < this.offsets.length; ++i) {
+            this.offsets[i] = Util.readShortBE(data, offset + nodeSize - ((i + 1) * 2));
+        }
+        this.records = new BTIndexRecord[this.offsets.length - 1];
     }
 
     public BTIndexRecord getIndexRecord(int index) {
@@ -41,17 +44,17 @@ public abstract class BTIndexNode extends BTNode {
     }
 
     public BTIndexRecord[] getIndexRecords() {
-	BTIndexRecord[] copy = new BTIndexRecord[records.length];
-	for(int i = 0; i < copy.length; ++i)
-	    copy[i] = records[i];
-	return copy;
+        BTIndexRecord[] copy = new BTIndexRecord[records.length];
+        for (int i = 0; i < copy.length; ++i)
+            copy[i] = records[i];
+        return copy;
     }
 
     @Override
     public void printFields(PrintStream ps, String prefix) {
         super.printFields(ps, prefix);
         ps.println(prefix + " records:");
-        for(int i = 0; i < records.length; ++i) {
+        for (int i = 0; i < records.length; ++i) {
             ps.println(prefix + "  [" + i + "]:");
             records[i].printFields(ps, prefix + "   ");
         }

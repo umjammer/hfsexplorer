@@ -25,6 +25,7 @@ import java.util.List;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.SwingUtilities;
+
 import org.catacombae.hfsexplorer.ExtractProgressMonitor.CreateDirectoryFailedAction;
 import org.catacombae.hfsexplorer.ExtractProgressMonitor.CreateFileFailedAction;
 import org.catacombae.hfsexplorer.ExtractProgressMonitor.DirectoryExistsAction;
@@ -33,10 +34,12 @@ import org.catacombae.hfsexplorer.ExtractProgressMonitor.ExtractPropertiesListen
 import org.catacombae.hfsexplorer.ExtractProgressMonitor.FileExistsAction;
 import org.catacombae.hfsexplorer.ExtractProgressMonitor.UnhandledExceptionAction;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ExtractSettingsPanel extends javax.swing.JPanel {
+
     private final ButtonGroup createDirButtonGroup = new ButtonGroup();
     private final ButtonGroup createFileButtonGroup = new ButtonGroup();
     private final ButtonGroup dirExistsButtonGroup = new ButtonGroup();
@@ -46,12 +49,11 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         this();
 
         p.addListener(new ExtractPropertiesListener() {
-            /* @Override */
-            public void propertyChanged(Object changedProperty) {
+                public void propertyChanged(Object changedProperty) {
                 //System.err.println("Received a propertyChanged for " + changedProperty);
                 final AbstractButton theButton;
-                if(changedProperty instanceof CreateDirectoryFailedAction) {
-                    switch((CreateDirectoryFailedAction)changedProperty) {
+                if (changedProperty instanceof CreateDirectoryFailedAction) {
+                    switch ((CreateDirectoryFailedAction) changedProperty) {
                         case PROMPT_USER:
                             theButton = createDirPromptUserButton;
                             break;
@@ -67,9 +69,8 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
                         default:
                             throw new RuntimeException("Unknown property: " + changedProperty);
                     }
-                }
-                else if(changedProperty instanceof CreateFileFailedAction) {
-                    switch((CreateFileFailedAction)changedProperty) {
+                } else if (changedProperty instanceof CreateFileFailedAction) {
+                    switch ((CreateFileFailedAction) changedProperty) {
                         case PROMPT_USER:
                             theButton = createFilePromptUserButton;
                             break;
@@ -88,9 +89,8 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
                         default:
                             throw new RuntimeException("Unknown property: " + changedProperty);
                     }
-                }
-                else if(changedProperty instanceof DirectoryExistsAction) {
-                    switch((DirectoryExistsAction)changedProperty) {
+                } else if (changedProperty instanceof DirectoryExistsAction) {
+                    switch ((DirectoryExistsAction) changedProperty) {
                         case PROMPT_USER:
                             theButton = dirExistsPromptUserButton;
                             break;
@@ -109,9 +109,8 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
                         default:
                             throw new RuntimeException("Unknown property: " + changedProperty);
                     }
-                }
-                else if(changedProperty instanceof FileExistsAction) {
-                    switch((FileExistsAction)changedProperty) {
+                } else if (changedProperty instanceof FileExistsAction) {
+                    switch ((FileExistsAction) changedProperty) {
                         case PROMPT_USER:
                             theButton = fileExistsPromptUserButton;
                             break;
@@ -133,20 +132,17 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
                         default:
                             throw new RuntimeException("Unknown property: " + changedProperty);
                     }
-                }
-                else if(changedProperty instanceof UnhandledExceptionAction) {
+                } else if (changedProperty instanceof UnhandledExceptionAction) {
                     /* Ignore for now, until we have implemented this in the
                      * GUI. */
                     theButton = null;
-                }
-                else
+                } else
                     throw new RuntimeException("Unknown property: " +
-                            (changedProperty != null?changedProperty.getClass():"null"));
+                            (changedProperty != null ? changedProperty.getClass() : "null"));
 
-                if(theButton != null) {
+                if (theButton != null) {
                     SwingUtilities.invokeLater(new Runnable() {
-                        /* @Override */
-                        public void run() {
+                                        public void run() {
                             theButton.setSelected(true);
                         }
                     });
@@ -203,6 +199,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         fileExistsCancelButton.addActionListener(new FileExistsListener(fileExistsCancelButton,
                 p, FileExistsAction.CANCEL));
     }
+
     /** Creates new form ExtractSettingsPanel */
     private ExtractSettingsPanel() {
         initComponents();
@@ -233,11 +230,10 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
 
         quietModeBox.addActionListener(new ActionListener() {
 
-            /* @Override */
-            public void actionPerformed(ActionEvent e) {
+                public void actionPerformed(ActionEvent e) {
                 boolean selected = quietModeBox.isSelected();
 
-                if(selected) {
+                if (selected) {
                     createDirSkipDirectoryButton.doClick();
                     createFileSkipFileButton.doClick();
                     dirExistsSkipDirectoryButton.doClick();
@@ -246,9 +242,9 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
 
                 List<ButtonGroup> buttonGroups = Arrays.asList(createDirButtonGroup,
                         createFileButtonGroup, dirExistsButtonGroup, fileExistsButtonGroup);
-                for(ButtonGroup bg : buttonGroups) {
+                for (ButtonGroup bg : buttonGroups) {
                     Enumeration<AbstractButton> buttonEnum = bg.getElements();
-                    while(buttonEnum.hasMoreElements()) {
+                    while (buttonEnum.hasMoreElements()) {
                         AbstractButton b = buttonEnum.nextElement();
                         b.setEnabled(!selected);
                     }
@@ -258,7 +254,8 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         });
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -313,29 +310,29 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout createDirPanelLayout = new org.jdesktop.layout.GroupLayout(createDirPanel);
         createDirPanel.setLayout(createDirPanelLayout);
         createDirPanelLayout.setHorizontalGroup(
-            createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(createDirLabel)
-            .add(createDirPanelLayout.createSequentialGroup()
-                .add(10, 10, 10)
-                .add(createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(createDirPromptUserButton)
-                    .add(createDirSkipDirectoryButton)
-                    .add(createDirAutoRenameButton)
-                    .add(createDirCancelButton)))
+                createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(createDirLabel)
+                        .add(createDirPanelLayout.createSequentialGroup()
+                                .add(10, 10, 10)
+                                .add(createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(createDirPromptUserButton)
+                                        .add(createDirSkipDirectoryButton)
+                                        .add(createDirAutoRenameButton)
+                                        .add(createDirCancelButton)))
         );
         createDirPanelLayout.setVerticalGroup(
-            createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(createDirPanelLayout.createSequentialGroup()
-                .add(createDirLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createDirPromptUserButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createDirSkipDirectoryButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createDirAutoRenameButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createDirCancelButton)
-                .addContainerGap(23, Short.MAX_VALUE))
+                createDirPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(createDirPanelLayout.createSequentialGroup()
+                                .add(createDirLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createDirPromptUserButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createDirSkipDirectoryButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createDirAutoRenameButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createDirCancelButton)
+                                .addContainerGap(23, Short.MAX_VALUE))
         );
 
         createFileLabel.setText("Create file failed:");
@@ -353,34 +350,34 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout createFilePanelLayout = new org.jdesktop.layout.GroupLayout(createFilePanel);
         createFilePanel.setLayout(createFilePanelLayout);
         createFilePanelLayout.setHorizontalGroup(
-            createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(createFilePanelLayout.createSequentialGroup()
-                .add(createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(createFileLabel)
-                    .add(createFilePanelLayout.createSequentialGroup()
-                        .add(10, 10, 10)
-                        .add(createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(createFileSkipFileButton)
-                            .add(createFilePromptUserButton)
-                            .add(createFileSkipDirectoryButton)
-                            .add(createFileAutoRenameButton)
-                            .add(createFileCancelButton))))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(createFilePanelLayout.createSequentialGroup()
+                                .add(createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(createFileLabel)
+                                        .add(createFilePanelLayout.createSequentialGroup()
+                                                .add(10, 10, 10)
+                                                .add(createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(createFileSkipFileButton)
+                                                        .add(createFilePromptUserButton)
+                                                        .add(createFileSkipDirectoryButton)
+                                                        .add(createFileAutoRenameButton)
+                                                        .add(createFileCancelButton))))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         createFilePanelLayout.setVerticalGroup(
-            createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(createFilePanelLayout.createSequentialGroup()
-                .add(createFileLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createFilePromptUserButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createFileSkipFileButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createFileSkipDirectoryButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createFileAutoRenameButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(createFileCancelButton))
+                createFilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(createFilePanelLayout.createSequentialGroup()
+                                .add(createFileLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createFilePromptUserButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createFileSkipFileButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createFileSkipDirectoryButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createFileAutoRenameButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(createFileCancelButton))
         );
 
         dirExistsLabel.setText("Directory already exists:");
@@ -398,31 +395,31 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout dirExistsPanelLayout = new org.jdesktop.layout.GroupLayout(dirExistsPanel);
         dirExistsPanel.setLayout(dirExistsPanelLayout);
         dirExistsPanelLayout.setHorizontalGroup(
-            dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(dirExistsLabel)
-            .add(dirExistsPanelLayout.createSequentialGroup()
-                .add(10, 10, 10)
-                .add(dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(dirExistsContinueButton)
-                    .add(dirExistsPromptUserButton)
-                    .add(dirExistsSkipDirectoryButton)
-                    .add(dirExistsAutoRenameButton)
-                    .add(dirExistsCancelButton)))
+                dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(dirExistsLabel)
+                        .add(dirExistsPanelLayout.createSequentialGroup()
+                                .add(10, 10, 10)
+                                .add(dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(dirExistsContinueButton)
+                                        .add(dirExistsPromptUserButton)
+                                        .add(dirExistsSkipDirectoryButton)
+                                        .add(dirExistsAutoRenameButton)
+                                        .add(dirExistsCancelButton)))
         );
         dirExistsPanelLayout.setVerticalGroup(
-            dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(dirExistsPanelLayout.createSequentialGroup()
-                .add(dirExistsLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dirExistsPromptUserButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dirExistsContinueButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dirExistsSkipDirectoryButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dirExistsAutoRenameButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dirExistsCancelButton))
+                dirExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(dirExistsPanelLayout.createSequentialGroup()
+                                .add(dirExistsLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirExistsPromptUserButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirExistsContinueButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirExistsSkipDirectoryButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirExistsAutoRenameButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirExistsCancelButton))
         );
 
         fileExistsLabel.setText("File already exists:");
@@ -442,72 +439,72 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout fileExistsPanelLayout = new org.jdesktop.layout.GroupLayout(fileExistsPanel);
         fileExistsPanel.setLayout(fileExistsPanelLayout);
         fileExistsPanelLayout.setHorizontalGroup(
-            fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(fileExistsPanelLayout.createSequentialGroup()
-                .add(fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(fileExistsLabel)
-                    .add(fileExistsPanelLayout.createSequentialGroup()
-                        .add(10, 10, 10)
-                        .add(fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(fileExistsCancelButton)
-                            .add(fileExistsAutoRenameButton)
-                            .add(fileExistsSkipFileButton)
-                            .add(fileExistsPromptUserButton)
-                            .add(fileExistsSkipDirectoryButton)
-                            .add(fileExistsOverwriteButton))))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(fileExistsPanelLayout.createSequentialGroup()
+                                .add(fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(fileExistsLabel)
+                                        .add(fileExistsPanelLayout.createSequentialGroup()
+                                                .add(10, 10, 10)
+                                                .add(fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(fileExistsCancelButton)
+                                                        .add(fileExistsAutoRenameButton)
+                                                        .add(fileExistsSkipFileButton)
+                                                        .add(fileExistsPromptUserButton)
+                                                        .add(fileExistsSkipDirectoryButton)
+                                                        .add(fileExistsOverwriteButton))))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         fileExistsPanelLayout.setVerticalGroup(
-            fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(fileExistsPanelLayout.createSequentialGroup()
-                .add(fileExistsLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsPromptUserButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsSkipFileButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsSkipDirectoryButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsOverwriteButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsAutoRenameButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fileExistsCancelButton))
+                fileExistsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(fileExistsPanelLayout.createSequentialGroup()
+                                .add(fileExistsLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsPromptUserButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsSkipFileButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsSkipDirectoryButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsOverwriteButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsAutoRenameButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fileExistsCancelButton))
         );
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createSequentialGroup()
-                        .add(21, 21, 21)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(dirExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(createDirPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .add(18, 18, 18)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(fileExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(createFilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                    .add(quietModeBox))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(layout.createSequentialGroup()
+                                                .add(21, 21, 21)
+                                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(dirExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                        .add(createDirPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                                .add(18, 18, 18)
+                                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                        .add(fileExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                        .add(createFilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                                        .add(quietModeBox))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(quietModeBox)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(createDirPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(createFilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(fileExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(dirExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(quietModeBox)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(createDirPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .add(createFilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(fileExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .add(dirExistsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -545,6 +542,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     private abstract class AbstractListener<A> implements ActionListener {
+
         protected final AbstractButton button;
         protected final ExtractProperties p;
         protected final A action;
@@ -554,9 +552,9 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
             this.p = p;
             this.action = action;
         }
-        /* @Override */
+
         public void actionPerformed(ActionEvent e) {
-            if(button.isSelected()) {
+            if (button.isSelected()) {
                 //System.err.println("Setting action " + action.getClass().getSimpleName() + "." +
                 //        action);
                 setAction(action);
@@ -567,6 +565,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
     }
 
     private class CreateDirListener extends AbstractListener<CreateDirectoryFailedAction> {
+
         public CreateDirListener(AbstractButton button, ExtractProperties p, CreateDirectoryFailedAction action) {
             super(button, p, action);
         }
@@ -578,6 +577,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
     }
 
     private class CreateFileListener extends AbstractListener<CreateFileFailedAction> {
+
         public CreateFileListener(AbstractButton button, ExtractProperties p, CreateFileFailedAction action) {
             super(button, p, action);
         }
@@ -589,6 +589,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
     }
 
     private class DirExistsListener extends AbstractListener<DirectoryExistsAction> {
+
         public DirExistsListener(AbstractButton button, ExtractProperties p, DirectoryExistsAction action) {
             super(button, p, action);
         }
@@ -600,6 +601,7 @@ public class ExtractSettingsPanel extends javax.swing.JPanel {
     }
 
     private class FileExistsListener extends AbstractListener<FileExistsAction> {
+
         public FileExistsListener(AbstractButton button, ExtractProperties p, FileExistsAction action) {
             super(button, p, action);
         }

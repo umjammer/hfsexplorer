@@ -19,11 +19,13 @@ package org.catacombae.hfsexplorer.gui;
 
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
 import org.catacombae.csjc.structelements.Array;
 import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.csjc.structelements.FlagField;
 import org.catacombae.csjc.structelements.StringRepresentableField;
 import org.catacombae.csjc.structelements.StructElement;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -36,43 +38,40 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
     }
 
     public InternalStructViewPanel(String label, Dictionary dict,
-            boolean noRootEntry)
-    {
+                                   boolean noRootEntry) {
         this(label, null, dict, noRootEntry);
     }
 
     public InternalStructViewPanel(String label, String tooltip,
-            Dictionary dict)
-    {
+                                   Dictionary dict) {
         this(label, tooltip, false);
     }
 
     public InternalStructViewPanel(String label, String tooltip,
-            Dictionary dict, boolean noRootEntry)
-    {
+                                   Dictionary dict, boolean noRootEntry) {
         this(label, tooltip, noRootEntry);
 
         String[] keys = dict.getKeys();
         JPanel[] subPanels = new JPanel[keys.length];
 
-        for(int i = 0; i < keys.length; ++i) {
+        for (int i = 0; i < keys.length; ++i) {
             String curKey = keys[i];
             StructElement curElement = dict.getElement(curKey);
             String curDescription = dict.getDescription(curKey);
             String subLabel;
-            if(curDescription != null)
+            if (curDescription != null)
                 subLabel = curDescription;
             else
                 subLabel = curKey;
 
             subPanels[i] = createPanel(subLabel, curElement);
-            if(i != keys.length - 1) {
+            if (i != keys.length - 1) {
                 subPanels[i].setBorder(new EmptyBorder(0, 0, 5, 0));
             }
         }
 
         fieldsPanel.removeAll();
-        for(JPanel subPanel : subPanels)
+        for (JPanel subPanel : subPanels)
             fieldsPanel.add(subPanel);
     }
 
@@ -86,7 +85,7 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
         StructElement[] elems = array.getElements();
         JPanel[] subPanels = new JPanel[elems.length];
 
-        for(int i = 0; i < elems.length; ++i) {
+        for (int i = 0; i < elems.length; ++i) {
             StructElement curElement = elems[i];
 
             subPanels[i] = createPanel("[" + i + "]", curElement);
@@ -94,7 +93,7 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
         }
 
         fieldsPanel.removeAll();
-        for(JPanel subPanel : subPanels)
+        for (JPanel subPanel : subPanels)
             fieldsPanel.add(subPanel);
     }
 
@@ -103,17 +102,15 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
     }
 
     private InternalStructViewPanel(String label, String tooltip,
-            boolean noRootEntry)
-    {
-        if(!noRootEntry) {
+                                    boolean noRootEntry) {
+        if (!noRootEntry) {
             initComponents();
 
             structNameLabel.setText(label);
-            if(tooltip != null) {
+            if (tooltip != null) {
                 structNameLabel.setToolTipText(tooltip);
             }
-        }
-        else {
+        } else {
             this.setLayout(new java.awt.BorderLayout());
             fieldsPanel = new JPanel();
             fieldsPanel.setLayout(new javax.swing.BoxLayout(fieldsPanel,
@@ -123,29 +120,26 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
     }
 
     private static JPanel createPanel(String label, StructElement elem) {
-        if(elem instanceof StringRepresentableField) {
+        if (elem instanceof StringRepresentableField) {
             StringRepresentableField f = (StringRepresentableField) elem;
             return new TextViewPanel(label + ":", f);
-        }
-        else if(elem instanceof FlagField) {
+        } else if (elem instanceof FlagField) {
             FlagField f = (FlagField) elem;
             return new FlagViewPanel(label, f);
-        }
-        else if(elem instanceof Array) {
+        } else if (elem instanceof Array) {
             Array a = (Array) elem;
             return new InternalStructViewPanel(label + ":", a);
-        }
-        else if(elem instanceof Dictionary) {
+        } else if (elem instanceof Dictionary) {
             Dictionary d = (Dictionary) elem;
             return new InternalStructViewPanel(label + ":", d);
-        }
-        else
+        } else
             throw new RuntimeException("Unsupported StructElement subtype: " +
                     elem.getClass());
 
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -172,20 +166,20 @@ public class InternalStructViewPanel extends javax.swing.JPanel {
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .add(structNameLabel)
-                .addContainerGap())
-            .add(layout.createSequentialGroup()
-                .add(24, 24, 24)
-                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .add(structNameLabel)
+                                .addContainerGap())
+                        .add(layout.createSequentialGroup()
+                                .add(24, 24, 24)
+                                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .add(structNameLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .add(structNameLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(fieldsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 

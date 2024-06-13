@@ -31,16 +31,19 @@ import java.util.LinkedList;
 import java.util.Set;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 import org.catacombae.io.InputStreamReadable;
 import org.catacombae.io.Readable;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class DisplayTextFilePanel extends javax.swing.JPanel {
+
     private static final String[] sortingPrefixes =
-            new String[] { "US-ASCII", "UTF-8", "ISO-8859", "UTF", "IBM4", "IBM8", "IBM" };
-    private byte[] fileData = new byte[] { 0 };
+            new String[] {"US-ASCII", "UTF-8", "ISO-8859", "UTF", "IBM4", "IBM8", "IBM"};
+    private byte[] fileData = new byte[] {0};
     private final Frame parentFrame;
     private final String baseTitle;
 
@@ -48,6 +51,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
     public DisplayTextFilePanel() {
         this(null);
     }
+
     /**
      * Creates new form DisplayTextFilePanel. Supplying a parent frame will lead to the frame's
      * title changing to reflect the currently displayed file.
@@ -55,7 +59,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
     public DisplayTextFilePanel(final Frame parentFrame) {
         this.parentFrame = parentFrame;
 
-        if(parentFrame != null)
+        if (parentFrame != null)
             this.baseTitle = parentFrame.getTitle();
         else
             this.baseTitle = "";
@@ -70,24 +74,23 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
         Set<String> keySet = Charset.availableCharsets().keySet();
         ArrayList<String> charsets = new ArrayList<String>(keySet);
         LinkedList<String> listItems = new LinkedList<String>();
-        for(String prefix : sortingPrefixes) {
-            for(int i = 0; i < charsets.size();) {
+        for (String prefix : sortingPrefixes) {
+            for (int i = 0; i < charsets.size(); ) {
                 String curCharset = charsets.get(i);
-                if(curCharset.startsWith(prefix)) {
+                if (curCharset.startsWith(prefix)) {
                     listItems.add(curCharset);
                     charsets.remove(i);
-                }
-                else
+                } else
                     ++i;
             }
         }
-        for(String curCharset : charsets)
+        for (String curCharset : charsets)
             listItems.add(curCharset);
 
         encodingBox.removeAllItems();
-        for(String curItem : listItems)
+        for (String curItem : listItems)
             encodingBox.addItem(curItem);
-        if(encodingBox.getItemCount() > 0)
+        if (encodingBox.getItemCount() > 0)
             encodingBox.setSelectedIndex(0);
 
         encodingBox.addActionListener(new ActionListener() {
@@ -123,19 +126,18 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
     */
 
     public void loadFile(File file) {
-        if(file.length() < Integer.MAX_VALUE) {
+        if (file.length() < Integer.MAX_VALUE) {
             try {
                 FileInputStream fis = new FileInputStream(file);
                 loadStream(fis);
                 fis.close();
-                if(parentFrame != null)
+                if (parentFrame != null)
                     parentFrame.setTitle(baseTitle + " - [" + file.getName() + "]");
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
             }
-        }
-        else
+        } else
             JOptionPane.showMessageDialog(this, "File too large for memory address space! (" +
                     file.length() + "bytes)");
     }
@@ -150,7 +152,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             int bytesRead;
-            while((bytesRead = is.read(tmp)) > 0)
+            while ((bytesRead = is.read(tmp)) > 0)
                 baos.write(tmp, 0, bytesRead);
 
             fileData = baos.toByteArray();
@@ -166,7 +168,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
                 }
             });
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Exception while loading file:\n  " + e + "\"");
         }
@@ -183,7 +185,7 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
                     textPaneScroller.getHorizontalScrollBar().setValue(hValue);
                 }
             });
-        } catch(UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Exception while decoding file data:\n  " + e +
                     "\"");
@@ -194,7 +196,8 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
         return encodingBox.getSelectedItem().toString();
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -215,29 +218,29 @@ public class DisplayTextFilePanel extends javax.swing.JPanel {
 
         encodingLabel.setText("Encoding:");
 
-        encodingBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        encodingBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] {"Item 1", "Item 2", "Item 3", "Item 4"}));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(encodingLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(encodingBox, 0, 650, Short.MAX_VALUE)
-                .addContainerGap())
-            .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 721, Short.MAX_VALUE)
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(encodingLabel)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(encodingBox, 0, 650, Short.MAX_VALUE)
+                                .addContainerGap())
+                        .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 721, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(encodingLabel)
-                    .add(encodingBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE))
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(encodingLabel)
+                                        .add(encodingBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(textPaneScroller, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
