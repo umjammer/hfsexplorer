@@ -2981,30 +2981,32 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         if (System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
             System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-        //
-        // Description of look&feels:
-        // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
-        //
-        String lookAndFeelClassName = javax.swing.UIManager.getSystemLookAndFeelClassName();
-        System.out.println("System L&F class name: " + lookAndFeelClassName);
-        if (lookAndFeelClassName.equals("javax.swing.plaf.metal.MetalLookAndFeel") ||
-                lookAndFeelClassName.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
-            // Metal and Motif are really quite terrible L&Fs. Try the GTK+ L&F
-            // instead.
-            try {
-                logger.log(Level.DEBUG, "Attempting to force GTK+ L&F...");
-                javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-                lookAndFeelClassName = null;
-            } catch (Exception e) {
-                // Non-critical.
+        if (System.getProperty("swing.defaultlaf") == null) {
+            //
+            // Description of look&feels:
+            // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
+            //
+            String lookAndFeelClassName = javax.swing.UIManager.getSystemLookAndFeelClassName();
+            logger.log(Level.DEBUG, "System L&F class name: " + lookAndFeelClassName);
+            if (lookAndFeelClassName.equals("javax.swing.plaf.metal.MetalLookAndFeel") ||
+                    lookAndFeelClassName.equals("com.sun.java.swing.plaf.motif.MotifLookAndFeel")) {
+                // Metal and Motif are really quite terrible L&Fs. Try the GTK+ L&F
+                // instead.
+                try {
+                    logger.log(Level.DEBUG, "Attempting to force GTK+ L&F...");
+                    javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+                    lookAndFeelClassName = null;
+                } catch (Exception e) {
+                    // Non-critical.
+                }
             }
-        }
 
-        if (lookAndFeelClassName != null) {
-            try {
-                javax.swing.UIManager.setLookAndFeel(lookAndFeelClassName);
-            } catch (Exception e) {
-                // Non-critical.
+            if (lookAndFeelClassName != null) {
+                try {
+                    javax.swing.UIManager.setLookAndFeel(lookAndFeelClassName);
+                } catch (Exception e) {
+                    // Non-critical.
+                }
             }
         }
 

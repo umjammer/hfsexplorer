@@ -57,14 +57,16 @@ public class DumpFSInfo {
     private static final Logger logger = getLogger(DumpFSInfo.class.getName());
 
     public static void main(String[] args) throws Throwable {
-        try {
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-            //
-            // Description of look&feels:
-            // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
-            //
-        } catch (Throwable e) {
-            // It's ok. Non-critical.
+        if (System.getProperty("swing.defaultlaf") == null) {
+            try {
+                javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+                //
+                // Description of look&feels:
+                // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
+                //
+            } catch (Throwable e) {
+                // It's ok. Non-critical.
+            }
         }
         try {
             dumpInfo(args);

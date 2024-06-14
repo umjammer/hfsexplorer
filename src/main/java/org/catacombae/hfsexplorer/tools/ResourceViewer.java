@@ -182,14 +182,17 @@ public class ResourceViewer extends javax.swing.JFrame {
         if (System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
             System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-        try {
-            //
-            // Description of look&feels:
-            // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
-            //
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            // It's ok. Non-critical.
+        if (System.getProperty("swing.defaultlaf") == null) {
+
+           try {
+                //
+                // Description of look&feels:
+                // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
+                //
+                javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // It's ok. Non-critical.
+            }
         }
 
         java.awt.EventQueue.invokeLater(() -> {
