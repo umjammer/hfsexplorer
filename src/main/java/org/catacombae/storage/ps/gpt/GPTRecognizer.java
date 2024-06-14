@@ -21,14 +21,16 @@ import org.catacombae.storage.ps.PartitionSystemRecognizer;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.ps.gpt.types.GPTHeader;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class GPTRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
-            //ReadableRandomAccessStream llf = data.createReadOnlyFile();
+//            ReadableRandomAccessStream llf = data.createReadOnlyFile();
             byte[] secondBlock = new byte[512];
             fsStream.seek(512);
             fsStream.readFully(secondBlock);
@@ -38,10 +40,10 @@ public class GPTRecognizer implements PartitionSystemRecognizer {
             // how to detect the actual block size (at least when reading from a file, otherwise I
             // guess there are system specific ways)...
             GPTHeader gh = new GPTHeader(secondBlock, 0, 512);
-            if(gh.isValid()) {
+            if (gh.isValid()) {
                 return true;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
 
         return false;

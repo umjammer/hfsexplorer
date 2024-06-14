@@ -18,12 +18,15 @@
 package org.catacombae.storage.ps.ebr;
 
 import java.io.PrintStream;
+
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ExtendedBootRecord {
+
     public static final short MBR_SIGNATURE = 0x55AA;
 
     /*
@@ -53,11 +56,11 @@ public class ExtendedBootRecord {
     protected final byte[] reserved4 = new byte[32];
     protected final byte[] mbrSignature = new byte[2];
 
-    //private final LinkedList<Partition> tempList = new LinkedList<Partition>(); // getUsedPartitionEntries()
+//    private final LinkedList<Partition> tempList = new LinkedList<Partition>(); // getUsedPartitionEntries()
 
     /** <code>data</code> is assumed to be at least (<code>offset</code>+512) bytes in length. */
     public ExtendedBootRecord(byte[] data, int offset, long extendedPartitionOffset, long thisRecordOffset, int sectorSize) {
-        //System.err.println("ExtendedBootRecord...");
+//        logger.log(Level.TRACE, "ExtendedBootRecord...");
         System.arraycopy(data, offset + 0, reserved1, 0, reserved1.length);
         System.arraycopy(data, offset + 394, optIBMBootmgrEntry, 0, optIBMBootmgrEntry.length);
         System.arraycopy(data, offset + 403, reserved2, 0, reserved2.length);
@@ -68,7 +71,7 @@ public class ExtendedBootRecord {
         System.arraycopy(data, offset + 478, reserved4, 0, reserved4.length);
         System.arraycopy(data, offset + 510, mbrSignature, 0, mbrSignature.length);
 
-        if(!Util.arrayRegionsEqual(getBytes(), 0, getStructSize(), data, offset, getStructSize()))
+        if (!Util.arrayRegionsEqual(getBytes(), 0, getStructSize(), data, offset, getStructSize()))
             throw new RuntimeException("Internal error!");
     }
 
@@ -84,36 +87,46 @@ public class ExtendedBootRecord {
         System.arraycopy(source.mbrSignature, 0, mbrSignature, 0, mbrSignature.length);
     }
 
-    public static int getStructSize() { return 512; }
+    public static int getStructSize() {
+        return 512;
+    }
 
     /** This is an optional field, and might contain unexpected and invalid data. */
-    public byte[] getOptionalIBMBootManagerEntry() { return Util.createCopy(optIBMBootmgrEntry); }
+    public byte[] getOptionalIBMBootManagerEntry() {
+        return Util.createCopy(optIBMBootmgrEntry);
+    }
 
     /** This is an optional field, and might contain unexpected and invalid data. */
-    public int getOptionalDiskSignature() { return Util.readIntBE(optDiskSignature); }
+    public int getOptionalDiskSignature() {
+        return Util.readIntBE(optDiskSignature);
+    }
 
-    public EBRPartition getFirstEntry() { return firstEntry; }
+    public EBRPartition getFirstEntry() {
+        return firstEntry;
+    }
 
-    public EBRPartition getSecondEntry() { return secondEntry; }
+    public EBRPartition getSecondEntry() {
+        return secondEntry;
+    }
 
-    public short getMBRSignature() { return Util.readShortBE(mbrSignature); }
+    public short getMBRSignature() {
+        return Util.readShortBE(mbrSignature);
+    }
 
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " diskSignature: 0x" + Util.toHexStringBE(getOptionalDiskSignature()) + " (optional, and possibly incorrect)");
 
         ps.println(prefix + " firstEntry:");
-        if(firstEntry.isValid()) {
+        if (firstEntry.isValid()) {
             firstEntry.print(ps, prefix + "  ");
-        }
-        else {
+        } else {
             ps.println(prefix + "  [Invalid data]");
         }
 
         ps.println(prefix + " secondEntry:");
-        if(secondEntry.isValid()) {
+        if (secondEntry.isValid()) {
             secondEntry.print(ps, prefix + "  ");
-        }
-        else {
+        } else {
             ps.println(prefix + "  [Invalid data]");
         }
 
@@ -132,7 +145,7 @@ public class ExtendedBootRecord {
     }
 
     public boolean isPartitionInfoValid() {
-        if(!firstEntry.isValid() || !secondEntry.isValid())
+        if (!firstEntry.isValid() || !secondEntry.isValid())
             return false;
         else
             return true;
@@ -142,19 +155,28 @@ public class ExtendedBootRecord {
         byte[] result = new byte[512];
         byte[] curData;
         int i = 0;
-        System.arraycopy(reserved1, 0, result, i, reserved1.length); i += reserved1.length;
-        System.arraycopy(optIBMBootmgrEntry, 0, result, i, optIBMBootmgrEntry.length); i += optIBMBootmgrEntry.length;
-        System.arraycopy(reserved2, 0, result, i, reserved2.length); i += reserved2.length;
-        System.arraycopy(optDiskSignature, 0, result, i, optDiskSignature.length); i += optDiskSignature.length;
-        System.arraycopy(reserved3, 0, result, i, reserved3.length); i += reserved3.length;
+        System.arraycopy(reserved1, 0, result, i, reserved1.length);
+        i += reserved1.length;
+        System.arraycopy(optIBMBootmgrEntry, 0, result, i, optIBMBootmgrEntry.length);
+        i += optIBMBootmgrEntry.length;
+        System.arraycopy(reserved2, 0, result, i, reserved2.length);
+        i += reserved2.length;
+        System.arraycopy(optDiskSignature, 0, result, i, optDiskSignature.length);
+        i += optDiskSignature.length;
+        System.arraycopy(reserved3, 0, result, i, reserved3.length);
+        i += reserved3.length;
         curData = firstEntry.getBytes();
-        System.arraycopy(curData, 0, result, i, curData.length); i += curData.length;
+        System.arraycopy(curData, 0, result, i, curData.length);
+        i += curData.length;
         curData = secondEntry.getBytes();
-        System.arraycopy(curData, 0, result, i, curData.length); i += curData.length;
-        System.arraycopy(reserved4, 0, result, i, reserved4.length); i += reserved4.length;
-        System.arraycopy(mbrSignature, 0, result, i, mbrSignature.length); i += mbrSignature.length;
+        System.arraycopy(curData, 0, result, i, curData.length);
+        i += curData.length;
+        System.arraycopy(reserved4, 0, result, i, reserved4.length);
+        i += reserved4.length;
+        System.arraycopy(mbrSignature, 0, result, i, mbrSignature.length);
+        i += mbrSignature.length;
 
-        if(i != result.length)
+        if (i != result.length)
             throw new RuntimeException("Internal error!");
         return result;
     }
@@ -162,5 +184,4 @@ public class ExtendedBootRecord {
     public boolean isTerminator() {
         return secondEntry.getLBAFirstSector() == 0 && secondEntry.getLBAPartitionLength() == 0;
     }
-
 }

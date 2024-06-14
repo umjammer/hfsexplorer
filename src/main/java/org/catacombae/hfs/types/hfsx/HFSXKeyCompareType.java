@@ -21,5 +21,5 @@ package org.catacombae.hfs.types.hfsx;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public enum HFSXKeyCompareType {
-    CASE_FOLDING, BINARY_COMPARE;
+    CASE_FOLDING, BINARY_COMPARE
 }

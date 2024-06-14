@@ -26,6 +26,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -37,7 +38,7 @@ public class MainWindow extends JFrame {
     private JMenuItem loadPathItem;
     private JMenuItem exitItem;
     private JMenuItem aboutItem;
-    private JPanel mainPanel;
+    private final JPanel mainPanel;
 
     public MainWindow(JPanel mainPanel) {
         super(BASE_TITLE);
@@ -53,7 +54,7 @@ public class MainWindow extends JFrame {
     }
 
     private static void setAbstractButtonListener(AbstractButton button, ActionListener listener) {
-        for(ActionListener al : button.getActionListeners())
+        for (ActionListener al : button.getActionListeners())
             button.removeActionListener(al);
         button.addActionListener(listener);
     }

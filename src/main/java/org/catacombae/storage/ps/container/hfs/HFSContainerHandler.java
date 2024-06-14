@@ -25,15 +25,17 @@ import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.container.ContainerHandler;
 import org.catacombae.storage.ps.container.ContainerType;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSContainerHandler extends ContainerHandler {
-    private static final short SIGNATURE_HFS =      (short)0x4244; // ASCII: 'BD'
-    private static final short SIGNATURE_HFS_PLUS = (short)0x482B; // ASCII: 'H+'
-    private static final short SIGNATURE_HFSX =     (short)0x4858; // ASCII: 'HX'
 
-    private DataLocator partitionData;
+    private static final short SIGNATURE_HFS = (short) 0x4244; // ASCII: 'BD'
+    private static final short SIGNATURE_HFS_PLUS = (short) 0x482B; // ASCII: 'H+'
+    private static final short SIGNATURE_HFSX = (short) 0x4858; // ASCII: 'HX'
+
+    private final DataLocator partitionData;
 
     public HFSContainerHandler(DataLocator partitionData) {
         this.partitionData = partitionData;
@@ -62,18 +64,12 @@ public class HFSContainerHandler extends ContainerHandler {
     @Override
     public FileSystemMajorType detectFileSystemType() {
         ReadableRandomAccessStream bitstream = partitionData.createReadOnlyFile();
-        switch(HFSCommonFileSystemRecognizer.detectFileSystem(bitstream, 0)) {
-            case HFS:
-                return FileSystemMajorType.APPLE_HFS;
-            case HFS_PLUS:
-            case HFS_WRAPPED_HFS_PLUS:
-                return FileSystemMajorType.APPLE_HFS_PLUS;
-            case HFSX:
-                return FileSystemMajorType.APPLE_HFSX;
-            case MFS: // Not possible, or probable.
-            default:
-                return FileSystemMajorType.UNKNOWN;
-        }
+        return switch (HFSCommonFileSystemRecognizer.detectFileSystem(bitstream, 0)) {
+            case HFS -> FileSystemMajorType.APPLE_HFS;
+            case HFS_PLUS, HFS_WRAPPED_HFS_PLUS -> FileSystemMajorType.APPLE_HFS_PLUS;
+            case HFSX -> FileSystemMajorType.APPLE_HFSX; // Not possible, or probable.
+            default -> FileSystemMajorType.UNKNOWN;
+        };
     }
 
     @Override
@@ -85,5 +81,4 @@ public class HFSContainerHandler extends ContainerHandler {
     public ContainerType detectContainerType() {
         throw new UnsupportedOperationException("An HFS container does not contain other containers.");
     }
-
 }

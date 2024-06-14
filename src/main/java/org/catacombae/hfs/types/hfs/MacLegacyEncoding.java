@@ -23,5 +23,5 @@ package org.catacombae.hfs.types.hfs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public enum MacLegacyEncoding {
-    ROMAN, ARABIC;
+    ROMAN, ARABIC
 }

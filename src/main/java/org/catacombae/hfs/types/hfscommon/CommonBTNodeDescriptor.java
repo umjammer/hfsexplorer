@@ -18,10 +18,12 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfsplus.BTNodeDescriptor;
 import org.catacombae.hfs.types.hfs.NodeDescriptor;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -29,20 +31,25 @@ import org.catacombae.hfs.types.hfs.NodeDescriptor;
 public abstract class CommonBTNodeDescriptor implements PrintableStruct {
 
     public enum NodeType {
-        INDEX, HEADER, MAP, LEAF;
+        INDEX, HEADER, MAP, LEAF
     }
+
     public abstract long getForwardLink();
+
     public abstract long getBackwardLink();
+
     public abstract NodeType getNodeType();
+
     public abstract short getHeight();
+
     public abstract int getNumberOfRecords();
 
-    /*public void print(PrintStream ps, String prefix) {
-        ps.println(prefix + "CommonBTNodeDescriptor:");
-        printFields(ps, prefix);
-    }
-    public abstract void printFields(PrintStream ps, String prefix);
-    */
+//    public void print(PrintStream ps, String prefix) {
+//        ps.println(prefix + "CommonBTNodeDescriptor:");
+//        printFields(ps, prefix);
+//    }
+
+//    public abstract void printFields(PrintStream ps, String prefix);
 
     public static CommonBTNodeDescriptor create(BTNodeDescriptor btnd) {
         return new HFSPlusImplementation(btnd);
@@ -53,6 +60,7 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
     }
 
     private static class HFSPlusImplementation extends CommonBTNodeDescriptor {
+
         private final BTNodeDescriptor btnd;
 
         public HFSPlusImplementation(BTNodeDescriptor btnd) {
@@ -72,18 +80,13 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
         @Override
         public NodeType getNodeType() {
             byte b = btnd.getKind();
-            switch(b) {
-                case BTNodeDescriptor.BT_HEADER_NODE:
-                    return NodeType.HEADER;
-                case BTNodeDescriptor.BT_INDEX_NODE:
-                    return NodeType.INDEX;
-                case BTNodeDescriptor.BT_MAP_NODE:
-                    return NodeType.MAP;
-                case BTNodeDescriptor.BT_LEAF_NODE:
-                    return NodeType.LEAF;
-                default:
-                    throw new RuntimeException("Unknown HFS+ node type: " + b);
-            }
+            return switch (b) {
+                case BTNodeDescriptor.BT_HEADER_NODE -> NodeType.HEADER;
+                case BTNodeDescriptor.BT_INDEX_NODE -> NodeType.INDEX;
+                case BTNodeDescriptor.BT_MAP_NODE -> NodeType.MAP;
+                case BTNodeDescriptor.BT_LEAF_NODE -> NodeType.LEAF;
+                default -> throw new RuntimeException("Unknown HFS+ node type: " + b);
+            };
         }
 
         @Override
@@ -96,18 +99,19 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
             return Util.unsign(btnd.getNumRecords());
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             btnd.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             btnd.printFields(ps, prefix);
         }
     }
 
     public static class HFSImplementation extends CommonBTNodeDescriptor {
+
         private final NodeDescriptor nd;
 
         public HFSImplementation(NodeDescriptor nd) {
@@ -127,18 +131,13 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
         @Override
         public NodeType getNodeType() {
             byte b = nd.getNdType();
-            switch(b) {
-                case NodeDescriptor.ndHdrNode:
-                    return NodeType.HEADER;
-                case NodeDescriptor.ndIndxNode:
-                    return NodeType.INDEX;
-                case NodeDescriptor.ndMapNode:
-                    return NodeType.MAP;
-                case NodeDescriptor.ndLeafNode:
-                    return NodeType.LEAF;
-                default:
-                    throw new RuntimeException("Unknown HFS node type: " + b);
-            }
+            return switch (b) {
+                case NodeDescriptor.ndHdrNode -> NodeType.HEADER;
+                case NodeDescriptor.ndIndxNode -> NodeType.INDEX;
+                case NodeDescriptor.ndMapNode -> NodeType.MAP;
+                case NodeDescriptor.ndLeafNode -> NodeType.LEAF;
+                default -> throw new RuntimeException("Unknown HFS node type: " + b);
+            };
         }
 
         @Override
@@ -151,12 +150,12 @@ public abstract class CommonBTNodeDescriptor implements PrintableStruct {
             return Util.unsign(nd.getNdNRecs());
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             nd.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             nd.printFields(ps, prefix);
         }

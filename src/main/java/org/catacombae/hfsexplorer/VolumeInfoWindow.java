@@ -18,10 +18,12 @@
 package org.catacombae.hfsexplorer;
 
 import java.awt.BorderLayout;
-import javax.swing.JFrame;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+
 import org.catacombae.hfs.AttributesFile;
 import org.catacombae.hfs.HFSVolume;
 import org.catacombae.hfs.Journal;
@@ -33,6 +35,9 @@ import org.catacombae.hfsexplorer.gui.HFSExplorerJFrame;
 import org.catacombae.hfsexplorer.gui.JournalInfoPanel;
 import org.catacombae.hfsexplorer.gui.StructViewPanel;
 
+import static java.lang.System.getLogger;
+
+
 /**
  * A window that queries a HFSish file system about its volume properties and displays them
  * graphically.
@@ -41,40 +46,37 @@ import org.catacombae.hfsexplorer.gui.StructViewPanel;
  */
 public class VolumeInfoWindow extends HFSExplorerJFrame {
 
+    private static final Logger logger = getLogger(VolumeInfoWindow.class.getName());
+
     public VolumeInfoWindow(HFSVolume fsView) {
         super("Volume information");
 
-        final JTabbedPane tabs = new JTabbedPane();
-
+        JTabbedPane tabs = new JTabbedPane();
 
         // The "Volume header" tab
 
         try {
-            final JPanel volumeInfoPanel;
+            JPanel volumeInfoPanel;
             CommonHFSVolumeHeader volHeader = fsView.getVolumeHeader();
-            volumeInfoPanel = new StructViewPanel("Volume header",
-                    volHeader.getStructElements(), true);
+            volumeInfoPanel = new StructViewPanel("Volume header", volHeader.getStructElements(), true);
 
             JScrollPane volumeInfoPanelScroller = new JScrollPane(volumeInfoPanel,
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
             tabs.addTab("Volume header", volumeInfoPanelScroller);
             volumeInfoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
-
 
         // The "Catalog file info" tab
 
         try {
-            final JTabbedPane catalogTabs = new JTabbedPane();
+            JTabbedPane catalogTabs = new JTabbedPane();
 
             try {
-                StructViewPanel headerRecordPanel =
-                        new StructViewPanel("B-tree header record",
-                        fsView.getCatalogFile().getCatalogHeaderNode().
-                        getHeaderRecord().getStructElements());
+                StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
+                                fsView.getCatalogFile().getCatalogHeaderNode().getHeaderRecord().getStructElements());
                 JScrollPane headerRecordPanelScroller = new JScrollPane(
                         headerRecordPanel,
                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -82,12 +84,11 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                 headerRecordPanelScroller.getVerticalScrollBar().
                         setUnitIncrement(10);
                 catalogTabs.addTab("Header record", headerRecordPanelScroller);
-            } catch(Exception e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
-            CatalogInfoPanel catalogInfoPanel =
-                    new CatalogInfoPanel(fsView);
+            CatalogInfoPanel catalogInfoPanel = new CatalogInfoPanel(fsView);
             JScrollPane catalogInfoPanelScroller = new JScrollPane(catalogInfoPanel,
                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -95,31 +96,26 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
             catalogTabs.addTab("Tree", catalogInfoPanelScroller);
 
             tabs.addTab("Catalog file", catalogTabs);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
-
 
         // The "Extents overflow file info" tab
 
         try {
-            final JTabbedPane extentsTabs = new JTabbedPane();
+            JTabbedPane extentsTabs = new JTabbedPane();
 
             try {
-                StructViewPanel headerRecordPanel =
-                        new StructViewPanel("B-tree header record",
-                        fsView.getExtentsOverflowFile().
-                        getHeaderNode().getHeaderRecord().
-                        getStructElements());
+                StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
+                        fsView.getExtentsOverflowFile().getHeaderNode().getHeaderRecord().getStructElements());
                 JScrollPane headerRecordPanelScroller = new JScrollPane(
                         headerRecordPanel,
                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                         JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                headerRecordPanelScroller.getVerticalScrollBar().
-                        setUnitIncrement(10);
+                headerRecordPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
                 extentsTabs.addTab("Header record", headerRecordPanelScroller);
-            } catch(Exception e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
             ExtentsInfoPanel extentsInfoPanel = new ExtentsInfoPanel(fsView);
@@ -130,38 +126,32 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
             extentsTabs.addTab("Tree", scroller);
 
             tabs.addTab("Extents overflow file", extentsTabs);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
-
 
         // The "Attributes file info" tab
 
         try {
-            final AttributesFile attributesFile = fsView.getAttributesFile();
+            AttributesFile attributesFile = fsView.getAttributesFile();
 
-            if(attributesFile != null) {
-                final JTabbedPane attributesTabs = new JTabbedPane();
+            if (attributesFile != null) {
+                JTabbedPane attributesTabs = new JTabbedPane();
 
                 try {
-                    StructViewPanel headerRecordPanel =
-                            new StructViewPanel("B-tree header record",
-                            attributesFile.getHeaderNode().getHeaderRecord().
-                            getStructElements());
+                    StructViewPanel headerRecordPanel = new StructViewPanel("B-tree header record",
+                            attributesFile.getHeaderNode().getHeaderRecord().getStructElements());
                     JScrollPane headerRecordPanelScroller = new JScrollPane(
                             headerRecordPanel,
                             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                             JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                    headerRecordPanelScroller.getVerticalScrollBar().
-                            setUnitIncrement(10);
-                    attributesTabs.addTab("Header record",
-                            headerRecordPanelScroller);
-                } catch(Exception e) {
-                    e.printStackTrace();
+                    headerRecordPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
+                    attributesTabs.addTab("Header record", headerRecordPanelScroller);
+                } catch (Exception e) {
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
 
-                AttributesInfoPanel attributesInfoPanel =
-                        new AttributesInfoPanel(fsView.getAttributesFile());
+                AttributesInfoPanel attributesInfoPanel = new AttributesInfoPanel(fsView.getAttributesFile());
                 JScrollPane scroller = new JScrollPane(attributesInfoPanel,
                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                         JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -169,39 +159,36 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
                 attributesTabs.addTab("Tree", scroller);
 
                 tabs.addTab("Attributes file", attributesTabs);
-}
-        } catch(Exception e) {
-            e.printStackTrace();
+            }
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
-
 
         // The "Journal info" tab (optional)
 
         try {
             Journal journal = fsView.getJournal();
-            if(journal != null) {
+            if (journal != null) {
                 JournalInfoPanel journalInfoPanel = new JournalInfoPanel(journal);
                 tabs.addTab("Journal", journalInfoPanel);
             }
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
-
 
         // The "Allocation file info" tab
-        /*
-        try {
-            AllocationFileInfoPanel allocationFileInfoPanel = new AllocationFileInfoPanel(this,
-                    fsView.getAllocationFileView());
-            JScrollPane allocationFileInfoPanelScroller = new JScrollPane(allocationFileInfoPanel,
-                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            tabs.addTab("Allocation file info", allocationFileInfoPanelScroller);
-            allocationFileInfoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        */
+
+//        try {
+//            AllocationFileInfoPanel allocationFileInfoPanel = new AllocationFileInfoPanel(this,
+//                    fsView.getAllocationFileView());
+//            JScrollPane allocationFileInfoPanelScroller = new JScrollPane(allocationFileInfoPanel,
+//                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+//                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+//            tabs.addTab("Allocation file info", allocationFileInfoPanelScroller);
+//            allocationFileInfoPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
+//        } catch (Exception e) {
+//            logger.log(Level.ERROR, e.getMessage(), e);
+//        }
 
         add(tabs, BorderLayout.CENTER);
 
@@ -210,21 +197,18 @@ public class VolumeInfoWindow extends HFSExplorerJFrame {
         int width = getSize().width;
         int height = getSize().height;
         int adjustedHeight = width + width / 2;
-        //System.err.println("w: " + width + " h: " + height + " ah: " + adjustedHeight);
-        if(adjustedHeight < height)
+//        logger.log(Level.DEBUG, "w: " + width + " h: " + height + " ah: " + adjustedHeight);
+        if (adjustedHeight < height)
             setSize(width, adjustedHeight);
 
         setLocationRelativeTo(null);
     }
 
-    /*
-    public void setVolumeFields(HFSPlusVolumeHeader vh) {
-        volumeInfoPanel.setFields(vh);
-    }
-    */
-    /*
-    public void setJournalFields(JournalInfoBlock jib) {
-        journalInfoPanel.setFields(jib);
-    }
-     * */
+//    public void setVolumeFields(HFSPlusVolumeHeader vh) {
+//        volumeInfoPanel.setFields(vh);
+//    }
+
+//    public void setJournalFields(JournalInfoBlock jib) {
+//        journalInfoPanel.setFields(jib);
+//    }
 }

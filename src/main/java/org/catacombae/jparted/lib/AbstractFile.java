@@ -21,13 +21,22 @@ package org.catacombae.jparted.lib;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface AbstractFile {
-    public void seek(long pos);
-    public int read();
-    public int read(byte[] data);
-    public int read(byte[] data, int pos, int len);
-    public void readFully(byte[] data);
-    public void readFully(byte[] data, int offset, int length);
-    public long length();
-    public long getFilePointer();
-    public void close();
+
+    void seek(long pos);
+
+    int read();
+
+    int read(byte[] data);
+
+    int read(byte[] data, int pos, int len);
+
+    void readFully(byte[] data);
+
+    void readFully(byte[] data, int offset, int length);
+
+    long length();
+
+    long getFilePointer();
+
+    void close();
 }

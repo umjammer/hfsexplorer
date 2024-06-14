@@ -18,43 +18,64 @@
 package org.catacombae.hfsexplorer;
 
 import java.io.File;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
+
 import org.catacombae.hfs.ProgressMonitor;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface ExtractProgressMonitor extends ProgressMonitor {
 
-    public void updateCalculateDir(String dirname);
-    public void updateTotalProgress(double fraction, String message);
-    public void updateCurrentDir(String dirname);
-    public void updateCurrentFile(String filename, long fileSize);
-    public void setDataSize(long totalSize);
-    //public boolean confirmOverwriteDirectory(File dir);
-    //public boolean confirmSkipDirectory(String... messageLines);
-    public CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory);
-    public CreateFileFailedAction createFileFailed(String filename, File parentDirectory);
-    public DirectoryExistsAction directoryExists(File directory);
-    public FileExistsAction fileExists(File file);
-    public UnhandledExceptionAction unhandledException(String filename,
-            Throwable t);
-    public String displayRenamePrompt(String currentName, File outDir);
-    public ExtractProperties getExtractProperties();
+    void updateCalculateDir(String dirname);
 
-    public static interface ExtractPropertiesListener {
-        public void propertyChanged(Object changedProperty);
+    void updateTotalProgress(double fraction, String message);
+
+    void updateCurrentDir(String dirname);
+
+    void updateCurrentFile(String filename, long fileSize);
+
+    void setDataSize(long totalSize);
+
+//    public boolean confirmOverwriteDirectory(File dir);
+
+//    public boolean confirmSkipDirectory(String... messageLines);
+
+    CreateDirectoryFailedAction createDirectoryFailed(String dirname, File parentDirectory);
+
+    CreateFileFailedAction createFileFailed(String filename, File parentDirectory);
+
+    DirectoryExistsAction directoryExists(File directory);
+
+    FileExistsAction fileExists(File file);
+
+    UnhandledExceptionAction unhandledException(String filename,
+                                                Throwable t);
+
+    String displayRenamePrompt(String currentName, File outDir);
+
+    ExtractProperties getExtractProperties();
+
+    interface ExtractPropertiesListener {
+
+        void propertyChanged(Object changedProperty);
     }
 
-    public static class ExtractProperties {
-        private final LinkedList<ExtractPropertiesListener> listeners =
-                new LinkedList<ExtractPropertiesListener>();
+    class ExtractProperties {
+
+        private static final Logger logger = getLogger(ExtractProperties.class.getName());
+
+        private final LinkedList<ExtractPropertiesListener> listeners = new LinkedList<>();
         private volatile CreateDirectoryFailedAction createDirAction = CreateDirectoryFailedAction.PROMPT_USER;
         private volatile CreateFileFailedAction createFileAction = CreateFileFailedAction.PROMPT_USER;
         private volatile DirectoryExistsAction dirExistsAction = DirectoryExistsAction.PROMPT_USER;
         private volatile FileExistsAction fileExistsAction = FileExistsAction.PROMPT_USER;
-        private volatile UnhandledExceptionAction unhandledExceptionAction =
-                UnhandledExceptionAction.PROMPT_USER;
+        private volatile UnhandledExceptionAction unhandledExceptionAction = UnhandledExceptionAction.PROMPT_USER;
 
         public CreateDirectoryFailedAction getCreateDirectoryFailedAction() {
             return createDirAction;
@@ -96,8 +117,7 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
             notifyListeners(action);
         }
 
-        public void setUnhandledExceptionAction(UnhandledExceptionAction action)
-        {
+        public void setUnhandledExceptionAction(UnhandledExceptionAction action) {
             unhandledExceptionAction = action;
             notifyListeners(action);
         }
@@ -107,20 +127,21 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
         }
 
         private void notifyListeners(Object changedProperty) {
-            for(ExtractPropertiesListener listener : listeners) {
+            for (ExtractPropertiesListener listener : listeners) {
                 try {
                     listener.propertyChanged(changedProperty);
-                } catch(Exception e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             }
         }
     }
 
-    public static enum CreateDirectoryFailedAction { PROMPT_USER, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL }
-    public static enum CreateFileFailedAction { PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL }
+    enum CreateDirectoryFailedAction {PROMPT_USER, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
 
-    public static enum DirectoryExistsAction {
+    enum CreateFileFailedAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, RENAME, AUTO_RENAME, CANCEL}
+
+    enum DirectoryExistsAction {
         PROMPT_USER,
         CONTINUE,
         ALWAYS_CONTINUE,
@@ -130,8 +151,9 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
         CANCEL,
     }
 
-    public static enum FileExistsAction { PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, OVERWRITE, OVERWRITE_ALL, RENAME, AUTO_RENAME, CANCEL }
-    public static enum UnhandledExceptionAction {
+    enum FileExistsAction {PROMPT_USER, SKIP_FILE, SKIP_DIRECTORY, OVERWRITE, OVERWRITE_ALL, RENAME, AUTO_RENAME, CANCEL}
+
+    enum UnhandledExceptionAction {
         PROMPT_USER,
         CONTINUE,
         ALWAYS_CONTINUE,

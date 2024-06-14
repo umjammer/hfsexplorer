@@ -21,44 +21,49 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.System.Logger.Level;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class SimpleDictionaryParser {
+
     private static final String SPD_HEADER = "!SimpleDictionary";
-    private HashMap<String, String> dictionaryTable =
-            new HashMap<String, String>();
+    private final HashMap<String, String> dictionaryTable = new HashMap<>();
 
     public SimpleDictionaryParser(InputStream is) {
-	try {
-	    BufferedReader buf = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-	    String firstLine = buf.readLine();
-	    int colonIndex = firstLine.indexOf(":");
-	    String spdTag = firstLine.substring(0, firstLine.indexOf(":"));
-	    String spdVersion = firstLine.substring(firstLine.indexOf(":")+1).trim();
-	    //System.err.println("spdTag: \"" + spdTag + "\" spdVersion: \"" + spdVersion + "\"");
-	    if(!(spdTag.equals(SPD_HEADER) && spdVersion.equals("1.0")))
-		throw new RuntimeException("Invalid SimpleDictionary data.");
+        try {
+            BufferedReader buf = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            String firstLine = buf.readLine();
+            int colonIndex = firstLine.indexOf(":");
+            String spdTag = firstLine.substring(0, firstLine.indexOf(":"));
+            String spdVersion = firstLine.substring(firstLine.indexOf(":") + 1).trim();
+//            logger.log(Level.DEBUG, "spdTag: \"" + spdTag + "\" spdVersion: \"" + spdVersion + "\"");
+            if (!(spdTag.equals(SPD_HEADER) && spdVersion.equals("1.0")))
+                throw new RuntimeException("Invalid SimpleDictionary data.");
 
-	    String currentLine = buf.readLine();
-	    while(currentLine != null) {
-		colonIndex = currentLine.indexOf(":");
-		String key = currentLine.substring(0, currentLine.indexOf(":"));
-		String value = currentLine.substring(currentLine.indexOf(":")+1).trim();
-		//System.err.println("key: \"" + key + "\" value: \"" + value + "\"");
-		dictionaryTable.put(key, value);
-		currentLine = buf.readLine();
-	    }
-	} catch(IOException ioe) { throw new RuntimeException(ioe); }
+            String currentLine = buf.readLine();
+            while (currentLine != null) {
+                colonIndex = currentLine.indexOf(":");
+                String key = currentLine.substring(0, currentLine.indexOf(":"));
+                String value = currentLine.substring(currentLine.indexOf(":") + 1).trim();
+//                logger.log(Level.DEBUG, "key: \"" + key + "\" value: \"" + value + "\"");
+                dictionaryTable.put(key, value);
+                currentLine = buf.readLine();
+            }
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
     }
 
-    public String getValue(String key) { return dictionaryTable.get(key); }
-
-    /*
-    public static void main(String[] args) {
-	new SimpleDictionaryParser(System.in);
+    public String getValue(String key) {
+        return dictionaryTable.get(key);
     }
-    */
+
+//    public static void main(String[] args) {
+//        new SimpleDictionaryParser(System.in);
+//    }
 }

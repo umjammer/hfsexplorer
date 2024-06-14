@@ -20,10 +20,12 @@ package org.catacombae.hfsexplorer;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class PrefixFileFilter extends FileFilter {
+
     private final String description;
     private final String prefix;
 
@@ -34,10 +36,10 @@ public class PrefixFileFilter extends FileFilter {
 
     @Override
     public boolean accept(File f) {
-       if(f.isDirectory())
+        if (f.isDirectory())
             return true;
 
-        if(f.getName().startsWith(prefix))
+        if (f.getName().startsWith(prefix))
             return true;
         return false;
     }
@@ -46,5 +48,4 @@ public class PrefixFileFilter extends FileFilter {
     public String getDescription() {
         return description;
     }
-
 }

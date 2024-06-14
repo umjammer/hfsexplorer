@@ -21,6 +21,7 @@ package org.catacombae.jparted.app;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class Main {
+
     public static void main(String[] args) {
         MainController mc = new MainController();
         mc.showMainWindow();

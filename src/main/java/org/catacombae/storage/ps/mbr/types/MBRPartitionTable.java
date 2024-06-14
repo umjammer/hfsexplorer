@@ -22,10 +22,17 @@ import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.ebr.types.DOSExtendedPartitionSystem;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableByteArrayStream;
+
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.storage.ps.mbr.MBRPartitionType;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * This class includes support for the MBR partition scheme, including the
@@ -35,6 +42,9 @@ import org.catacombae.storage.ps.mbr.MBRPartitionType;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
+
+    private static final Logger logger = getLogger(MBRPartitionTable.class.getName());
+
     /* Until I figure out a way to detect sector size, it will be 512... */
     public static final int DEFAULT_SECTOR_SIZE = 512;
 
@@ -44,18 +54,23 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
     public MBRPartitionTable(byte[] data, int offset) {
         this(new ReadableByteArrayStream(data), offset, false);
     }
+
     public MBRPartitionTable(byte[] data, int offset, int sectorSize) {
         this(new ReadableByteArrayStream(data), offset, sectorSize, false);
     }
+
     public MBRPartitionTable(ReadableRandomAccessStream raf, int offset) {
         this(raf, offset, true);
     }
+
     public MBRPartitionTable(ReadableRandomAccessStream raf, int offset, boolean parseEmbeddedPartitionSystems) {
         this(raf, offset, DEFAULT_SECTOR_SIZE, parseEmbeddedPartitionSystems);
     }
+
     public MBRPartitionTable(ReadableRandomAccessStream raf, int offset, int sectorSize) {
         this(raf, offset, sectorSize, true);
     }
+
     public MBRPartitionTable(ReadableRandomAccessStream raf, int offset, int sectorSize, boolean parseEmbeddedPartitionSystems) {
         byte[] block = new byte[sectorSize];
         raf.seek(offset);
@@ -65,19 +80,18 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         // Check for embedded partition systems
         MBRPartition[] mbrPartitions = masterBootRecord.getPartitions();
         embeddedPartitionSystems = new PartitionSystem[mbrPartitions.length];
-        for(int i = 0; i < mbrPartitions.length; ++i) {
+        for (int i = 0; i < mbrPartitions.length; ++i) {
             MBRPartition p = mbrPartitions[i];
             PartitionSystem embeddedPS = null;
 
-            if(!parseEmbeddedPartitionSystems); // Disable all other elses
-            else if(p.getPartitionTypeAsEnum() == MBRPartitionType.DOS_EXTENDED ||
+            if (!parseEmbeddedPartitionSystems) ; // Disable all other elses
+            else if (p.getPartitionTypeAsEnum() == MBRPartitionType.DOS_EXTENDED ||
                     p.getPartitionTypeAsEnum() == MBRPartitionType.DOS_EXTENDED_INT13HX) {
                 try {
                     embeddedPS =
-                        new DOSExtendedPartitionSystem(raf, p.getStartOffset(), p.getLength(), sectorSize);
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
+                            new DOSExtendedPartitionSystem(raf, p.getStartOffset(), p.getLength(), sectorSize);
+                } catch (Exception e) {
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             }
 
@@ -85,7 +99,9 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         }
     }
 
-    public MasterBootRecord getMasterBootRecord() { return masterBootRecord; }
+    public MasterBootRecord getMasterBootRecord() {
+        return masterBootRecord;
+    }
 
     /**
      * This will return an array of exactly 4 elements, corresponding to the
@@ -93,6 +109,7 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
      * null, it means there is no embedded partition system at that MBR entry.
      * If no embedded partition systems exists, then this array will consist of
      * all null elements.
+     *
      * @return a four element array containing the embedded partition systems
      * of this MBR layout, if any.
      */
@@ -106,10 +123,11 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return embeddedPartitionSystems[index];
     }
 
+    @Override
     public boolean isValid() {
-        if(masterBootRecord.isValid()) {
-            for(PartitionSystem ebr : embeddedPartitionSystems) {
-                if(ebr != null && !ebr.isValid())
+        if (masterBootRecord.isValid()) {
+            for (PartitionSystem ebr : embeddedPartitionSystems) {
+                if (ebr != null && !ebr.isValid())
                     return false;
             }
             return true;
@@ -117,49 +135,52 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         return false;
     }
 
+    @Override
     public int getPartitionCount() {
- 	int num = masterBootRecord.getPartitionCount();
-	for(PartitionSystem ps : embeddedPartitionSystems) {
-	    if(ps != null)
+        int num = masterBootRecord.getPartitionCount();
+        for (PartitionSystem ps : embeddedPartitionSystems) {
+            if (ps != null)
                 num += ps.getPartitionCount();
-	}
-	return num;
-   }
-
-    public int getUsedPartitionCount() {
-	int num = masterBootRecord.getUsedPartitionCount();
-	for(PartitionSystem ps : embeddedPartitionSystems) {
-	    if(ps != null)
-                num += ps.getUsedPartitionCount();
-	}
-	return num;
+        }
+        return num;
     }
 
+    @Override
+    public int getUsedPartitionCount() {
+        int num = masterBootRecord.getUsedPartitionCount();
+        for (PartitionSystem ps : embeddedPartitionSystems) {
+            if (ps != null)
+                num += ps.getUsedPartitionCount();
+        }
+        return num;
+    }
+
+    @Override
     public Partition[] getUsedPartitionEntries() {
-        LinkedList<Partition> tempList = new LinkedList<Partition>();
-        for(Partition p : masterBootRecord.getUsedPartitionEntries())
+        LinkedList<Partition> tempList = new LinkedList<>();
+        for (Partition p : masterBootRecord.getUsedPartitionEntries())
             tempList.addLast(p);
 
-	for(PartitionSystem ps : embeddedPartitionSystems) {
-	    if(ps != null) {
-                for(Partition p : ps.getUsedPartitionEntries())
+        for (PartitionSystem ps : embeddedPartitionSystems) {
+            if (ps != null) {
+                for (Partition p : ps.getUsedPartitionEntries())
                     tempList.addLast(p);
             }
-	}
+        }
 
-        return tempList.toArray(new Partition[tempList.size()]);
+        return tempList.toArray(Partition[]::new);
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
-        if(index >= 0 && index < 4) {
+        if (index >= 0 && index < 4) {
             return masterBootRecord.getPartitionEntry(index);
-        }
-        else if(index >= 4) {
+        } else if (index >= 4) {
             int curIndex = 4;
-            for(PartitionSystem ps : embeddedPartitionSystems) {
+            for (PartitionSystem ps : embeddedPartitionSystems) {
                 int psPartitions = ps.getPartitionCount();
-                if(index < curIndex+psPartitions)
-                    return ps.getPartitionEntry(index-curIndex);
+                if (index < curIndex + psPartitions)
+                    return ps.getPartitionEntry(index - curIndex);
                 curIndex += psPartitions;
             }
         }
@@ -167,34 +188,41 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         throw new IllegalArgumentException("index out of bounds (index=" + index + ")");
     }
 
+    @Override
     public Partition[] getPartitionEntries() {
-        LinkedList<Partition> tempList = new LinkedList<Partition>();
-        for(Partition p : masterBootRecord.getPartitionEntries())
+        LinkedList<Partition> tempList = new LinkedList<>();
+        for (Partition p : masterBootRecord.getPartitionEntries())
             tempList.addLast(p);
 
-	for(PartitionSystem ps : embeddedPartitionSystems) {
-	    if(ps != null) {
-                for(Partition p : ps.getPartitionEntries())
+        for (PartitionSystem ps : embeddedPartitionSystems) {
+            if (ps != null) {
+                for (Partition p : ps.getPartitionEntries())
                     tempList.addLast(p);
             }
-	}
+        }
 
-        return tempList.toArray(new Partition[tempList.size()]);
+        return tempList.toArray(Partition[]::new);
     }
 
+    @Override
+    public String getLongName() {
+        return "Master Boot Record";
+    }
 
-    public String getLongName() { return "Master Boot Record"; }
+    @Override
+    public String getShortName() {
+        return "MBR";
+    }
 
-    public String getShortName() { return "MBR"; }
-
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " masterBootRecord:");
         masterBootRecord.print(ps, prefix + "  ");
         ps.println(prefix + " embeddedPartitionSystems:");
-        for(int i = 0; i < embeddedPartitionSystems.length; ++i) {
+        for (int i = 0; i < embeddedPartitionSystems.length; ++i) {
             PartitionSystem partSys = embeddedPartitionSystems[i];
             ps.print(prefix + "  [" + i + "]:");
-            if(partSys == null)
+            if (partSys == null)
                 ps.println(" null");
             else {
                 ps.println();
@@ -203,10 +231,9 @@ public class MBRPartitionTable implements PartitionSystem, PrintableStruct {
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + this.getClass().getSimpleName() + ":");
         printFields(ps, prefix);
     }
-
-
 }

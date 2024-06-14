@@ -17,11 +17,13 @@
 
 package org.catacombae.hfs.types.carbon;
 
-import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
+import org.catacombae.csjc.structelements.Dictionary;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -51,10 +53,12 @@ public class FourCharCode implements PrintableStruct, StructElements {
         return Util.toASCIIString(getFourCharCode());
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " fourCharCode: \"" + getFourCharCodeAsString() + "\"");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "FourCharCode:");
         printFields(ps, prefix);
@@ -64,7 +68,7 @@ public class FourCharCode implements PrintableStruct, StructElements {
         return Util.createCopy(fourCharCode);
     }
 
-    /* @Override */
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(FourCharCode.class.getSimpleName());
 

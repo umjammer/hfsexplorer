@@ -19,90 +19,95 @@ package org.catacombae.hfsexplorer;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashSet;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class FileNameTools {
-    private static final HashSet<String> reservedWindowsFilenames =
-            buildReservedWindowsFilenames();
+
+    private static final Logger logger = getLogger(FileNameTools.class.getName());
+
+    private static final HashSet<String> reservedWindowsFilenames = buildReservedWindowsFilenames();
 
     /**
      * This method should only return a non-null value when it's ABSOLUTELY SURE
      * that the file can be created.
      *
      * @param filename the filename to be validated and possibly renamed.
-     * @param outDir the directory where the new file with name
-     * <code>filename</code> is to be created.
+     * @param outDir   the directory where the new file with name
+     *                 <code>filename</code> is to be created.
      * @return the resulting 'safe' filename.
      */
-    public static String autoRenameIllegalFilename(String filename, File outDir,
-            boolean isDirectory) {
+    public static String autoRenameIllegalFilename(String filename, File outDir, boolean isDirectory) {
         final char substituteChar = '_';
 
-        if(FileNameTools.isReservedWindowsFilename(filename)) {
+        if (FileNameTools.isReservedWindowsFilename(filename)) {
             filename = FileNameTools.getSafeRandomFilename("hfsx");
         }
 
         char[] filenameChars = filename.toCharArray();
 
-        //System.err.println("filenameChars before: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars before: " + new String(filenameChars));
         // Clean out all the usual suspects
-        for(int i = 0; i < filenameChars.length; ++i) {
+        for (int i = 0; i < filenameChars.length; ++i) {
             int c = Util.unsign(filenameChars[i]);
 
-            if(c < 32 || c == 127 || (c >= 0x80 && c <= 0x9F)) {// ASCII/ISO-8859 control characters
+            if (c < 32 || c == 127 || (c >= 0x80 && c <= 0x9F)) {// ASCII/ISO-8859 control characters
                 filenameChars[i] = substituteChar;
-                //System.err.println("'" + (char)c + "' (" + c + ") matches control character criteria.");
-            }
-            else if(FileNameTools.isIllegalWindowsCharacter(c)) {
+//                logger.log(Level.DEBUG, "'" + (char)c + "' (" + c + ") matches control character criteria.");
+            } else if (FileNameTools.isIllegalWindowsCharacter(c)) {
                 filenameChars[i] = substituteChar;
-                //System.err.println("'" + (char)c + "' (" + c + ") is an illegal Windows character.");
+//                logger.log(Level.DEBUG, "'" + (char)c + "' (" + c + ") is an illegal Windows character.");
             }
         }
-        //System.err.println("filenameChars middle: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars middle: " + new String(filenameChars));
 
         // Check for trailing dots and spaces
-        for(int i = filenameChars.length-1; i >= 0; --i) {
+        for (int i = filenameChars.length - 1; i >= 0; --i) {
             char c = filenameChars[i];
-            if(c == ' ' || c == '.')
+            if (c == ' ' || c == '.')
                 filenameChars[i] = substituteChar;
             else
                 break;
         }
-        //System.err.println("filenameChars after: " + new String(filenameChars));
+//        logger.log(Level.DEBUG, "filenameChars after: " + new String(filenameChars));
 
         filename = new String(filenameChars);
 
         String createdFilename = FileNameTools.tryCreate(filename, outDir, isDirectory);
-        if(createdFilename != null)
+        if (createdFilename != null)
             return createdFilename;
 
         // Still no-go. Maybe the file name is too long?
-        if(filename.length() > 240) { // 255 is a common limit... and 240 is 15 characters less. Might be useful.
+        if (filename.length() > 240) { // 255 is a common limit... and 240 is 15 characters less. Might be useful.
             filename = filename.substring(0, 240);
             createdFilename = FileNameTools.tryCreate(filename, outDir, isDirectory);
-            if(createdFilename != null)
+            if (createdFilename != null)
                 return createdFilename;
         }
-        if(filename.length() > 27) { // 31 is a common limit... and 27 is 4 characters less. Might be useful.
+        if (filename.length() > 27) { // 31 is a common limit... and 27 is 4 characters less. Might be useful.
             filename = filename.substring(0, 27);
             createdFilename = FileNameTools.tryCreate(filename, outDir, isDirectory);
-            if(createdFilename != null)
+            if (createdFilename != null)
                 return createdFilename;
         }
-        if(filename.length() > 8) { // 8 is the DOS limit... and 27 is 4 characters less. Might be useful.
+        if (filename.length() > 8) { // 8 is the DOS limit... and 27 is 4 characters less. Might be useful.
             filename = filename.substring(0, 8);
             createdFilename = FileNameTools.tryCreate(filename, outDir, isDirectory);
-            if(createdFilename != null)
+            if (createdFilename != null)
                 return createdFilename;
         }
 
         // Last resort
         filename = FileNameTools.getSafeRandomFilename("hfsx");
         createdFilename = FileNameTools.tryCreate(filename, outDir, isDirectory);
-        if(createdFilename != null)
+        if (createdFilename != null)
             return createdFilename;
         else
             return null; // We give up.
@@ -110,12 +115,11 @@ public class FileNameTools {
 
     public static String getSafeRandomFilename(String prefix) {
         int suffixLength = 8 - prefix.length();
-        if(suffixLength <= 0) {
+        if (suffixLength <= 0) {
             return prefix.substring(0, 8);
-        }
-        else {
+        } else {
             int suffixBase = 1;
-            for(int i = 0; i < suffixLength; ++i)
+            for (int i = 0; i < suffixLength; ++i)
                 suffixBase *= 10;
             suffixBase -= 1; // 100 -> 99, 1000 -> 999
             String suffixString = Integer.toString((int) (Math.random() * suffixBase));
@@ -124,36 +128,35 @@ public class FileNameTools {
     }
 
     public static String tryCreate(String filename, File outDir, boolean asDirectory) {
-        final String originalFilename = filename;
+        String originalFilename = filename;
         File f = new File(outDir, filename);
 
         // Deal with the situation where we already have a file by that name.
         final int limit = 999; // 0-999: 3 characters... maximum DOS file extension.
         int i = 0;
-        while(f.exists() && i < limit) {
+        while (f.exists() && i < limit) {
             filename = originalFilename + "." + i++;
             f = new File(outDir, filename);
         }
-        if(f.exists())
+        if (f.exists())
             return null;
 
         try {
-            if(asDirectory) {
-                if(f.mkdir()) {
+            if (asDirectory) {
+                if (f.mkdir()) {
+                    f.delete();
+                    return filename;
+                }
+            } else {
+                if (f.createNewFile()) {
                     f.delete();
                     return filename;
                 }
             }
-            else {
-                if(f.createNewFile()) {
-                    f.delete();
-                    return filename;
-                }
-            }
-        } catch(IOException e) {
-            System.err.println("IOException while trying to create \"" + f.getAbsolutePath() +
+        } catch (IOException e) {
+            logger.log(Level.DEBUG, "IOException while trying to create \"" + f.getAbsolutePath() +
                     "\" as " + (asDirectory ? "directory" : "file") + ":");
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         return null;
     }
@@ -163,37 +166,27 @@ public class FileNameTools {
     }
 
     private static boolean isIllegalWindowsCharacter(int c) {
-        if(c < 32)
+        if (c < 32)
             return true;
 
-        switch(c) {
-            case '/':
-            case '\\':
-            case ':':
-            case '*':
-            case '?':
-            case '"':
-            case '<':
-            case '>':
-            case '|':
-                return true;
-            default:
-                return false;
-        }
+        return switch (c) {
+            case '/', '\\', ':', '*', '?', '"', '<', '>', '|' -> true;
+            default -> false;
+        };
     }
 
     public static boolean isReservedWindowsFilename(String filename) {
-        /* Check if the full file name matches one of the reserved Windows file
-         * names. */
-        if(reservedWindowsFilenames.contains(filename))
+        // Check if the full file name matches one of the reserved Windows file
+        // names.
+        if (reservedWindowsFilenames.contains(filename))
             return true;
 
-        /* Check if the file name is a reserved name if we cut off the file
-         * extension. Apparently this can also cause problems in Windows. */
-        if(filename.length() > 4 && filename.charAt(4) == '.' &&
+        // Check if the file name is a reserved name if we cut off the file
+        // extension. Apparently this can also cause problems in Windows.
+        if (filename.length() > 4 && filename.charAt(4) == '.' &&
                 reservedWindowsFilenames.contains(filename.substring(0, 4)))
             return true;
-        if(filename.length() > 3 && filename.charAt(3) == '.' &&
+        if (filename.length() > 3 && filename.charAt(3) == '.' &&
                 reservedWindowsFilenames.contains(filename.substring(0, 3)))
             return true;
 
@@ -201,7 +194,7 @@ public class FileNameTools {
     }
 
     private static HashSet<String> buildReservedWindowsFilenames() {
-        HashSet<String> result = new HashSet<String>();
+        HashSet<String> result = new HashSet<>();
         /*
          * <http://threebit.net/mail-archive/carbon-dev/msg01314.html>
          *
@@ -271,9 +264,9 @@ public class FileNameTools {
         result.add("PRN");
         result.add("AUX");
         result.add("NUL");
-        for(int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
             result.add("COM" + i);
-        for(int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
             result.add("LPT" + i);
         result.add("CLOCK$");
 

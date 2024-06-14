@@ -18,11 +18,13 @@
 package org.catacombae.hfsexplorer.tools;
 
 import java.io.FileOutputStream;
+
 import org.catacombae.storage.ps.apm.types.ApplePartitionMap;
 import org.catacombae.storage.ps.apm.types.DriverDescriptorRecord;
 import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -31,7 +33,7 @@ public class PrintAPMPartitions {
 
     public static void main(String[] args) throws Exception {
         ReadableRandomAccessStream llf;
-        if(ReadableWin32FileStream.isSystemSupported())
+        if (ReadableWin32FileStream.isSystemSupported())
             llf = new ReadableWin32FileStream(args[0]);
         else
             llf = new ReadableFileStream(args[0]);
@@ -47,8 +49,8 @@ public class PrintAPMPartitions {
 
         System.out.println("Length of file: " + llf.length());
 
-        final int blockSize = ddr.getSbBlkSize();
-        //final int blockSize = 512;
+        int blockSize = ddr.getSbBlkSize();
+//        final int blockSize = 512;
         ApplePartitionMap apm = new ApplePartitionMap(llf, blockSize, blockSize);
         apm.print(System.out, "");
 

@@ -18,7 +18,9 @@
 package org.catacombae.storage.fs;
 
 import java.util.Date;
+
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -26,31 +28,38 @@ import org.catacombae.util.Util;
 public abstract class FSAttributes {
 
     public abstract boolean hasPOSIXFileAttributes();
+
     public abstract POSIXFileAttributes getPOSIXFileAttributes();
 
     public abstract boolean hasWindowsFileAttributes();
+
     public abstract WindowsFileAttributes getWindowsFileAttributes();
 
     public abstract boolean hasCreateDate();
+
     public abstract Date getCreateDate();
 
     public abstract boolean hasModifyDate();
+
     public abstract Date getModifyDate();
 
     public abstract boolean hasAttributeModifyDate();
+
     public abstract Date getAttributeModifyDate();
 
     public abstract boolean hasAccessDate();
+
     public abstract Date getAccessDate();
 
     public abstract boolean hasBackupDate();
+
     public abstract Date getBackupDate();
 
     public abstract boolean hasLinkCount();
+
     public abstract Long getLinkCount();
 
-    //public abstract FSAccessControlList getAccessControlList();
-
+//    public abstract FSAccessControlList getAccessControlList();
 
     public static abstract class POSIXFileAttributes {
 
@@ -74,24 +83,37 @@ public abstract class FSAttributes {
         public static final byte FILETYPE_WHITEOUT = 016;
 
         public abstract long getUserID();
+
         public abstract long getGroupID();
 
         public abstract byte getFileType();
 
         public abstract boolean canUserRead();
+
         public abstract boolean canUserWrite();
+
         public abstract boolean canUserExecute();
+
         public abstract boolean canGroupRead();
+
         public abstract boolean canGroupWrite();
+
         public abstract boolean canGroupExecute();
+
         public abstract boolean canOthersRead();
+
         public abstract boolean canOthersWrite();
+
         public abstract boolean canOthersExecute();
+
         public abstract boolean isSetUID();
+
         public abstract boolean isSetGID();
+
         public abstract boolean isStickyBit();
 
         public abstract boolean hasInodeNumber();
+
         public abstract Long getInodeNumber();
 
         /**
@@ -103,7 +125,7 @@ public abstract class FSAttributes {
         public String getPermissionString() {
             String result;
             byte fileType = getFileType();
-            switch(fileType) {
+            switch (fileType) {
                 case FILETYPE_UNDEFINED: // This one appears at the root node (CNID 2) sometimes. dunno what it would look like in ls -l
                     result = "?";
                     break;
@@ -135,67 +157,64 @@ public abstract class FSAttributes {
                     result = " ";
                     System.err.println(
                             "[FSAttributes.POSIXFileAttributes.getPermissionString()] " +
-                            "Unknown file type:  " + fileType +
-                            " Mode: 0x" + Util.toHexStringBE(getFileModeWord()));
+                                    "Unknown file type:  " + fileType +
+                                    " Mode: 0x" + Util.toHexStringBE(getFileModeWord()));
             }
 
-            if(canUserRead())
+            if (canUserRead())
                 result += "r";
             else
                 result += "-";
-            if(canUserWrite())
+            if (canUserWrite())
                 result += "w";
             else
                 result += "-";
-            if(canUserExecute()) {
-                if(isSetUID())
+            if (canUserExecute()) {
+                if (isSetUID())
                     result += "s";
                 else
                     result += "x";
-            }
-            else {
-                if(isSetUID())
+            } else {
+                if (isSetUID())
                     result += "S";
                 else
                     result += "-";
             }
 
-            if(canGroupRead())
+            if (canGroupRead())
                 result += "r";
             else
                 result += "-";
-            if(canGroupWrite())
+            if (canGroupWrite())
                 result += "w";
             else
                 result += "-";
-            if(canGroupExecute()) {
-                if(isSetGID())
+            if (canGroupExecute()) {
+                if (isSetGID())
                     result += "s";
                 else
                     result += "x";
-            }
-            else {
-                if(isSetGID())
+            } else {
+                if (isSetGID())
                     result += "S";
                 else
                     result += "-";
             }
-            if(canOthersRead())
+            if (canOthersRead())
                 result += "r";
             else
                 result += "-";
-            if(canOthersWrite())
+            if (canOthersWrite())
                 result += "w";
             else
                 result += "-";
-            if(canOthersExecute()) {
-                if(isStickyBit())
+            if (canOthersExecute()) {
+                if (isStickyBit())
                     result += "t";
                 else
                     result += "x";
-            }
-            else {
-                if(isStickyBit())
+            } else {
+                if (isStickyBit())
                     result += "T";
                 else
                     result += "-";
@@ -211,7 +230,7 @@ public abstract class FSAttributes {
          * @return the raw POSIX file mode word.
          */
         public short getFileModeWord() {
-            short result = (short)((getFileType() & 017) << 12);
+            short result = (short) ((getFileType() & 017) << 12);
 
             result = Util.setBit(result, 11, isSetUID());
             result = Util.setBit(result, 10, isSetGID());
@@ -231,6 +250,7 @@ public abstract class FSAttributes {
     }
 
     public static class DefaultPOSIXFileAttributes extends POSIXFileAttributes {
+
         private final short fileMode;
         private final long userID;
         private final long groupID;
@@ -251,70 +271,82 @@ public abstract class FSAttributes {
             this.inodeNumber = inodeNumber;
         }
 
-        /** {@inheritDoc} */
         @Override
-        public long getUserID() { return userID; }
+        public long getUserID() {
+            return userID;
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public long getGroupID() { return groupID; }
+        public long getGroupID() {
+            return groupID;
+        }
 
-        /** {@inheritDoc} */
         @Override
         public byte getFileType() {
             int type = (fileMode >> 12) & 017;
             return (byte) type;
         }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean isSetUID() { return Util.getBit(fileMode, 11); }
+        public boolean isSetUID() {
+            return Util.getBit(fileMode, 11);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean isSetGID() { return Util.getBit(fileMode, 10); }
+        public boolean isSetGID() {
+            return Util.getBit(fileMode, 10);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean isStickyBit() { return Util.getBit(fileMode, 9); }
+        public boolean isStickyBit() {
+            return Util.getBit(fileMode, 9);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canUserRead() { return Util.getBit(fileMode, 8); }
+        public boolean canUserRead() {
+            return Util.getBit(fileMode, 8);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canUserWrite() { return Util.getBit(fileMode, 7); }
+        public boolean canUserWrite() {
+            return Util.getBit(fileMode, 7);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canUserExecute() { return Util.getBit(fileMode, 6); }
+        public boolean canUserExecute() {
+            return Util.getBit(fileMode, 6);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canGroupRead() { return Util.getBit(fileMode, 5); }
+        public boolean canGroupRead() {
+            return Util.getBit(fileMode, 5);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canGroupWrite() { return Util.getBit(fileMode, 4); }
+        public boolean canGroupWrite() {
+            return Util.getBit(fileMode, 4);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canGroupExecute() { return Util.getBit(fileMode, 3); }
+        public boolean canGroupExecute() {
+            return Util.getBit(fileMode, 3);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canOthersRead() { return Util.getBit(fileMode, 2); }
+        public boolean canOthersRead() {
+            return Util.getBit(fileMode, 2);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canOthersWrite() { return Util.getBit(fileMode, 1); }
+        public boolean canOthersWrite() {
+            return Util.getBit(fileMode, 1);
+        }
 
-        /** {@inheritDoc} */
         @Override
-        public boolean canOthersExecute() { return Util.getBit(fileMode, 0); }
+        public boolean canOthersExecute() {
+            return Util.getBit(fileMode, 0);
+        }
 
-        /** {@inheritDoc} */
         @Override
         public short getFileModeWord() {
             return fileMode;

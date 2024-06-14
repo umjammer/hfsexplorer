@@ -18,7 +18,9 @@
 package org.catacombae.hfsexplorer.testcode;
 
 import java.io.RandomAccessFile;
+
 import org.catacombae.hfs.types.hfsplus.HFSPlusExtentLeafNode;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -35,7 +37,7 @@ public class ParseExtentLeafNode {
 
         System.out.println("Leaf record offsets:");
         short[] offsets = node.getLeafRecordOffsets();
-        for(short s : offsets)
+        for (short s : offsets)
             System.out.println("  " + (s & 0xFFFF));
     }
 }

@@ -18,68 +18,87 @@
 package org.catacombae.hfsexplorer.gui;
 
 import java.awt.event.ActionListener;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.charset.Charset;
-import java.util.logging.Logger;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.border.BevelBorder;
+import javax.swing.table.DefaultTableModel;
+
 import org.catacombae.hfsexplorer.Resources;
+
+import static java.lang.System.getLogger;
+import static org.jdesktop.layout.GroupLayout.BASELINE;
+import static org.jdesktop.layout.GroupLayout.DEFAULT_SIZE;
+import static org.jdesktop.layout.GroupLayout.LEADING;
+import static org.jdesktop.layout.GroupLayout.PREFERRED_SIZE;
+import static org.jdesktop.layout.GroupLayout.TRAILING;
+import static org.jdesktop.layout.LayoutStyle.RELATED;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class FilesystemBrowserPanel extends javax.swing.JPanel {
-    private static final ImageIcon FORWARD_ICON =
-            new ImageIcon(Resources.FORWARD_ICON);
-    private static final ImageIcon EXTRACT_ICON =
-            new ImageIcon(Resources.EXTRACT_ICON);
-    private static final ImageIcon BACK_ICON =
-            new ImageIcon(Resources.BACK_ICON);
-    private static final ImageIcon UP_ICON =
-            new ImageIcon(Resources.UP_ICON);
-    private static final ImageIcon INFO_ICON =
-            new ImageIcon(Resources.INFO_ICON);
+
+    private static final Logger logger = getLogger(FilesystemBrowserPanel.class.getName());
+
+    private static final ImageIcon FORWARD_ICON = new ImageIcon(Resources.FORWARD_ICON);
+    private static final ImageIcon EXTRACT_ICON = new ImageIcon(Resources.EXTRACT_ICON);
+    private static final ImageIcon BACK_ICON = new ImageIcon(Resources.BACK_ICON);
+    private static final ImageIcon UP_ICON = new ImageIcon(Resources.UP_ICON);
+    private static final ImageIcon INFO_ICON = new ImageIcon(Resources.INFO_ICON);
 
     private static final String[] optionalEncodings = {
-        "MacChineseTrad",
-        "MacKorean",
-        "MacArabic",
-        "MacHebrew",
-        "MacGreek",
-        "MacCyrillic",
-        "MacDevanagari",
-        "MacGurmukhi",
-        "MacGujarati",
-        "MacOriya",
-        "MacBengali",
-        "MacTamil",
-        "MacTelugu",
-        "MacKannada",
-        "MacMalayalam",
-        "MacSinhalese",
-        "MacBurmese",
-        "MacKhmer",
-        "MacThai",
-        "MacLaotian",
-        "MacGeorgian",
-        "MacArmenian",
-        "MacChineseSimp",
-        "MacTibetan",
-        "MacMongolian",
-        "MacEthiopic",
-        "MacCentralEurRoman",
-        "MacVietnamese",
-        "MacExtArabic",
-        "MacSymbol",
-        "MacDingbats",
-        "MacTurkish",
-        "MacCroatian",
-        "MacIcelandic",
-        "MacRomanian",
-        "MacFarsi",
-        "MacUkrainian",
+            "MacChineseTrad",
+            "MacKorean",
+            "MacArabic",
+            "MacHebrew",
+            "MacGreek",
+            "MacCyrillic",
+            "MacDevanagari",
+            "MacGurmukhi",
+            "MacGujarati",
+            "MacOriya",
+            "MacBengali",
+            "MacTamil",
+            "MacTelugu",
+            "MacKannada",
+            "MacMalayalam",
+            "MacSinhalese",
+            "MacBurmese",
+            "MacKhmer",
+            "MacThai",
+            "MacLaotian",
+            "MacGeorgian",
+            "MacArmenian",
+            "MacChineseSimp",
+            "MacTibetan",
+            "MacMongolian",
+            "MacEthiopic",
+            "MacCentralEurRoman",
+            "MacVietnamese",
+            "MacExtArabic",
+            "MacSymbol",
+            "MacDingbats",
+            "MacTurkish",
+            "MacCroatian",
+            "MacIcelandic",
+            "MacRomanian",
+            "MacFarsi",
+            "MacUkrainian",
     };
-
-    private static final Logger log =
-            Logger.getLogger(FilesystemBrowserPanel.class.getName());
 
     /** Creates new form FilesystemBrowserPanel */
     public FilesystemBrowserPanel() {
@@ -91,15 +110,12 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
          * Add optional encodings to the encoding combo box based on
          * availability.
          */
-        for(String encoding : optionalEncodings) {
-            if(Charset.isSupported(encoding) ||
-                    Charset.isSupported("x-" + encoding))
-            {
-                log.fine("Charset is supported: " + encoding);
+        for (String encoding : optionalEncodings) {
+            if (Charset.isSupported(encoding) || Charset.isSupported("x-" + encoding)) {
+                logger.log(Level.DEBUG, "Charset is supported: " + encoding);
                 encodingComboBox.addItem(encoding);
-            }
-            else {
-                log.fine("Charset is not supported: " + encoding);
+            } else {
+                logger.log(Level.DEBUG, "Charset is not supported: " + encoding);
             }
         }
     }
@@ -126,9 +142,9 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
      * @return true if the encoding existed in the combo box, false otherwise.
      */
     public boolean setSelectedHFSEncoding(String encoding) {
-        for(int i = 0; i < encodingComboBox.getItemCount(); ++i) {
+        for (int i = 0; i < encodingComboBox.getItemCount(); ++i) {
             Object item = encodingComboBox.getItemAt(i);
-            if(item.toString().equals(encoding)) {
+            if (item.toString().equals(encoding)) {
                 encodingComboBox.setSelectedIndex(i);
                 return true;
             }
@@ -147,7 +163,8 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
         encodingComboBox.addActionListener(al);
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
@@ -155,23 +172,23 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        addressField = new javax.swing.JTextField();
-        pathLabel = new javax.swing.JLabel();
-        goButton = new javax.swing.JButton();
-        extractButton = new javax.swing.JButton();
-        upButton = new javax.swing.JButton();
-        infoButton = new javax.swing.JButton();
-        boxPanel = new javax.swing.JPanel();
-        treeTablePanel = new javax.swing.JPanel();
-        treeTableSplit = new javax.swing.JSplitPane();
-        dirTreeScroller = new javax.swing.JScrollPane();
-        dirTree = new javax.swing.JTree();
-        fileTableScroller = new javax.swing.JScrollPane();
-        fileTable = new javax.swing.JTable();
-        statusLabelPanel = new javax.swing.JPanel();
-        statusLabel = new javax.swing.JLabel();
-        encodingLabel = new javax.swing.JLabel();
-        encodingComboBox = new javax.swing.JComboBox();
+        addressField = new JTextField();
+        pathLabel = new JLabel();
+        goButton = new JButton();
+        extractButton = new JButton();
+        upButton = new JButton();
+        infoButton = new JButton();
+        boxPanel = new JPanel();
+        treeTablePanel = new JPanel();
+        treeTableSplit = new JSplitPane();
+        dirTreeScroller = new JScrollPane();
+        dirTree = new JTree();
+        fileTableScroller = new JScrollPane();
+        fileTable = new JTable();
+        statusLabelPanel = new JPanel();
+        statusLabel = new JLabel();
+        encodingLabel = new JLabel();
+        encodingComboBox = new JComboBox<>();
 
         pathLabel.setText("Path:");
 
@@ -198,23 +215,24 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
 
         treeTableSplit.setLeftComponent(dirTreeScroller);
 
-        fileTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"yada.txt", "1 KiB", "File", "2006-06-11 14:34"},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Name", "Size", "Type", "Date modified"
-            }
+        fileTable.setModel(new DefaultTableModel(
+                new Object[][] {
+                        {"yada.txt", "1 KiB", "File", "2006-06-11 14:34"},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null}
+                },
+                new String[] {
+                        "Name", "Size", "Type", "Date modified"
+                }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
+            final boolean[] canEdit = new boolean[] {
+                    false, false, false, false
             };
 
+            @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         fileTable.setIntercellSpacing(new java.awt.Dimension(4, 0));
@@ -231,90 +249,87 @@ public class FilesystemBrowserPanel extends javax.swing.JPanel {
         statusLabelPanel.setLayout(new java.awt.BorderLayout());
 
         statusLabel.setText("No file system loaded");
-        statusLabel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+        statusLabel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
         statusLabelPanel.add(statusLabel, java.awt.BorderLayout.CENTER);
 
         boxPanel.add(statusLabelPanel, java.awt.BorderLayout.SOUTH);
 
         encodingLabel.setText("Encoding:");
 
-        encodingComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "MacRoman", "MacJapanese" }));
+        encodingComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"MacRoman", "MacJapanese"}));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(pathLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(addressField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(goButton)
-                .addContainerGap())
-            .add(boxPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 812, Short.MAX_VALUE)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(upButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(extractButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(infoButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 295, Short.MAX_VALUE)
-                .add(encodingLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(encodingComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                layout.createParallelGroup(LEADING)
+                        .add(TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(pathLabel)
+                                .addPreferredGap(RELATED)
+                                .add(addressField, DEFAULT_SIZE, 650, Short.MAX_VALUE)
+                                .addPreferredGap(RELATED)
+                                .add(goButton)
+                                .addContainerGap())
+                        .add(boxPanel, DEFAULT_SIZE, 812, Short.MAX_VALUE)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(upButton)
+                                .addPreferredGap(RELATED)
+                                .add(extractButton)
+                                .addPreferredGap(RELATED)
+                                .add(infoButton)
+                                .addPreferredGap(RELATED, 295, Short.MAX_VALUE)
+                                .add(encodingLabel)
+                                .addPreferredGap(RELATED)
+                                .add(encodingComboBox, PREFERRED_SIZE, 166, PREFERRED_SIZE)
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(upButton)
-                    .add(extractButton)
-                    .add(infoButton)
-                    .add(encodingComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(encodingLabel))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(addressField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(goButton)
-                    .add(pathLabel))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(boxPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE))
+                layout.createParallelGroup(LEADING)
+                        .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(layout.createParallelGroup(BASELINE)
+                                        .add(upButton)
+                                        .add(extractButton)
+                                        .add(infoButton)
+                                        .add(encodingComboBox, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+                                        .add(encodingLabel))
+                                .addPreferredGap(RELATED)
+                                .add(layout.createParallelGroup(BASELINE)
+                                        .add(addressField, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+                                        .add(goButton)
+                                        .add(pathLabel))
+                                .addPreferredGap(RELATED)
+                                .add(boxPanel, DEFAULT_SIZE, 429, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    public javax.swing.JTextField addressField;
-    private javax.swing.JPanel boxPanel;
-    public javax.swing.JTree dirTree;
-    private javax.swing.JScrollPane dirTreeScroller;
-    private javax.swing.JComboBox encodingComboBox;
-    private javax.swing.JLabel encodingLabel;
-    public javax.swing.JButton extractButton;
-    public javax.swing.JTable fileTable;
-    public javax.swing.JScrollPane fileTableScroller;
-    public javax.swing.JButton goButton;
-    public javax.swing.JButton infoButton;
-    private javax.swing.JLabel pathLabel;
-    public javax.swing.JLabel statusLabel;
-    private javax.swing.JPanel statusLabelPanel;
-    private javax.swing.JPanel treeTablePanel;
-    private javax.swing.JSplitPane treeTableSplit;
-    public javax.swing.JButton upButton;
+    public JTextField addressField;
+    private JPanel boxPanel;
+    public JTree dirTree;
+    private JScrollPane dirTreeScroller;
+    private JComboBox<String> encodingComboBox;
+    private JLabel encodingLabel;
+    public JButton extractButton;
+    public JTable fileTable;
+    public JScrollPane fileTableScroller;
+    public JButton goButton;
+    public JButton infoButton;
+    private JLabel pathLabel;
+    public JLabel statusLabel;
+    private JPanel statusLabelPanel;
+    private JPanel treeTablePanel;
+    private JSplitPane treeTableSplit;
+    public JButton upButton;
     // End of variables declaration//GEN-END:variables
 
-    /*
-    public static void main(String[] args) {
-        JFrame jf = new JFrame("Test");
-        jf.add(new FilesystemBrowserPanel());
-        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        jf.pack();
-        jf.setLocationRelativeTo(null);
-        jf.setVisible(true);
-    }
-    */
+//    public static void main(String[] args) {
+//        JFrame jf = new JFrame("Test");
+//        jf.add(new FilesystemBrowserPanel());
+//        jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//        jf.pack();
+//        jf.setLocationRelativeTo(null);
+//        jf.setVisible(true);
+//    }
 }

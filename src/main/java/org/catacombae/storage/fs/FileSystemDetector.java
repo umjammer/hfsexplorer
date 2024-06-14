@@ -18,9 +18,11 @@
 package org.catacombae.storage.fs;
 
 import java.util.LinkedList;
+
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
 import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -38,7 +40,7 @@ public class FileSystemDetector {
         long len;
         try {
             len = fsStream.length();
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             len = -1;
         }
         return detectFileSystem(fsStream, 0, len);
@@ -52,24 +54,23 @@ public class FileSystemDetector {
      *
      * @param fsStream the stream to search for known file systems.
      * @param off
-     * @param len the length of the data area to scan for file systems, or -1 if
-     * the length isn't currently known.
+     * @param len      the length of the data area to scan for file systems, or -1 if
+     *                 the length isn't currently known.
      * @return a list of matching file systems. If no matches were found, this
      * list will be empty (0 elements).
      */
-    public static FileSystemMajorType[] detectFileSystem(ReadableRandomAccessStream fsStream,
-            long off, long len) {
+    public static FileSystemMajorType[] detectFileSystem(ReadableRandomAccessStream fsStream, long off, long len) {
 
-        LinkedList<FileSystemMajorType> result = new LinkedList<FileSystemMajorType>();
+        LinkedList<FileSystemMajorType> result = new LinkedList<>();
 
-        for(FileSystemMajorType type : FileSystemMajorType.values()) {
+        for (FileSystemMajorType type : FileSystemMajorType.values()) {
             FileSystemHandlerFactory fact = type.createDefaultHandlerFactory();
-            if(fact != null) {
-                if(fact.getRecognizer().detect(fsStream, off, len))
+            if (fact != null) {
+                if (fact.getRecognizer().detect(fsStream, off, len))
                     result.add(type);
             }
         }
 
-        return result.toArray(new FileSystemMajorType[result.size()]);
+        return result.toArray(FileSystemMajorType[]::new);
     }
 }

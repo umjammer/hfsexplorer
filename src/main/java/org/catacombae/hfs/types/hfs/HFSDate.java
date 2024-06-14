@@ -21,12 +21,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSDate {
 
-    protected HFSDate() {}
+    protected HFSDate() {
+    }
 
     /**
      * Converts a HFS local date to a Java date, treated as if it had been
@@ -39,27 +41,25 @@ public class HFSDate {
      * @return a java.util.Date representation of the HFS timestamp.
      */
     public static Date localTimestampToDate(int hfsTimestamp) {
-	Date baseDate = getBaseDate(TimeZone.getDefault());
-	return new Date(baseDate.getTime() + (hfsTimestamp & 0xFFFFFFFFL)*1000);
-        /*
-	Calendar c = Calendar.getInstance(); // Get Calendar for current time zone and locale
-        c.setLenient(true);
-        c.clear();
-	c.setTimeZone(TimeZone.getDefault());
-        c.set(Calendar.YEAR, 1904);
-	c.set(Calendar.DAY_OF_YEAR, 1);
-	if(hfsPlusTimestamp < 0)
-	    c.add(Calendar.SECOND, 0x7FFFFFFF);
-	c.add(Calendar.SECOND, hfsPlusTimestamp & 0x7FFFFFFF);
-        return c.getTime();
-	*/
-	//return timestampToDate(hfsPlusTimestamp, TimeZone.getDefault());
+        Date baseDate = getBaseDate(TimeZone.getDefault());
+        return new Date(baseDate.getTime() + (hfsTimestamp & 0xffff_ffffL) * 1000);
+//        Calendar c = Calendar.getInstance(); // Get Calendar for current time zone and locale
+//        c.setLenient(true);
+//        c.clear();
+//        c.setTimeZone(TimeZone.getDefault());
+//        c.set(Calendar.YEAR, 1904);
+//        c.set(Calendar.DAY_OF_YEAR, 1);
+//        if (hfsPlusTimestamp < 0)
+//            c.add(Calendar.SECOND, 0x7FFFFFFF);
+//        c.add(Calendar.SECOND, hfsPlusTimestamp & 0x7FFFFFFF);
+//        return c.getTime();
+//        return timestampToDate(hfsPlusTimestamp, TimeZone.getDefault());
     }
 
     protected static Date getBaseDate(TimeZone tz) {
-	Calendar c = Calendar.getInstance(tz);
-	c.clear();
+        Calendar c = Calendar.getInstance(tz);
+        c.clear();
         c.set(Calendar.YEAR, 1904);
-	return c.getTime();
+        return c.getTime();
     }
 }

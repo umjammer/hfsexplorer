@@ -18,12 +18,15 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class BTNode implements PrintableStruct {
+
     protected final BTNodeDescriptor nodeDescriptor;
 
     public BTNode(byte[] data, int offset, int nodeSize) {
@@ -34,11 +37,13 @@ public abstract class BTNode implements PrintableStruct {
         return nodeDescriptor;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " nodeDescriptor:");
         nodeDescriptor.printFields(ps, prefix + "  ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTNode:");
         printFields(ps, prefix);

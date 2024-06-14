@@ -21,11 +21,13 @@ import org.catacombae.storage.ps.PartitionSystemRecognizer;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.ps.mbr.types.MBRPartitionTable;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MBRRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
             byte[] firstBlock = new byte[512];
@@ -33,10 +35,10 @@ public class MBRRecognizer implements PartitionSystemRecognizer {
 
             // Look for MBR
             MBRPartitionTable mpt = new MBRPartitionTable(firstBlock, 0);
-            if(mpt.isValid()) {
+            if (mpt.isValid()) {
                 return true;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
 
         return false;

@@ -18,23 +18,25 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
 import org.catacombae.hfs.types.hfs.CdrThdRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSCatalogFolderThread
-        extends CommonHFSCatalogThread
-        implements PrintableStruct, StructElements
-{
+public abstract class CommonHFSCatalogFolderThread extends CommonHFSCatalogThread
+        implements PrintableStruct, StructElements {
+
     public abstract int length();
+
     public abstract byte[] getBytes();
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolderThread.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -49,6 +51,7 @@ public abstract class CommonHFSCatalogFolderThread
     }
 
     private static class HFSPlusImplementation extends CommonHFSCatalogFolderThread {
+
         private final HFSPlusCatalogThread data;
 
         public HFSPlusImplementation(HFSPlusCatalogThread data) {
@@ -75,19 +78,20 @@ public abstract class CommonHFSCatalogFolderThread
             return data.getBytes();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
     }
 
     private static class HFSImplementation extends CommonHFSCatalogFolderThread {
+
         private final CdrThdRec data;
 
         public HFSImplementation(CdrThdRec data) {
@@ -106,7 +110,7 @@ public abstract class CommonHFSCatalogFolderThread
 
         @Override
         public int length() {
-            return data.length();
+            return CdrThdRec.length();
         }
 
         @Override
@@ -114,13 +118,13 @@ public abstract class CommonHFSCatalogFolderThread
             return data.getBytes();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }

@@ -18,7 +18,9 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.util.Util;
+
 
 /**
  * Record with unspecified data.
@@ -26,6 +28,7 @@ import org.catacombae.util.Util;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CommonBTGenericDataRecord extends CommonBTRecord {
+
     private final byte[] data;
 
     public CommonBTGenericDataRecord(byte[] data, int offset, int length) {
@@ -43,13 +46,14 @@ public class CommonBTGenericDataRecord extends CommonBTRecord {
         return Util.createCopy(data);
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CommonBTGenericDataRecord:");
         printFields(ps, prefix + " ");
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "data: byte[" + data.length + "] (" + data + ")");
     }
-
 }

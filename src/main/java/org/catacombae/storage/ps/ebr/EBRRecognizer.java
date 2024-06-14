@@ -20,17 +20,20 @@ package org.catacombae.storage.ps.ebr;
 import org.catacombae.storage.ps.PartitionSystemRecognizer;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class EBRRecognizer implements PartitionSystemRecognizer {
+
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
             EBRPartitionSystem ps = new EBRPartitionSystem(fsStream, offset, 512);
-            if(ps.isValid()) {
+            if (ps.isValid()) {
                 return true;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
 
         return false;

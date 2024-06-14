@@ -18,30 +18,40 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class BTIndexRecord implements PrintableStruct {
+
     private final BTKey key;
     private final byte[] index = new byte[4];
 
     public BTIndexRecord(BTKey key, byte[] data, int offset) {
-	this.key = key;
-	System.arraycopy(data, offset+key.length(), index, 0, 4);
+        this.key = key;
+        System.arraycopy(data, offset + key.length(), index, 0, 4);
     }
 
-    public BTKey getKey() { return key; }
-    public int getIndex() { return Util.readIntBE(index); }
+    public BTKey getKey() {
+        return key;
+    }
 
+    public int getIndex() {
+        return Util.readIntBE(index);
+    }
+
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.print(ps, prefix + "  ");
         ps.println(prefix + " index: " + Util.unsign(getIndex()));
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BTIndexRecord:");
         printFields(ps, prefix);

@@ -26,12 +26,13 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface FSFolder extends FSEntry {
+
     /**
      * Lists the contents of this folder as an array of the names of its subentries.
      *
      * @return the contents of this folder as an array of the names of its subentries.
      */
-    public String[] list();
+    String[] list();
 
     /**
      * Returns the contents of this folder as an array of FSEntries. This method is more expensive
@@ -40,7 +41,7 @@ public interface FSFolder extends FSEntry {
      *
      * @return the contents of this folder as an array of FSEntries.
      */
-    public FSEntry[] listEntries();
+    FSEntry[] listEntries();
 
     /**
      * Returns a named child entry in this directory, or <code>null</code> if no
@@ -50,7 +51,7 @@ public interface FSFolder extends FSEntry {
      * @return the requested child entry if existent, or <code>null</code>
      * otherwise.
      */
-    public FSEntry getChild(String childName);
+    FSEntry getChild(String childName);
 
     /**
      * Returns the valence of this folder, i.e. how many subentries this folder
@@ -58,5 +59,5 @@ public interface FSFolder extends FSEntry {
      *
      * @return the valence of this folder.
      */
-    public long getValence();
+    long getValence();
 }

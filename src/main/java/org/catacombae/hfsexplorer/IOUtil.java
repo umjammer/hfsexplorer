@@ -20,11 +20,13 @@ package org.catacombae.hfsexplorer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import org.catacombae.io.InputStreamReadable;
 import org.catacombae.io.OutputStreamWritable;
 import org.catacombae.io.Readable;
 import org.catacombae.io.RuntimeIOException;
 import org.catacombae.io.Writable;
+
 
 /**
  * IO-specific utility class.
@@ -32,12 +34,13 @@ import org.catacombae.io.Writable;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class IOUtil extends org.catacombae.util.IOUtil {
+
     public static long streamCopy(InputStream is, OutputStream os, int bufferSize) throws IOException {
         try {
             return streamCopy(new InputStreamReadable(is), new OutputStreamWritable(os), bufferSize);
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             IOException cause = e.getIOCause();
-            if(cause != null)
+            if (cause != null)
                 throw cause;
             else
                 throw e;
@@ -47,9 +50,9 @@ public class IOUtil extends org.catacombae.util.IOUtil {
     public static long streamCopy(Readable is, OutputStream os, int bufferSize) throws IOException {
         try {
             return streamCopy(is, new OutputStreamWritable(os), bufferSize);
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             IOException cause = e.getIOCause();
-            if(cause != null)
+            if (cause != null)
                 throw cause;
             else
                 throw e;
@@ -59,9 +62,9 @@ public class IOUtil extends org.catacombae.util.IOUtil {
     public static long streamCopy(InputStream is, Writable os, int bufferSize) throws IOException {
         try {
             return streamCopy(new InputStreamReadable(is), os, bufferSize);
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             IOException cause = e.getIOCause();
-            if(cause != null)
+            if (cause != null)
                 throw cause;
             else
                 throw e;
@@ -72,18 +75,18 @@ public class IOUtil extends org.catacombae.util.IOUtil {
      * Transfers the entire contents of the readable stream <code>is</code> to
      * the writable stream <code>os</code>.
      *
-     * @param is the source stream.
-     * @param os the sink stream.
+     * @param is         the source stream.
+     * @param os         the sink stream.
      * @param bufferSize the buffer size that should be used in the copy.
      * @throws RuntimeIOException if an I/O error occurred during the stream
-     * copy.
+     *                            copy.
      */
     public static long streamCopy(Readable is, Writable os, int bufferSize) throws RuntimeIOException {
         byte[] buffer = new byte[bufferSize];
         long totalBytesCopied = 0;
         int bytesRead;
 
-        while((bytesRead = is.read(buffer)) > 0) {
+        while ((bytesRead = is.read(buffer)) > 0) {
             os.write(buffer, 0, bytesRead);
             totalBytesCopied += bytesRead;
         }

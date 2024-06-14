@@ -19,19 +19,22 @@ package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
 import java.util.Date;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
-import org.catacombae.hfs.types.hfsplus.HFSPlusBSDInfo;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
 import org.catacombae.hfs.types.hfs.CdrDirRec;
 import org.catacombae.hfs.types.hfs.HFSDate;
+import org.catacombae.hfs.types.hfsplus.HFSPlusBSDInfo;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttributes, PrintableStruct, StructElements {
+
     public abstract CommonHFSCatalogNodeID getFolderID();
 
     public static CommonHFSCatalogFolder create(HFSPlusCatalogFolder data) {
@@ -48,24 +51,26 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
 
     public abstract byte[] getBytes();
 
+    @Override
     public CommonHFSCatalogNodeID getCatalogNodeID() {
         return getFolderID();
     }
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolder.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
     public static class HFSPlusImplementation extends CommonHFSCatalogFolder {
-        private HFSPlusCatalogFolder data;
+
+        private final HFSPlusCatalogFolder data;
 
         public HFSPlusImplementation(HFSPlusCatalogFolder data) {
             this.data = data;
         }
 
-        //@Deprecated
+        @Deprecated
         public HFSPlusCatalogFolder getUnderlying() {
             return data;
         }
@@ -75,13 +80,14 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
             return CommonHFSCatalogNodeID.create(data.getFolderID());
         }
 
-        @Override public long getValence() {
+        @Override
+        public long getValence() {
             return Util.unsign(data.getValence());
         }
 
         @Override
         public int length() {
-            return data.length();
+            return HFSPlusCatalogFolder.length();
         }
 
         @Override
@@ -89,119 +95,121 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
             return data.getBytes();
         }
 
-        /* @Override */
+        @Override
         public short getRecordType() {
             return data.getRecordType();
         }
 
-        /* @Override */
+        @Override
         public short getFlags() {
             return data.getFlags();
         }
 
-        /* @Override */
+        @Override
         public int getCreateDate() {
             return data.getCreateDate();
         }
 
-        /* @Override */
+        @Override
         public int getContentModDate() {
             return data.getContentModDate();
         }
 
-        /* @Override */
+        @Override
         public int getAttributeModDate() {
             return data.getAttributeModDate();
         }
 
-        /* @Override */
+        @Override
         public int getAccessDate() {
             return data.getAccessDate();
         }
 
-        /* @Override */
+        @Override
         public int getBackupDate() {
             return data.getBackupDate();
         }
 
-        /* @Override */
+        @Override
         public Date getCreateDateAsDate() {
             return data.getCreateDateAsDate();
         }
 
-        /* @Override */
+        @Override
         public Date getContentModDateAsDate() {
             return data.getContentModDateAsDate();
         }
 
-        /* @Override */
+        @Override
         public Date getAttributeModDateAsDate() {
             return data.getAttributeModDateAsDate();
         }
 
-        /* @Override */
+        @Override
         public Date getAccessDateAsDate() {
             return data.getAccessDateAsDate();
         }
 
-        /* @Override */
+        @Override
         public Date getBackupDateAsDate() {
             return data.getBackupDateAsDate();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
 
-        /* @Override */
+        @Override
         public boolean hasPermissions() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public HFSPlusBSDInfo getPermissions() {
             return data.getPermissions();
         }
 
-        /* @Override */
+        @Override
         public boolean hasCreateDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasContentModDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasAttributeModDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasAccessDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasBackupDate() {
             return true;
         }
 
+        @Override
         public CommonHFSFinderInfo getFinderInfo() {
             return CommonHFSFinderInfo.create(data);
         }
     }
 
     public static class HFSImplementation extends CommonHFSCatalogFolder {
-        private CdrDirRec data;
+
+        private final CdrDirRec data;
 
         public HFSImplementation(CdrDirRec data) {
             this.data = data;
@@ -212,13 +220,14 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
             return CommonHFSCatalogNodeID.create(data.getDirDirID());
         }
 
-        @Override public long getValence() {
+        @Override
+        public long getValence() {
             return Util.unsign(data.getDirVal());
         }
 
         @Override
         public int length() {
-            return data.length();
+            return CdrDirRec.length();
         }
 
         @Override
@@ -227,112 +236,113 @@ public abstract class CommonHFSCatalogFolder implements CommonHFSCatalogAttribut
         }
 
 
-        /* @Override */
+        @Override
         public short getRecordType() {
             return data.getCdrType();
         }
 
-        /* @Override */
+        @Override
         public short getFlags() {
             return data.getDirFlags();
         }
 
-        /* @Override */
+        @Override
         public int getCreateDate() {
             return data.getDirCrDat();
         }
 
-        /* @Override */
+        @Override
         public int getContentModDate() {
             return data.getDirMdDat();
         }
 
-        /* @Override */
+        @Override
         public int getAttributeModDate() {
             return data.getDirMdDat();
         }
 
-        /* @Override */
+        @Override
         public int getAccessDate() {
             return data.getDirMdDat();
         }
 
-        /* @Override */
+        @Override
         public int getBackupDate() {
             return data.getDirBkDat();
         }
 
-        /* @Override */
+        @Override
         public Date getCreateDateAsDate() {
             return HFSDate.localTimestampToDate(getCreateDate());
         }
 
-        /* @Override */
+        @Override
         public Date getContentModDateAsDate() {
             return HFSDate.localTimestampToDate(getContentModDate());
         }
 
-        /* @Override */
+        @Override
         public Date getAttributeModDateAsDate() {
             return HFSDate.localTimestampToDate(getAttributeModDate());
         }
 
-        /* @Override */
+        @Override
         public Date getAccessDateAsDate() {
             return HFSDate.localTimestampToDate(getAccessDate());
         }
 
-        /* @Override */
+        @Override
         public Date getBackupDateAsDate() {
             return HFSDate.localTimestampToDate(getBackupDate());
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "data:");
             data.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return data.getStructElements();
         }
 
-        /* @Override */
+        @Override
         public boolean hasPermissions() {
             return false;
         }
 
-        /* @Override */
+        @Override
         public HFSPlusBSDInfo getPermissions() {
             throw new UnsupportedOperationException("Not supported.");
         }
 
-        /* @Override */
+        @Override
         public boolean hasAccessDate() {
             return false;
         }
 
-        /* @Override */
+        @Override
         public boolean hasBackupDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasCreateDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasContentModDate() {
             return true;
         }
 
-        /* @Override */
+        @Override
         public boolean hasAttributeModDate() {
             return false;
         }
 
+        @Override
         public CommonHFSFinderInfo getFinderInfo() {
             return CommonHFSFinderInfo.create(data);
         }

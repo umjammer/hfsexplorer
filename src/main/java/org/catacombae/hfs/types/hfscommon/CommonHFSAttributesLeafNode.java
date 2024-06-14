@@ -19,42 +19,33 @@ package org.catacombae.hfs.types.hfscommon;
 
 import org.catacombae.hfs.types.hfsplus.HFSPlusAttributesLeafRecord;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSAttributesLeafNode
-        extends CommonBTKeyedNode<CommonHFSAttributesLeafRecord>
-{
-    protected CommonHFSAttributesLeafNode(byte[] data, int offset, int nodeSize,
-            FSType type)
-    {
+public abstract class CommonHFSAttributesLeafNode extends CommonBTKeyedNode<CommonHFSAttributesLeafRecord> {
+
+    protected CommonHFSAttributesLeafNode(byte[] data, int offset, int nodeSize, FSType type) {
         super(data, offset, nodeSize, type);
     }
 
     public CommonHFSAttributesLeafRecord[] getLeafRecords() {
-        return ic.records.toArray(
-                new CommonHFSAttributesLeafRecord[ic.records.size()]);
+        return ic.records.toArray(CommonHFSAttributesLeafRecord[]::new);
     }
 
-    public static CommonHFSAttributesLeafNode createHFSPlus(byte[] data,
-            int offset, int nodeSize)
-    {
+    public static CommonHFSAttributesLeafNode createHFSPlus(byte[] data, int offset, int nodeSize) {
         return new HFSPlusImplementation(data, offset, nodeSize);
     }
 
-    public static class HFSPlusImplementation
-            extends CommonHFSAttributesLeafNode
-    {
+    public static class HFSPlusImplementation extends CommonHFSAttributesLeafNode {
+
         public HFSPlusImplementation(byte[] data, int offset, int nodeSize) {
             super(data, offset, nodeSize, FSType.HFS_PLUS);
         }
 
         @Override
-        protected CommonHFSAttributesLeafRecord createBTRecord(int recordNumber,
-                byte[] data, int offset, int length)
-        {
-            final HFSPlusAttributesLeafRecord record =
-                    new HFSPlusAttributesLeafRecord(data, offset);
+        protected CommonHFSAttributesLeafRecord createBTRecord(int recordNumber, byte[] data, int offset, int length) {
+            HFSPlusAttributesLeafRecord record = new HFSPlusAttributesLeafRecord(data, offset);
 
             return CommonHFSAttributesLeafRecord.create(record);
         }

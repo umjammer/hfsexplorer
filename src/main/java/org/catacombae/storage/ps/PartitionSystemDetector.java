@@ -18,9 +18,11 @@
 package org.catacombae.storage.ps;
 
 import java.util.LinkedList;
+
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
 import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * A detector for known partition systems (see PartitionSystemType for a list
@@ -41,12 +43,9 @@ public class PartitionSystemDetector {
      * @return a list of matching partition systems. If no matches were found,
      * this list will be empty (0 elements).
      */
-    public static PartitionSystemType[] detectPartitionSystem(
-            DataLocator inputDataLocator, boolean includeOverridden)
-    {
+    public static PartitionSystemType[] detectPartitionSystem(DataLocator inputDataLocator, boolean includeOverridden) {
         ReadableRandomAccessStream dlStream = inputDataLocator.createReadOnlyFile();
-        PartitionSystemType[] result =
-                detectPartitionSystem(dlStream, includeOverridden);
+        PartitionSystemType[] result = detectPartitionSystem(dlStream, includeOverridden);
         dlStream.close();
         return result;
     }
@@ -63,12 +62,11 @@ public class PartitionSystemDetector {
      * this list will be empty (0 elements).
      */
     public static PartitionSystemType[] detectPartitionSystem(
-            ReadableRandomAccessStream psStream, boolean includeOverridden)
-    {
+            ReadableRandomAccessStream psStream, boolean includeOverridden) {
         long len;
         try {
             len = psStream.length();
-        } catch(RuntimeIOException e) {
+        } catch (RuntimeIOException e) {
             len = -1;
         }
         return detectPartitionSystem(psStream, 0, len, includeOverridden);
@@ -82,66 +80,60 @@ public class PartitionSystemDetector {
      * false positives.
      *
      * @param psStream the stream to probe for known partition systems.
-     * @param off offset in the stream to start probing at.
-     * @param len the length of the data area to probe for partition systems, or
-     * -1 if the length isn't currently known.
+     * @param off      offset in the stream to start probing at.
+     * @param len      the length of the data area to probe for partition systems, or
+     *                 -1 if the length isn't currently known.
      * @return a list of matching partition systems. If no matches were found,
      * this list will be empty (0 elements).
      */
     public static PartitionSystemType[] detectPartitionSystem(
-            ReadableRandomAccessStream psStream, long off, long len,
-            boolean includeOverridden)
-    {
+            ReadableRandomAccessStream psStream, long off, long len, boolean includeOverridden) {
 
-        LinkedList<PartitionSystemType> rawResult =
-                new LinkedList<PartitionSystemType>();
+        LinkedList<PartitionSystemType> rawResult = new LinkedList<>();
 
-        for(PartitionSystemType type : PartitionSystemType.values()) {
-            if(!type.isTopLevelCapable()) {
+        for (PartitionSystemType type : PartitionSystemType.values()) {
+            if (!type.isTopLevelCapable()) {
                 continue;
             }
 
-            PartitionSystemHandlerFactory fact =
-                    type.createDefaultHandlerFactory();
+            PartitionSystemHandlerFactory fact = type.createDefaultHandlerFactory();
 
-            if(fact != null) {
-                if(fact.getRecognizer().detect(psStream, off, len))
+            if (fact != null) {
+                if (fact.getRecognizer().detect(psStream, off, len))
                     rawResult.add(type);
             }
         }
 
-        /* Clean out overridden types from result. */
+        // Clean out overridden types from result.
         LinkedList<PartitionSystemType> result;
-        if(includeOverridden) {
+        if (includeOverridden) {
             result = rawResult;
-        }
-        else {
-            result = new LinkedList<PartitionSystemType>();
+        } else {
+            result = new LinkedList<>();
 
-            for(PartitionSystemType type : rawResult) {
+            for (PartitionSystemType type : rawResult) {
                 boolean isOverridden = false;
 
-                for(PartitionSystemType type2 : rawResult) {
-                    for(PartitionSystemType overriddenType :
-                        type2.getOverriddenPartitionSystems())
-                    {
-                        if(overriddenType == type) {
+                for (PartitionSystemType type2 : rawResult) {
+                    for (PartitionSystemType overriddenType :
+                            type2.getOverriddenPartitionSystems()) {
+                        if (overriddenType == type) {
                             isOverridden = true;
                             break;
                         }
                     }
 
-                    if(isOverridden) {
+                    if (isOverridden) {
                         break;
                     }
                 }
 
-                if(!isOverridden) {
+                if (!isOverridden) {
                     result.add(type);
                 }
             }
         }
 
-        return result.toArray(new PartitionSystemType[result.size()]);
+        return result.toArray(PartitionSystemType[]::new);
     }
 }

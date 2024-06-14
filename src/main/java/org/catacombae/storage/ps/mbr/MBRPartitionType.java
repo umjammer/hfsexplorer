@@ -18,7 +18,10 @@
 package org.catacombae.storage.ps.mbr;
 
 import java.util.HashMap;
+import java.util.Objects;
+
 import org.catacombae.storage.ps.PartitionType;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -74,12 +77,12 @@ public enum MBRPartitionType {
     LINUX_NATIVE((byte) 0x83, PartitionType.LINUX_NATIVE), // Used for reiserfs, ext2, ext3 and many more
     UNKNOWN;
 
-    private static HashMap<Byte,MBRPartitionType> reverseLookupTable;
+    private static HashMap<Byte, MBRPartitionType> reverseLookupTable;
     private final Byte mbrType;
     private final PartitionType enumType;
 
-    private MBRPartitionType(byte mbrType, PartitionType enumType) {
-        if(enumType == null)
+    MBRPartitionType(byte mbrType, PartitionType enumType) {
+        if (enumType == null)
             throw new IllegalArgumentException("enumType == null");
         this.mbrType = mbrType;
         this.enumType = enumType;
@@ -87,7 +90,7 @@ public enum MBRPartitionType {
         addReverseLookupReference(mbrType, this);
     }
 
-    private MBRPartitionType() {
+    MBRPartitionType() {
         this.mbrType = null;
         this.enumType = null;
     }
@@ -101,23 +104,21 @@ public enum MBRPartitionType {
     }
 
     private static void addReverseLookupReference(byte b, MBRPartitionType t) {
-        if(reverseLookupTable == null)
-            reverseLookupTable = new HashMap<Byte,MBRPartitionType>();
+        if (reverseLookupTable == null)
+            reverseLookupTable = new HashMap<>();
         reverseLookupTable.put(b, t);
     }
 
     /**
      * Does a reverse lookup from an MBR type byte to a MBRPartitionType.
+     *
      * @param mbrType
      * @return the MBRPartitionType corresponding to <code>mbrType</code>, or
      * <code>null</code> if the
      */
     public static MBRPartitionType fromMBRType(byte mbrType) {
         MBRPartitionType type = reverseLookupTable.get(mbrType);
-        if(type == null)
-            return UNKNOWN;
-        else
-            return type;
+        return Objects.requireNonNullElse(type, UNKNOWN);
     }
 }
 

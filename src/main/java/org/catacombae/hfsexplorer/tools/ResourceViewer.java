@@ -17,14 +17,15 @@
 
 package org.catacombae.hfsexplorer.tools;
 
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
+
 import org.catacombae.hfsexplorer.GUIUtil;
 import org.catacombae.hfsexplorer.PrefixFileFilter;
 import org.catacombae.hfsexplorer.fs.AppleSingleHandler;
@@ -34,11 +35,20 @@ import org.catacombae.hfsexplorer.types.applesingle.EntryDescriptor;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+import static java.awt.Toolkit.getDefaultToolkit;
+import static java.lang.System.getLogger;
+import static javax.swing.KeyStroke.getKeyStroke;
+
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ResourceViewer extends javax.swing.JFrame {
+
+    private static final Logger logger = getLogger(ResourceViewer.class.getName());
+
     private final ResourceForkViewPanel resourceForkViewPanel;
+
     /** Creates new form ResourceViewer */
     public ResourceViewer() {
         super("Resource Viewer");
@@ -47,11 +57,11 @@ public class ResourceViewer extends javax.swing.JFrame {
 
         initComponents();
 
-        openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        openMenuItem.setAccelerator(getKeyStroke(KeyEvent.VK_O, getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         backgroundPanel.add(resourceForkViewPanel);
 
         openMenuItem.addActionListener(new ActionListener() {
-            private JFileChooser jfc = new JFileChooser();
+            private final JFileChooser jfc = new JFileChooser();
 
             {
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -59,12 +69,12 @@ public class ResourceViewer extends javax.swing.JFrame {
                 jfc.setFileFilter(new PrefixFileFilter("AppleDouble resource forks (._*)", "._"));
             }
 
+            @Override
             public void actionPerformed(ActionEvent e) {
-                if(jfc.showOpenDialog(ResourceViewer.this) == JFileChooser.APPROVE_OPTION) {
+                if (jfc.showOpenDialog(ResourceViewer.this) == JFileChooser.APPROVE_OPTION) {
                     loadFile(jfc.getSelectedFile());
                 }
             }
-
         });
     }
 
@@ -76,61 +86,60 @@ public class ResourceViewer extends javax.swing.JFrame {
             fileStream = new ReadableFileStream(f);
 
             // Detect AppleSingle format
-            //System.err.println("Detecting AppleSingle format...");
-            if(AppleSingleHandler.detectFileFormat(fileStream, 0) != null) {
+//            logger.log(Level.DEBUG, "Detecting AppleSingle format...");
+            if (AppleSingleHandler.detectFileFormat(fileStream, 0) != null) {
                 try {
-                    //System.err.println("AppleSingle format found! Creating handler...");
+//                    logger.log(Level.DEBUG, "AppleSingle format found! Creating handler...");
                     AppleSingleHandler handler = new AppleSingleHandler(fileStream);
-                    //System.err.println("Getting resource entry descriptor...");
+//                    logger.log(Level.DEBUG, "Getting resource entry descriptor...");
                     EntryDescriptor desc = handler.getResourceEntryDescriptor();
-                    if(desc != null) {
-                        //System.err.println("Getting entry stream...");
+                    if (desc != null) {
+//                        logger.log(Level.DEBUG, "Getting entry stream...");
                         fileStream = handler.getEntryStream(desc);
-                        //System.err.println("done!");
+//                        logger.log(Level.DEBUG, "done!");
                     }
-                    //else
-                    //    System.err.println("No resource entry found in AppleSingle structure.");
-                } catch(Exception e) {
-                    System.err.println("Unhandled exception while detecting AppleSingle format:");
-                    e.printStackTrace();
+//                    else
+//                        logger.log(Level.DEBUG, "No resource entry found in AppleSingle structure.");
+                } catch (Exception e) {
+                    logger.log(Level.DEBUG, "Unhandled exception while detecting AppleSingle format:");
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
-            }
-            else {
+            } else {
                 int res = JOptionPane.showConfirmDialog(this, "Invalid AppleDouble file.\n" +
-                        "Do you want to attempt to load the file as raw resource fork data?",
+                                "Do you want to attempt to load the file as raw resource fork data?",
                         "Invalid file format", JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE);
-                if(res != JOptionPane.YES_OPTION) {
+                if (res != JOptionPane.YES_OPTION) {
                     fileStream.close();
                     return;
                 }
             }
 
-            //System.err.println("Creating new ResourceForkReader...");
+//            logger.log(Level.DEBUG, "Creating new ResourceForkReader...");
             reader = new ResourceForkReader(fileStream);
-            //System.err.println("Loading resource fork into panel...");
+//            logger.log(Level.DEBUG, "Loading resource fork into panel...");
             resourceForkViewPanel.loadResourceFork(reader);
-            //System.err.println("done!");
+//            logger.log(Level.DEBUG, "done!");
 
             setTitle("Resource Viewer - [" + f.getName() + "]");
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
             GUIUtil.displayExceptionDialog(e, this);
 
             resourceForkViewPanel.loadResourceFork(null);
-            if(reader != null)
+            if (reader != null)
                 reader.close();
-            if(fileStream != null)
+            if (fileStream != null)
                 fileStream.close();
         }
     }
 
-    /** This method is called from within the constructor to
+    /**
+     * This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -155,44 +164,45 @@ public class ResourceViewer extends javax.swing.JFrame {
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(backgroundPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(backgroundPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(backgroundPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(backgroundPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     /**
-    * @param args the command line arguments
-    */
-    public static void main(final String args[]) {
-        if(System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        if (System.getProperty("os.name").toLowerCase().startsWith("mac os x"))
             System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-        try {
-            /*
-             * Description of look&feels:
-             *   http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
-             */
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-        } catch(Exception e) {
-            //It's ok. Non-critical.
+        if (System.getProperty("swing.defaultlaf") == null) {
+
+           try {
+                //
+                // Description of look&feels:
+                // http://java.sun.com/docs/books/tutorial/uiswing/misc/plaf.html
+                //
+                javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // It's ok. Non-critical.
+            }
         }
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ResourceViewer rv = new ResourceViewer();
-                rv.pack();
-                rv.setLocationRelativeTo(null);
-                rv.setVisible(true);
+        java.awt.EventQueue.invokeLater(() -> {
+            ResourceViewer rv = new ResourceViewer();
+            rv.pack();
+            rv.setLocationRelativeTo(null);
+            rv.setVisible(true);
 
-                if(args.length > 0)
-                    rv.loadFile(new File(args[0]));
-            }
+            if (args.length > 0)
+                rv.loadFile(new File(args[0]));
         });
     }
 
@@ -202,5 +212,4 @@ public class ResourceViewer extends javax.swing.JFrame {
     private javax.swing.JMenu openMenu;
     private javax.swing.JMenuItem openMenuItem;
     // End of variables declaration//GEN-END:variables
-
 }

@@ -19,22 +19,25 @@ package org.catacombae.storage.ps;
 
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface PartitionSystemRecognizer {
-    /* TODO: detect should take a sectorSize argument... */
+
+    // TODO: detect should take a sectorSize argument...
+
     /**
      * Detects whether there is a partition system located at the specified
      * offset in fsStream. Which partition system is being detected is dependent
      * on the context.
      *
      * @param fsStream
-     * @param offset the offset in fsStream to the start of the file system.
-     * @param length this parameter may be set to -1 if the length isn't
-     * currently known.
+     * @param offset   the offset in fsStream to the start of the file system.
+     * @param length   this parameter may be set to -1 if the length isn't
+     *                 currently known.
      * @return <code>true</code> if a partition system can be detected at the
      * specified offset in fsStream, and <code>false</code> otherwise.
      */
-    public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
+    boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
 }

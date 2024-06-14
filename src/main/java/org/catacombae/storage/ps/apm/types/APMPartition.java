@@ -18,17 +18,27 @@
 package org.catacombae.storage.ps.apm.types;
 
 import org.catacombae.util.Util;
+
 import java.io.PrintStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionType;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class APMPartition implements Partition {
+
+    private static final Logger logger = getLogger(APMPartition.class.getName());
+
     public static final short APM_PARTITION_SIGNATURE = 0x504D;
     public static final short APM_PARTITION_OLD_SIGNATURE = 0x5453;
 
@@ -76,7 +86,7 @@ public class APMPartition implements Partition {
     private final byte[] pmBootEntry2 = new byte[4];
     private final byte[] pmBootCksum = new byte[4];
     private final byte[] pmProcessor = new byte[16];
-    private final byte[] pmPad = new byte[2*188];
+    private final byte[] pmPad;
 
     private final int blockSize;
 
@@ -99,7 +109,8 @@ public class APMPartition implements Partition {
         System.arraycopy(data, offset + 112, pmBootEntry2, 0, 4);
         System.arraycopy(data, offset + 116, pmBootCksum, 0, 4);
         System.arraycopy(data, offset + 120, pmProcessor, 0, 16);
-        System.arraycopy(data, offset + 136, pmPad, 0, 2 * 188);
+        pmPad = new byte[blockSize - 136];
+        System.arraycopy(data, offset + 136, pmPad, 0, blockSize - 136);
 
         this.blockSize = blockSize;
     }
@@ -107,58 +118,43 @@ public class APMPartition implements Partition {
     /**
      * Creates a new APMPartition with the specified parameters.
      *
-     * @param partitionMapBlockCount
-     *      The number of blocks in the partition map that contains this
-     *      partition.
-     * @param partitionStartBlock
-     *      The first block of the partition's data.
-     * @param partitionBlockCount
-     *      The number of blocks in the partition.
-     * @param partitionName
-     *      The name of the partition.
-     * @param partitionType
-     *      The type of the partition (Apple_HFS, Apple_partition_map, ...).
-     * @param partitionStatus
-     *      The status bits of the partition (see source code for more info).
-     * @param blockSize
-     *      The block size of the device, as specified in the Driver Descriptor
-     *      Record.
+     * @param partitionMapBlockCount The number of blocks in the partition map that contains this
+     *                               partition.
+     * @param partitionStartBlock    The first block of the partition's data.
+     * @param partitionBlockCount    The number of blocks in the partition.
+     * @param partitionName          The name of the partition.
+     * @param partitionType          The type of the partition (Apple_HFS, Apple_partition_map, ...).
+     * @param partitionStatus        The status bits of the partition (see source code for more info).
+     * @param blockSize              The block size of the device, as specified in the Driver Descriptor
+     *                               Record.
      */
     public APMPartition(long partitionMapBlockCount, long partitionStartBlock,
-            long partitionBlockCount, String partitionName,
-            String partitionType, int partitionStatus, int blockSize) {
+                        long partitionBlockCount, String partitionName,
+                        String partitionType, int partitionStatus, int blockSize) {
 
-        /* Input check: Number ranges. */
+        // Input check: Number ranges.
 
-        if(partitionMapBlockCount < 0 || partitionMapBlockCount >= 0xFFFFFFFFL)
-            throw new IllegalArgumentException("'partitionMapBlockCount' out " +
-                    "of range: " + partitionMapBlockCount);
+        if (partitionMapBlockCount < 0 || partitionMapBlockCount >= 0xFFFFFFFFL)
+            throw new IllegalArgumentException("'partitionMapBlockCount' out of range: " + partitionMapBlockCount);
 
-        if(partitionStartBlock < 0 || partitionStartBlock >= 0xFFFFFFFFL)
-            throw new IllegalArgumentException("'partitionStartBlock' out of " +
-                    "range: " + partitionStartBlock);
+        if (partitionStartBlock < 0 || partitionStartBlock >= 0xFFFFFFFFL)
+            throw new IllegalArgumentException("'partitionStartBlock' out of range: " + partitionStartBlock);
 
-        if(partitionBlockCount < 0 || partitionBlockCount >= 0xFFFFFFFFL)
-            throw new IllegalArgumentException("'partitionBlockCount' out of " +
-                    "range: " + partitionBlockCount);
+        if (partitionBlockCount < 0 || partitionBlockCount >= 0xFFFFFFFFL)
+            throw new IllegalArgumentException("'partitionBlockCount' out of range: " + partitionBlockCount);
 
         int partitionNameEncodedLength =
                 partitionName.codePointCount(0, partitionName.length());
-        if(partitionNameEncodedLength < 0 ||
-                partitionNameEncodedLength > pmPartName.length)
-            throw new IllegalArgumentException("'partitionName' string too " +
-                    "long: " + partitionName.length());
+        if (partitionNameEncodedLength < 0 || partitionNameEncodedLength > pmPartName.length)
+            throw new IllegalArgumentException("'partitionName' string too long: " + partitionName.length());
 
-        /* Input check: String lengths. */
+        // Input check: String lengths.
 
-        int partitionTypeEncodedLength =
-                partitionType.codePointCount(0, partitionType.length());
-        if(partitionTypeEncodedLength < 0 ||
-                partitionTypeEncodedLength > pmParType.length)
-            throw new IllegalArgumentException("'partitionType' string too " +
-                    "long: " + partitionType.length());
+        int partitionTypeEncodedLength = partitionType.codePointCount(0, partitionType.length());
+        if (partitionTypeEncodedLength < 0 || partitionTypeEncodedLength > pmParType.length)
+            throw new IllegalArgumentException("'partitionType' string too long: " + partitionType.length());
 
-        /* Filling in the APMPartition fields. */
+        // Filling in the APMPartition fields.
 
         Util.arrayPutBE(pmSig, 0, APM_PARTITION_SIGNATURE);
         Arrays.fill(pmSigPad, (byte) 0);
@@ -167,160 +163,312 @@ public class APMPartition implements Partition {
         Util.arrayPutBE(pmPartBlkCnt, 0, (int) partitionBlockCount);
 
         try {
-            Util.encodeASCIIString(partitionName, 0, pmPartName, 0,
-                    partitionNameEncodedLength);
-            if(partitionNameEncodedLength < pmPartName.length)
-                Arrays.fill(pmPartName, partitionNameEncodedLength,
-                        pmPartName.length, (byte) 0);
-        } catch(IllegalArgumentException e) {
-            throw new IllegalArgumentException("'partitionName' has illegal " +
-                    "(non-ASCII) characters.");
+            Util.encodeASCIIString(partitionName, 0, pmPartName, 0, partitionNameEncodedLength);
+            if (partitionNameEncodedLength < pmPartName.length)
+                Arrays.fill(pmPartName, partitionNameEncodedLength, pmPartName.length, (byte) 0);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("'partitionName' has illegal (non-ASCII) characters.");
         }
 
         try {
-            Util.encodeASCIIString(partitionType, 0, pmParType, 0,
-                    partitionTypeEncodedLength);
-            if(partitionTypeEncodedLength < pmParType.length)
-                Arrays.fill(pmParType, partitionTypeEncodedLength,
-                        pmParType.length, (byte) 0);
-        } catch(IllegalArgumentException e) {
-            throw new IllegalArgumentException("'partitionType' has illegal " +
-                    "(non-ASCII) characters.");
+            Util.encodeASCIIString(partitionType, 0, pmParType, 0, partitionTypeEncodedLength);
+            if (partitionTypeEncodedLength < pmParType.length)
+                Arrays.fill(pmParType, partitionTypeEncodedLength, pmParType.length, (byte) 0);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("'partitionType' has illegal (non-ASCII) characters.");
         }
 
-        Util.arrayPutBE(pmLgDataStart, 0, (int) 0);
+        Util.arrayPutBE(pmLgDataStart, 0, 0);
         Util.arrayPutBE(pmDataCnt, 0, (int) partitionBlockCount);
         Util.arrayPutBE(pmPartStatus, 0, partitionStatus);
-        Util.arrayPutBE(pmLgBootStart, 0, (int) 0);
-        Util.arrayPutBE(pmBootSize, 0, (int) 0);
-        Util.arrayPutBE(pmBootAddr, 0, (int) 0);
-        Util.arrayPutBE(pmBootAddr2, 0, (int) 0);
-        Util.arrayPutBE(pmBootEntry, 0, (int) 0);
-        Util.arrayPutBE(pmBootEntry2, 0, (int) 0);
-        Util.arrayPutBE(pmBootCksum, 0, (int) 0);
+        Util.arrayPutBE(pmLgBootStart, 0, 0);
+        Util.arrayPutBE(pmBootSize, 0, 0);
+        Util.arrayPutBE(pmBootAddr, 0, 0);
+        Util.arrayPutBE(pmBootAddr2, 0, 0);
+        Util.arrayPutBE(pmBootEntry, 0, 0);
+        Util.arrayPutBE(pmBootEntry2, 0, 0);
+        Util.arrayPutBE(pmBootCksum, 0, 0);
         Arrays.fill(pmProcessor, (byte) 0);
+        pmPad = new byte[blockSize - 136];
         Arrays.fill(pmPad, (byte) 0);
 
         this.blockSize = blockSize;
     }
 
-    public static int structSize() { return 512; }
+    public int size() { return blockSize; }
+
     // Defined in Partition
-    public long getStartOffset() { return ( Util.unsign(getPmPyPartStart())+
-					    Util.unsign(getPmLgDataStart()) )*blockSize; }
+    @Override
+    public long getStartOffset() {
+        return (getPmPyPartStart() + getPmLgDataStart()) * blockSize;
+    }
 
+    @Override
     public long getLength() {
-        final long dataStartSector = Util.unsign(getPmLgDataStart());
-        long dataSectors = Util.unsign(getPmDataCnt());
+        long dataStartSector = getPmLgDataStart();
+        long dataSectors = getPmDataCnt();
 
-        if(dataSectors == 0) {
-            /*
-             * In case 0 is recorded in 'pmDataCnt' we derive the data size from
-             * the size of the partition and the offset of the boot data.
-             */
-            final long partitionSectors = Util.unsign(getPmPartBlkCnt());
-            final long bootStartSector = Util.unsign(getPmLgBootStart());
+        if (dataSectors == 0) {
+            //
+            // In case 0 is recorded in 'pmDataCnt' we derive the data size from
+            // the size of the partition and the offset of the boot data.
+            //
+            long partitionSectors = getPmPartBlkCnt();
+            long bootStartSector = getPmLgBootStart();
 
-            dataSectors =
-                    ((bootStartSector > dataStartSector) ? bootStartSector :
-                    partitionSectors) - dataStartSector;
+            dataSectors = ((bootStartSector > dataStartSector) ? bootStartSector : partitionSectors) - dataStartSector;
         }
 
         return dataSectors * blockSize;
     }
 
-    public PartitionType getType() { return convertPartitionType(getPmParType()); }
+    @Override
+    public PartitionType getType() {
+        return convertPartitionType(getPmParType());
+    }
 
     /** partition signature */
-    public short getPmSig()        { return Util.readShortBE(pmSig); }
+    public short getPmSig() {
+        return Util.readShortBE(pmSig);
+    }
+
     /** reserved */
-    public short getPmSigPad()     { return Util.readShortBE(pmSigPad); }
+    public short getPmSigPad() {
+        return Util.readShortBE(pmSigPad);
+    }
+
     /** number of blocks in partition map */
-    public int getPmMapBlkCnt()    { return Util.readIntBE(pmMapBlkCnt); }
+    public long getPmMapBlkCnt() {
+        return Util.unsign(getPmMapBlkCntRaw());
+    }
+
     /** first physical block of partition */
-    public int getPmPyPartStart()  { return Util.readIntBE(pmPyPartStart); }
+    public long getPmPyPartStart() {
+        return Util.unsign(getPmPyPartStartRaw());
+    }
+
     /** number of blocks in partition */
-    public int getPmPartBlkCnt()   { return Util.readIntBE(pmPartBlkCnt); }
+    public long getPmPartBlkCnt() {
+        return Util.unsign(getPmPartBlkCntRaw());
+    }
+
     /** partition name */
-    public byte[] getPmPartName()  { return Util.createCopy(pmPartName); }
+    public byte[] getPmPartName() {
+        return Util.createCopy(pmPartName);
+    }
+
     /** partition type */
-    public byte[] getPmParType()   { return Util.createCopy(pmParType); }
+    public byte[] getPmParType() {
+        return Util.createCopy(pmParType);
+    }
+
     /** first logical block of data area */
-    public int getPmLgDataStart()  { return Util.readIntBE(pmLgDataStart); }
+    public long getPmLgDataStart() {
+        return Util.unsign(getPmLgDataStartRaw());
+    }
+
     /** number of blocks in data area */
-    public int getPmDataCnt()      { return Util.readIntBE(pmDataCnt); }
+    public long getPmDataCnt() {
+        return Util.unsign(getPmDataCntRaw());
+    }
+
     /** partition status information */
-    public int getPmPartStatus()   { return Util.readIntBE(pmPartStatus); }
+    public int getPmPartStatus() {
+        return Util.readIntBE(pmPartStatus);
+    }
+
     /** first logical block of boot code */
-    public int getPmLgBootStart()  { return Util.readIntBE(pmLgBootStart); }
+    public long getPmLgBootStart() {
+        return Util.unsign(getPmLgBootStartRaw());
+    }
+
     /** size of boot code, in bytes */
-    public int getPmBootSize()     { return Util.readIntBE(pmBootSize); }
+    public long getPmBootSize() {
+        return Util.unsign(getPmBootSizeRaw());
+    }
+
     /** boot code load address */
-    public int getPmBootAddr()     { return Util.readIntBE(pmBootAddr); }
+    public long getPmBootAddr() {
+        return Util.unsign(getPmBootAddrRaw());
+    }
+
     /** reserved */
-    public int getPmBootAddr2()    { return Util.readIntBE(pmBootAddr2); }
+    public long getPmBootAddr2() {
+        return Util.unsign(getPmBootAddr2Raw());
+    }
+
     /** boot code entry point */
-    public int getPmBootEntry()    { return Util.readIntBE(pmBootEntry); }
+    public long getPmBootEntry() {
+        return Util.unsign(getPmBootEntryRaw());
+    }
+
     /** reserved */
-    public int getPmBootEntry2()   { return Util.readIntBE(pmBootEntry2); }
+    public long getPmBootEntry2() {
+        return Util.unsign(getPmBootEntry2Raw());
+    }
+
     /** boot code checksum */
-    public int getPmBootCksum()    { return Util.readIntBE(pmBootCksum); }
+    public int getPmBootCksum() {
+        return Util.readIntBE(pmBootCksum);
+    }
+
     /** processor type */
-    public byte[] getPmProcessor() { return Util.createCopy(pmProcessor); }
+    public byte[] getPmProcessor() {
+        return Util.createCopy(pmProcessor);
+    }
+
     /** reserved */
-    public short[] getPmPad()      { return Util.readShortArrayBE(pmPad); }
+    public short[] getPmPad() {
+        return Util.readShortArrayBE(pmPad);
+    }
+
+    /** number of blocks in partition map (raw 32-bit value) */
+    public int getPmMapBlkCntRaw() {
+        return Util.readIntBE(pmMapBlkCnt);
+    }
+
+    /** first physical block of partition (raw 32-bit value) */
+    public int getPmPyPartStartRaw() {
+        return Util.readIntBE(pmPyPartStart);
+    }
+
+    /** number of blocks in partition (raw 32-bit value) */
+    public int getPmPartBlkCntRaw() {
+        return Util.readIntBE(pmPartBlkCnt);
+    }
+
+    /** first logical block of data area (raw 32-bit value) */
+    public int getPmLgDataStartRaw() {
+        return Util.readIntBE(pmLgDataStart);
+    }
+
+    /** number of blocks in data area (raw 32-bit value) */
+    public int getPmDataCntRaw() {
+        return Util.readIntBE(pmDataCnt);
+    }
+
+    /** first logical block of boot code (raw 32-bit value) */
+    public int getPmLgBootStartRaw() {
+        return Util.readIntBE(pmLgBootStart);
+    }
+
+    /** size of boot code, in bytes (raw 32-bit value) */
+    public int getPmBootSizeRaw() {
+        return Util.readIntBE(pmBootSize);
+    }
+
+    /** boot code load address (raw 32-bit value) */
+    public int getPmBootAddrRaw() {
+        return Util.readIntBE(pmBootAddr);
+    }
+
+    /** reserved (raw 32-bit value) */
+    public int getPmBootAddr2Raw() {
+        return Util.readIntBE(pmBootAddr2);
+    }
+
+    /** boot code entry point (raw 32-bit value) */
+    public int getPmBootEntryRaw() {
+        return Util.readIntBE(pmBootEntry);
+    }
+
+    /** reserved (raw 32-bit value) */
+    public int getPmBootEntry2Raw() {
+        return Util.readIntBE(pmBootEntry2);
+    }
 
     private static boolean getBit(byte[] array, int bit) {
-        final long bitLength = ((long) array.length) << 3;
-        if(bit < 0 || bit >= bitLength)
+        long bitLength = ((long) array.length) << 3;
+        if (bit < 0 || bit >= bitLength)
             throw new IllegalArgumentException("'bit' out of range: " + bit);
 
-        final int arrayIndex = (int)((bitLength - 1 - bit) >>> 3);
-        final int bitIndex = (bit & 0x7);
+        int arrayIndex = (int) ((bitLength - 1 - bit) >>> 3);
+        int bitIndex = (bit & 0x7);
 
         return (array[arrayIndex] & (0x1 << bitIndex)) != 0;
     }
 
-    public boolean getPmPartStatusValid() { return getBit(pmPartStatus, 0); }
-    public boolean getPmPartStatusAllocated() { return getBit(pmPartStatus, 1); }
-    public boolean getPmPartStatusInUse() { return getBit(pmPartStatus, 2); }
-    public boolean getPmPartStatusBootable() { return getBit(pmPartStatus, 3); }
-    public boolean getPmPartStatusReadable() { return getBit(pmPartStatus, 4); }
-    public boolean getPmPartStatusWritable() { return getBit(pmPartStatus, 5); }
-    public boolean getPmPartStatusOSPicCode() { return getBit(pmPartStatus, 6); }
-    public boolean getPmPartStatusOSSpecific1() { return getBit(pmPartStatus, 7); }
-    public boolean getPmPartStatusOSSpecific2() { return getBit(pmPartStatus, 8); }
+    public boolean getPmPartStatusValid() {
+        return getBit(pmPartStatus, 0);
+    }
+
+    public boolean getPmPartStatusAllocated() {
+        return getBit(pmPartStatus, 1);
+    }
+
+    public boolean getPmPartStatusInUse() {
+        return getBit(pmPartStatus, 2);
+    }
+
+    public boolean getPmPartStatusBootable() {
+        return getBit(pmPartStatus, 3);
+    }
+
+    public boolean getPmPartStatusReadable() {
+        return getBit(pmPartStatus, 4);
+    }
+
+    public boolean getPmPartStatusWritable() {
+        return getBit(pmPartStatus, 5);
+    }
+
+    public boolean getPmPartStatusOSPicCode() {
+        return getBit(pmPartStatus, 6);
+    }
+
+    public boolean getPmPartStatusOSSpecific1() {
+        return getBit(pmPartStatus, 7);
+    }
+
+    public boolean getPmPartStatusOSSpecific2() {
+        return getBit(pmPartStatus, 8);
+    }
 
     /**
      * Returns the partition signature as a String. (Should always be "PM".)
+     *
      * @return the partition signature as a String.
      */
-    public String getPmSigAsString() { return Util.toASCIIString(pmSig); }
+    public String getPmSigAsString() {
+        return Util.toASCIIString(pmSig);
+    }
 
     /**
      * Returns the partition name as a String.
+     *
      * @return the partition name as a String.
      */
-    public String getPmPartNameAsString() { return Util.readNullTerminatedASCIIString(pmPartName); }
+    public String getPmPartNameAsString() {
+        return Util.readNullTerminatedASCIIString(pmPartName);
+    }
 
     /**
      * Returns the partition type as a String.
+     *
      * @return the partition type as a String.
      */
-    public String getPmParTypeAsString() { return Util.readNullTerminatedASCIIString(pmParType); }
+    public String getPmParTypeAsString() {
+        return Util.readNullTerminatedASCIIString(pmParType);
+    }
 
     /**
      * Returns the processor type as a String.
+     *
      * @return the processor type as a String.
      */
-    public String getPmProcessorAsString() { return Util.readNullTerminatedASCIIString(pmProcessor); }
-    public byte[] getPmPadRaw()      { return Util.createCopy(pmPad); }
+    public String getPmProcessorAsString() {
+        return Util.readNullTerminatedASCIIString(pmProcessor);
+    }
+
+    public byte[] getPmPadRaw() {
+        return Util.createCopy(pmPad);
+    }
 
     public boolean isValid() {
         // Signature check
-        int pmSigInt = getPmSig() & 0xFFFF;
-        if(pmSigInt != APM_PARTITION_SIGNATURE && // Signature "PM", in ASCII
-           pmSigInt != APM_PARTITION_OLD_SIGNATURE) // Older signature, but still supported.
+        int pmSigInt = getPmSig() & 0xffff;
+        if (pmSigInt != APM_PARTITION_SIGNATURE && // Signature "PM", in ASCII
+                pmSigInt != APM_PARTITION_OLD_SIGNATURE) // Older signature, but still supported.
             return false;
 
         return true;
@@ -360,8 +508,8 @@ public class APMPartition implements Partition {
         ps.println(prefix + "pmProcessor: \"" + getPmProcessorAsString() + "\"");
         ps.println(prefix + "pmPad:");
         ps.print(prefix + " byte[" + pmPad.length + "] {");
-        for(int i = 0; i < pmPad.length; ++i) {
-            if(i % 16 == 0) {
+        for (int i = 0; i < pmPad.length; ++i) {
+            if (i % 16 == 0) {
                 ps.println();
                 ps.print(prefix + " ");
             }
@@ -372,40 +520,60 @@ public class APMPartition implements Partition {
         try {
             byte[] md5sum = MessageDigest.getInstance("MD5").digest(pmPad);
             ps.println(prefix + " MD5: " + Util.byteArrayToHexString(md5sum));
-        } catch(NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 
     public byte[] getData() {
-        byte[] result = new byte[structSize()];
+        byte[] result = new byte[size()];
         int offset = 0;
-        System.arraycopy(pmSig, 0, result, offset, pmSig.length); offset += pmSig.length;
-        System.arraycopy(pmSigPad, 0, result, offset, pmSigPad.length); offset += pmSigPad.length;
-        System.arraycopy(pmMapBlkCnt, 0, result, offset, pmMapBlkCnt.length); offset += pmMapBlkCnt.length;
-        System.arraycopy(pmPyPartStart, 0, result, offset, pmPyPartStart.length); offset += pmPyPartStart.length;
-        System.arraycopy(pmPartBlkCnt, 0, result, offset, pmPartBlkCnt.length); offset += pmPartBlkCnt.length;
-        System.arraycopy(pmPartName, 0, result, offset, pmPartName.length); offset += pmPartName.length;
-        System.arraycopy(pmParType, 0, result, offset, pmParType.length); offset += pmParType.length;
-        System.arraycopy(pmLgDataStart, 0, result, offset, pmLgDataStart.length); offset += pmLgDataStart.length;
-        System.arraycopy(pmDataCnt, 0, result, offset, pmDataCnt.length); offset += pmDataCnt.length;
-        System.arraycopy(pmPartStatus, 0, result, offset, pmPartStatus.length); offset += pmPartStatus.length;
-        System.arraycopy(pmLgBootStart, 0, result, offset, pmLgBootStart.length); offset += pmLgBootStart.length;
-        System.arraycopy(pmBootSize, 0, result, offset, pmBootSize.length); offset += pmBootSize.length;
-        System.arraycopy(pmBootAddr, 0, result, offset, pmBootAddr.length); offset += pmBootAddr.length;
-        System.arraycopy(pmBootAddr2, 0, result, offset, pmBootAddr2.length); offset += pmBootAddr2.length;
-        System.arraycopy(pmBootEntry, 0, result, offset, pmBootEntry.length); offset += pmBootEntry.length;
-        System.arraycopy(pmBootEntry2, 0, result, offset, pmBootEntry2.length); offset += pmBootEntry2.length;
-        System.arraycopy(pmBootCksum, 0, result, offset, pmBootCksum.length); offset += pmBootCksum.length;
-        System.arraycopy(pmProcessor, 0, result, offset, pmProcessor.length); offset += pmProcessor.length;
-        System.arraycopy(pmPad, 0, result, offset, pmPad.length); offset += pmPad.length;
-	       //System.arraycopy(, 0, result, offset, .length); offset += .length;
-        if(offset != result.length)
+        System.arraycopy(pmSig, 0, result, offset, pmSig.length);
+        offset += pmSig.length;
+        System.arraycopy(pmSigPad, 0, result, offset, pmSigPad.length);
+        offset += pmSigPad.length;
+        System.arraycopy(pmMapBlkCnt, 0, result, offset, pmMapBlkCnt.length);
+        offset += pmMapBlkCnt.length;
+        System.arraycopy(pmPyPartStart, 0, result, offset, pmPyPartStart.length);
+        offset += pmPyPartStart.length;
+        System.arraycopy(pmPartBlkCnt, 0, result, offset, pmPartBlkCnt.length);
+        offset += pmPartBlkCnt.length;
+        System.arraycopy(pmPartName, 0, result, offset, pmPartName.length);
+        offset += pmPartName.length;
+        System.arraycopy(pmParType, 0, result, offset, pmParType.length);
+        offset += pmParType.length;
+        System.arraycopy(pmLgDataStart, 0, result, offset, pmLgDataStart.length);
+        offset += pmLgDataStart.length;
+        System.arraycopy(pmDataCnt, 0, result, offset, pmDataCnt.length);
+        offset += pmDataCnt.length;
+        System.arraycopy(pmPartStatus, 0, result, offset, pmPartStatus.length);
+        offset += pmPartStatus.length;
+        System.arraycopy(pmLgBootStart, 0, result, offset, pmLgBootStart.length);
+        offset += pmLgBootStart.length;
+        System.arraycopy(pmBootSize, 0, result, offset, pmBootSize.length);
+        offset += pmBootSize.length;
+        System.arraycopy(pmBootAddr, 0, result, offset, pmBootAddr.length);
+        offset += pmBootAddr.length;
+        System.arraycopy(pmBootAddr2, 0, result, offset, pmBootAddr2.length);
+        offset += pmBootAddr2.length;
+        System.arraycopy(pmBootEntry, 0, result, offset, pmBootEntry.length);
+        offset += pmBootEntry.length;
+        System.arraycopy(pmBootEntry2, 0, result, offset, pmBootEntry2.length);
+        offset += pmBootEntry2.length;
+        System.arraycopy(pmBootCksum, 0, result, offset, pmBootCksum.length);
+        offset += pmBootCksum.length;
+        System.arraycopy(pmProcessor, 0, result, offset, pmProcessor.length);
+        offset += pmProcessor.length;
+        System.arraycopy(pmPad, 0, result, offset, pmPad.length);
+        offset += pmPad.length;
+//        System.arraycopy(, 0, result, offset, .length); offset += .length;
+        if (offset != result.length)
             throw new RuntimeException("Internal miscalculation...");
         else
             return result;
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         printPartitionInfo(ps, prefix + " ");
         ps.println(prefix + " Partition methods: ");
@@ -414,6 +582,7 @@ public class APMPartition implements Partition {
         ps.println(prefix + "  getType(): " + getType());
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "APMPartition:");
         printFields(ps, prefix);
@@ -426,27 +595,28 @@ public class APMPartition implements Partition {
 
     public PartitionType convertPartitionType(byte[] parTypeData) {
         String typeString = Util.readNullTerminatedASCIIString(parTypeData);
-        if(typeString.equals("Apple_partition_map")) // Partition contains a partition map
-            return PartitionType.APPLE_PARTITION_MAP;
-        else if(typeString.equals("Apple_Driver")) // Partition contains a device driver
-            return PartitionType.APPLE_DRIVER;
-        else if(typeString.equals("Apple_Driver43")) // Partition contains a SCSI Manager 4.3 device driver
-            return PartitionType.APPLE_DRIVER43;
-        else if(typeString.equals("Apple_MFS")) // Partition uses the original Macintosh File System (64K ROM version)
-            return PartitionType.APPLE_MFS;
-        else if(typeString.equals("Apple_HFS")) // Partition uses the Hierarchical File System (128K and later ROM versions)
-            return PartitionType.APPLE_HFS_CONTAINER;
-        else if(typeString.equals("Apple_HFSX")) // Partition uses HFSX. Presently, we report it as HFS+, and let the mounter decide.
-            return PartitionType.APPLE_HFSX;
-        else if(typeString.equals("Apple_Unix_SVR2")) // Partition uses the Unix file system
-            return PartitionType.APPLE_UNIX_SVR2;
-        else if(typeString.equals("Apple_PRODOS")) // Partition uses the ProDOS file system
-            return PartitionType.APPLE_PRODOS;
-        else if(typeString.equals("Apple_Free")) // Partition is unused
-            return PartitionType.EMPTY;
-        else if(typeString.equals("Apple_Scratch")) // Partition is empty
-            return PartitionType.EMPTY;
-        else
-            return PartitionType.UNKNOWN;
+        return switch (typeString) {
+            // Partition contains a partition map
+            case "Apple_partition_map" -> PartitionType.APPLE_PARTITION_MAP;
+            // Partition contains a device driver
+            case "Apple_Driver" -> PartitionType.APPLE_DRIVER;
+            // Partition contains a SCSI Manager 4.3 device driver
+            case "Apple_Driver43" -> PartitionType.APPLE_DRIVER43;
+            // Partition uses the original Macintosh File System (64K ROM version)
+            case "Apple_MFS" -> PartitionType.APPLE_MFS;
+            // Partition uses the Hierarchical File System (128K and later ROM versions)
+            case "Apple_HFS" -> PartitionType.APPLE_HFS_CONTAINER;
+            // Partition uses HFSX. Presently, we report it as HFS+, and let the mounter decide.
+            case "Apple_HFSX" -> PartitionType.APPLE_HFSX;
+            // Partition uses the Unix file system
+            case "Apple_Unix_SVR2" -> PartitionType.APPLE_UNIX_SVR2;
+            // Partition uses the ProDOS file system
+            case "Apple_PRODOS" -> PartitionType.APPLE_PRODOS;
+            // Partition is unused
+            case "Apple_Free" -> PartitionType.EMPTY;
+            // Partition is empty
+            case "Apple_Scratch" -> PartitionType.EMPTY;
+            default -> PartitionType.UNKNOWN;
+        };
     }
 }

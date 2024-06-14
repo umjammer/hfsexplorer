@@ -22,13 +22,19 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
 import org.catacombae.hfsexplorer.gui.HFSExplorerJFrame;
 import org.catacombae.hfsexplorer.io.JTextAreaOutputStream;
+
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class DebugConsoleWindow extends HFSExplorerJFrame {
+
     private static final int WINDOW_NUMBER_OF_COLUMNS = 80;
     private static final int WINDOW_NUMBER_OF_LINES = 25;
 
@@ -43,8 +49,7 @@ public class DebugConsoleWindow extends HFSExplorerJFrame {
 
         setLayout(new BorderLayout());
         this.debugArea = new JTextArea(WINDOW_NUMBER_OF_LINES, WINDOW_NUMBER_OF_COLUMNS);
-        this.debugAreaScroller = new JScrollPane(debugArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        this.debugAreaScroller = new JScrollPane(debugArea, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_NEVER);
         this.debugArea.setLineWrap(true);
         this.debugArea.setEditable(false);
 
@@ -59,6 +64,7 @@ public class DebugConsoleWindow extends HFSExplorerJFrame {
 
     /**
      * Returns an OutputStream which sends its output to the DebugConsoleWindow's JTextArea.
+     *
      * @return an OutputStream which sends its output to the DebugConsoleWindow's JTextArea.
      */
     public OutputStream getDebugStream() {

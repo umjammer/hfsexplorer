@@ -18,30 +18,32 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonBTIndexRecord <K extends CommonBTKey<K>>
-        extends CommonBTKeyedRecord<K>
-{
+public abstract class CommonBTIndexRecord<K extends CommonBTKey<K>> extends CommonBTKeyedRecord<K> {
+
     protected final K key;
     protected final byte[] index = new byte[4];
 
     public static <K extends CommonBTKey<K>> CommonBTIndexRecord<K> createHFS(K key, byte[] data, int offset) {
-        return new HFSImplementation<K>(key, data, offset);
+        return new HFSImplementation<>(key, data, offset);
     }
 
     public static <K extends CommonBTKey<K>> CommonBTIndexRecord<K> createHFSPlus(K key, byte[] data, int offset) {
-        return new HFSPlusImplementation<K>(key, data, offset);
+        return new HFSPlusImplementation<>(key, data, offset);
     }
 
     protected CommonBTIndexRecord(K key, byte[] data, int offset) {
         this.key = key;
-        System.arraycopy(data, offset+key.occupiedSize(), index, 0, index.length);
+        System.arraycopy(data, offset + key.occupiedSize(), index, 0, index.length);
     }
 
+    @Override
     public K getKey() {
         return key;
     }
@@ -61,28 +63,27 @@ public abstract class CommonBTIndexRecord <K extends CommonBTKey<K>>
         i += keyData.length;
         System.arraycopy(index, 0, res, i, index.length);
         i += index.length;
-        if(i != res.length)
+        if (i != res.length)
             throw new RuntimeException("Assertion failed: i == res.length (i=" +
                     i + ",res.length=" + res.length + ")");
 
         return res;
     }
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "CommonBTIndexRecord:");
         printFields(ps, prefix);
     }
 
-    /* @Override */
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " key:");
         key.print(ps, prefix + "  ");
         ps.println(prefix + " index: " + getIndex());
     }
 
-
-    private static class HFSImplementation <K extends CommonBTKey<K>> extends CommonBTIndexRecord<K> {
+    private static class HFSImplementation<K extends CommonBTKey<K>> extends CommonBTIndexRecord<K> {
 
         public HFSImplementation(K key, byte[] data, int offset) {
             super(key, data, offset);
@@ -92,15 +93,15 @@ public abstract class CommonBTIndexRecord <K extends CommonBTKey<K>>
         public int getSize() {
             return key.occupiedSize() + index.length;
         }
-        /*
-        @Override
-        public long getIndexAsOffset(int nodeSize) {
-            return getIndex()*nodeSize;
-        }
-         * */
+
+//        @Override
+//        public long getIndexAsOffset(int nodeSize) {
+//            return getIndex() * nodeSize;
+//        }
     }
 
-    private static class HFSPlusImplementation <K extends CommonBTKey<K>> extends CommonBTIndexRecord<K> {
+    private static class HFSPlusImplementation<K extends CommonBTKey<K>> extends CommonBTIndexRecord<K> {
+
         public HFSPlusImplementation(K key, byte[] data, int offset) {
             super(key, data, offset);
         }
@@ -110,11 +111,9 @@ public abstract class CommonBTIndexRecord <K extends CommonBTKey<K>>
             return key.occupiedSize() + index.length;
         }
 
-        /*
-        @Override
-        public long getIndexAsOffset(int nodeSize) {
-            return getIndex()*nodeSize;
-        }
-         * */
+//        @Override
+//        public long getIndexAsOffset(int nodeSize) {
+//            return getIndex() * nodeSize;
+//        }
     }
 }

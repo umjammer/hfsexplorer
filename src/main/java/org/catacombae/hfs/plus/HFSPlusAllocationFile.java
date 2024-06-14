@@ -17,56 +17,46 @@
 
 package org.catacombae.hfs.plus;
 
+import org.catacombae.hfs.AllocationFile;
+import org.catacombae.hfs.Limits;
 import org.catacombae.hfs.types.hfscommon.CommonHFSExtentDescriptor;
 import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
 import org.catacombae.io.ReadableRandomAccessStream;
-import org.catacombae.hfs.AllocationFile;
-import org.catacombae.hfs.Limits;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusAllocationFile extends AllocationFile implements Limits {
-    private HFSPlusVolume hfsPlusParentView;
-    private ReadableRandomAccessStream allocationFile;
 
-    public HFSPlusAllocationFile(HFSPlusVolume parentView,
-            ReadableRandomAccessStream allocationFile) {
+    private final HFSPlusVolume hfsPlusParentView;
+    private final ReadableRandomAccessStream allocationFile;
+
+    public HFSPlusAllocationFile(HFSPlusVolume parentView, ReadableRandomAccessStream allocationFile) {
         super(parentView, allocationFile);
 
         this.hfsPlusParentView = parentView;
         this.allocationFile = allocationFile;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isAllocationBlockUsed(long blockNumber) throws IllegalArgumentException {
-        if(blockNumber < 0 || blockNumber > UINT32_MAX) {
-            throw new IllegalArgumentException("Block number (" + blockNumber +
-                    ") out of range for UInt32!");
+        if (blockNumber < 0 || blockNumber > UINT32_MAX) {
+            throw new IllegalArgumentException("Block number (" + blockNumber + ") out of range for UInt32!");
         }
 
         return super.isAllocationBlockUsed(blockNumber);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CommonHFSExtentDescriptor createExtentDescriptor(long startBlock, long blockCount) {
-        if(startBlock < 0 || startBlock > UINT32_MAX) {
-            throw new IllegalArgumentException("startBlock(" + startBlock +
-                    ") out of range for UInt32!");
-        }
-        else if(blockCount < 0 || blockCount > UINT32_MAX) {
-            throw new IllegalArgumentException("blockCount(" + blockCount +
-                    ") out of range for UInt32!");
+        if (startBlock < 0 || startBlock > UINT32_MAX) {
+            throw new IllegalArgumentException("startBlock(" + startBlock + ") out of range for UInt32!");
+        } else if (blockCount < 0 || blockCount > UINT32_MAX) {
+            throw new IllegalArgumentException("blockCount(" + blockCount + ") out of range for UInt32!");
         }
 
-        HFSPlusExtentDescriptor hped =
-                new HFSPlusExtentDescriptor((int)startBlock, (int)blockCount);
+        HFSPlusExtentDescriptor hped = new HFSPlusExtentDescriptor((int) startBlock, (int) blockCount);
         return CommonHFSExtentDescriptor.create(hped);
     }
 }

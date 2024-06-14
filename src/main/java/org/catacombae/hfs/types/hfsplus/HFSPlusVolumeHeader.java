@@ -17,25 +17,27 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import org.catacombae.util.Util;
-import org.catacombae.csjc.MutableStruct;
 import java.util.Date;
+
+import org.catacombae.csjc.MutableStruct;
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.ASCIIStringField;
 import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.csjc.structelements.IntegerFieldRepresentation;
 import org.catacombae.hfs.types.hfs.HFSVolumeFinderInfo;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public class HFSPlusVolumeHeader extends MutableStruct implements
-        PrintableStruct, StructElements
-{
+public class HFSPlusVolumeHeader extends MutableStruct implements PrintableStruct, StructElements {
+
     public static final short SIGNATURE_HFS_PLUS = 0x482B;
     public static final short SIGNATURE_HFSX = 0x4858;
     /*
@@ -100,7 +102,7 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
     private final HFSPlusForkData startupFile;
 
     public HFSPlusVolumeHeader(byte[] data) {
-	this(data, 0);
+        this(data, 0);
     }
 
     public HFSPlusVolumeHeader(byte[] data, int offset) {
@@ -108,120 +110,222 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
     }
 
     private HFSPlusVolumeHeader(boolean mutable, byte[] data, int offset) {
-	//this(new ByteArrayInputStream(data, offset, _getSize()));
-	System.arraycopy(data, offset+0, signature, 0, 2);
-	System.arraycopy(data, offset+2, version, 0, 2);
-	System.arraycopy(data, offset+4, attributes, 0, 4);
-	System.arraycopy(data, offset+8, lastMountedVersion, 0, 4);
-	System.arraycopy(data, offset+12, journalInfoBlock, 0, 4);
-	System.arraycopy(data, offset+16, createDate, 0, 4);
-	System.arraycopy(data, offset+20, modifyDate, 0, 4);
-	System.arraycopy(data, offset+24, backupDate, 0, 4);
-	System.arraycopy(data, offset+28, checkedDate, 0, 4);
-	System.arraycopy(data, offset+32, fileCount, 0, 4);
-	System.arraycopy(data, offset+36, folderCount, 0, 4);
-	System.arraycopy(data, offset+40, blockSize, 0, 4);
-	System.arraycopy(data, offset+44, totalBlocks, 0, 4);
-	System.arraycopy(data, offset+48, freeBlocks, 0, 4);
-	System.arraycopy(data, offset+52, nextAllocation, 0, 4);
-	System.arraycopy(data, offset+56, rsrcClumpSize, 0, 4);
-	System.arraycopy(data, offset+60, dataClumpSize, 0, 4);
-	//System.arraycopy(data, 64, nextCatalogID, 0, 4);// (HFSCatalogNodeID)
+//        this(new ByteArrayInputStream(data, offset, _getSize()));
+        System.arraycopy(data, offset + 0, signature, 0, 2);
+        System.arraycopy(data, offset + 2, version, 0, 2);
+        System.arraycopy(data, offset + 4, attributes, 0, 4);
+        System.arraycopy(data, offset + 8, lastMountedVersion, 0, 4);
+        System.arraycopy(data, offset + 12, journalInfoBlock, 0, 4);
+        System.arraycopy(data, offset + 16, createDate, 0, 4);
+        System.arraycopy(data, offset + 20, modifyDate, 0, 4);
+        System.arraycopy(data, offset + 24, backupDate, 0, 4);
+        System.arraycopy(data, offset + 28, checkedDate, 0, 4);
+        System.arraycopy(data, offset + 32, fileCount, 0, 4);
+        System.arraycopy(data, offset + 36, folderCount, 0, 4);
+        System.arraycopy(data, offset + 40, blockSize, 0, 4);
+        System.arraycopy(data, offset + 44, totalBlocks, 0, 4);
+        System.arraycopy(data, offset + 48, freeBlocks, 0, 4);
+        System.arraycopy(data, offset + 52, nextAllocation, 0, 4);
+        System.arraycopy(data, offset + 56, rsrcClumpSize, 0, 4);
+        System.arraycopy(data, offset + 60, dataClumpSize, 0, 4);
+//        System.arraycopy(data, 64, nextCatalogID, 0, 4);// (HFSCatalogNodeID)
         nextCatalogID = (mutable ?
-            new HFSCatalogNodeID.Mutable(data, offset+64) :
-            new HFSCatalogNodeID(data, offset+64));
-	System.arraycopy(data, offset+68, writeCount, 0, 4);
-	System.arraycopy(data, offset+72, encodingsBitmap, 0, 4);
+                new HFSCatalogNodeID.Mutable(data, offset + 64) :
+                new HFSCatalogNodeID(data, offset + 64));
+        System.arraycopy(data, offset + 68, writeCount, 0, 4);
+        System.arraycopy(data, offset + 72, encodingsBitmap, 0, 4);
         finderInfo = (mutable ?
-            new HFSVolumeFinderInfo.Mutable(data, offset+80) :
-            new HFSVolumeFinderInfo(data, offset+80));
-	//System.arraycopy(data, 112, allocationFile, 0, 80);
-	allocationFile = (mutable ?
-            new HFSPlusForkData.Mutable(data, offset+112) :
-            new HFSPlusForkData(data, offset+112));
-	//System.arraycopy(data, 192, extentsFile, 0, 80);
-	extentsFile = (mutable ?
-            new HFSPlusForkData.Mutable(data, offset+192) :
-            new HFSPlusForkData(data, offset+192));
-	//System.arraycopy(data, 272, catalogFile, 0, 80);
-	catalogFile = (mutable ?
-            new HFSPlusForkData.Mutable(data, offset+272) :
-            new HFSPlusForkData(data, offset+272));
-	//System.arraycopy(data, 352, attributesFile, 0, 80);
-	attributesFile = (mutable ?
-            new HFSPlusForkData.Mutable(data, offset+352) :
-            new HFSPlusForkData(data, offset+352));
-	//System.arraycopy(data, 432, startupFile, 0, 80);
-	startupFile = (mutable ?
-            new HFSPlusForkData.Mutable(data, offset+432) :
-            new HFSPlusForkData(data, offset+432));
+                new HFSVolumeFinderInfo.Mutable(data, offset + 80) :
+                new HFSVolumeFinderInfo(data, offset + 80));
+//        System.arraycopy(data, 112, allocationFile, 0, 80);
+        allocationFile = (mutable ?
+                new HFSPlusForkData.Mutable(data, offset + 112) :
+                new HFSPlusForkData(data, offset + 112));
+//        System.arraycopy(data, 192, extentsFile, 0, 80);
+        extentsFile = (mutable ?
+                new HFSPlusForkData.Mutable(data, offset + 192) :
+                new HFSPlusForkData(data, offset + 192));
+//        System.arraycopy(data, 272, catalogFile, 0, 80);
+        catalogFile = (mutable ?
+                new HFSPlusForkData.Mutable(data, offset + 272) :
+                new HFSPlusForkData(data, offset + 272));
+//        System.arraycopy(data, 352, attributesFile, 0, 80);
+        attributesFile = (mutable ?
+                new HFSPlusForkData.Mutable(data, offset + 352) :
+                new HFSPlusForkData(data, offset + 352));
+//        System.arraycopy(data, 432, startupFile, 0, 80);
+        startupFile = (mutable ?
+                new HFSPlusForkData.Mutable(data, offset + 432) :
+                new HFSPlusForkData(data, offset + 432));
     }
 
     public HFSPlusVolumeHeader(InputStream is) throws IOException {
-	this(Util.fillBuffer(is, new byte[_getSize()]), 0);
+        this(Util.fillBuffer(is, new byte[_getSize()]), 0);
     }
 
     private static int _getSize() {
-	return 512;
+        return 512;
     }
 
-    public short getSignature()                { return Util.readShortBE(signature); } // UInt16 0x0
-    public short getVersion()                  { return Util.readShortBE(version); } // UInt16 0x2
-    public int getAttributes()                 { return Util.readIntBE(attributes); } // UInt32 0x4
-    public int getLastMountedVersion()         { return Util.readIntBE(lastMountedVersion); } // UInt32 0x8
-    public int getJournalInfoBlock()           { return Util.readIntBE(journalInfoBlock); } // UInt32 0xC
-    public int getCreateDate()                 { return Util.readIntBE(createDate); } // UInt32 0x10
-    public int getModifyDate()                 { return Util.readIntBE(modifyDate); } // UInt32 0x14
-    public int getBackupDate()                 { return Util.readIntBE(backupDate); } // UInt32 0x18
-    public int getCheckedDate()                { return Util.readIntBE(checkedDate); } // UInt32 0x1C
-    public int getFileCount()                  { return Util.readIntBE(fileCount); } // UInt32 0x20
-    public int getFolderCount()                { return Util.readIntBE(folderCount); } // UInt32 0x24
-    public int getBlockSize()                  { return Util.readIntBE(blockSize); } // UInt32 0x28
-    public int getTotalBlocks()                { return Util.readIntBE(totalBlocks); } // UInt32 0x2C
-    public int getFreeBlocks()                 { return Util.readIntBE(freeBlocks); } // UInt32 0x30
-    public int getNextAllocation()             { return Util.readIntBE(nextAllocation); } // UInt32 0x34
-    public int getRsrcClumpSize()              { return Util.readIntBE(rsrcClumpSize); } // UInt32 0x38
-    public int getDataClumpSize()              { return Util.readIntBE(dataClumpSize); } // UInt32 0x3C
-    public HFSCatalogNodeID getNextCatalogID() { return nextCatalogID; } // typedef HFSCatalogNodeID UInt32 0x40
-    public int getWriteCount()                 { return Util.readIntBE(writeCount); } // UInt32 0x44
-    public long getEncodingsBitmap()           { return Util.readLongBE(encodingsBitmap); } // UInt64 0x48
-    public HFSVolumeFinderInfo getFinderInfo() { return finderInfo; } // UInt32[8] 0x50
+    public short getSignature() {
+        return Util.readShortBE(signature);
+    } // UInt16 0x0
 
-    public HFSPlusForkData getAllocationFile() { return allocationFile; } // 0x70
-    public HFSPlusForkData getExtentsFile()    { return extentsFile; } // 0xC0
-    public HFSPlusForkData getCatalogFile()    { return catalogFile; } // 0x110
-    public HFSPlusForkData getAttributesFile() { return attributesFile; } // 0x160
-    public HFSPlusForkData getStartupFile()    { return startupFile; } // 0x1B0
+    public short getVersion() {
+        return Util.readShortBE(version);
+    } // UInt16 0x2
+
+    public int getAttributes() {
+        return Util.readIntBE(attributes);
+    } // UInt32 0x4
+
+    public int getLastMountedVersion() {
+        return Util.readIntBE(lastMountedVersion);
+    } // UInt32 0x8
+
+    public int getJournalInfoBlock() {
+        return Util.readIntBE(journalInfoBlock);
+    } // UInt32 0xC
+
+    public int getCreateDate() {
+        return Util.readIntBE(createDate);
+    } // UInt32 0x10
+
+    public int getModifyDate() {
+        return Util.readIntBE(modifyDate);
+    } // UInt32 0x14
+
+    public int getBackupDate() {
+        return Util.readIntBE(backupDate);
+    } // UInt32 0x18
+
+    public int getCheckedDate() {
+        return Util.readIntBE(checkedDate);
+    } // UInt32 0x1C
+
+    public int getFileCount() {
+        return Util.readIntBE(fileCount);
+    } // UInt32 0x20
+
+    public int getFolderCount() {
+        return Util.readIntBE(folderCount);
+    } // UInt32 0x24
+
+    public int getBlockSize() {
+        return Util.readIntBE(blockSize);
+    } // UInt32 0x28
+
+    public int getTotalBlocks() {
+        return Util.readIntBE(totalBlocks);
+    } // UInt32 0x2C
+
+    public int getFreeBlocks() {
+        return Util.readIntBE(freeBlocks);
+    } // UInt32 0x30
+
+    public int getNextAllocation() {
+        return Util.readIntBE(nextAllocation);
+    } // UInt32 0x34
+
+    public int getRsrcClumpSize() {
+        return Util.readIntBE(rsrcClumpSize);
+    } // UInt32 0x38
+
+    public int getDataClumpSize() {
+        return Util.readIntBE(dataClumpSize);
+    } // UInt32 0x3C
+
+    public HFSCatalogNodeID getNextCatalogID() {
+        return nextCatalogID;
+    } // typedef HFSCatalogNodeID UInt32 0x40
+
+    public int getWriteCount() {
+        return Util.readIntBE(writeCount);
+    } // UInt32 0x44
+
+    public long getEncodingsBitmap() {
+        return Util.readLongBE(encodingsBitmap);
+    } // UInt64 0x48
+
+    public HFSVolumeFinderInfo getFinderInfo() {
+        return finderInfo;
+    } // UInt32[8] 0x50
+
+    public HFSPlusForkData getAllocationFile() {
+        return allocationFile;
+    } // 0x70
+
+    public HFSPlusForkData getExtentsFile() {
+        return extentsFile;
+    } // 0xC0
+
+    public HFSPlusForkData getCatalogFile() {
+        return catalogFile;
+    } // 0x110
+
+    public HFSPlusForkData getAttributesFile() {
+        return attributesFile;
+    } // 0x160
+
+    public HFSPlusForkData getStartupFile() {
+        return startupFile;
+    } // 0x1B0
 
     public Date getCreateDateAsDate() {
-        /* Dates in the volume header are, contrary to elsewhere is HFS+, stored
-         * in local time. */
+        // Dates in the volume header are, contrary to elsewhere is HFS+, stored
+        // in local time.
         return HFSPlusDate.localTimestampToDate(getCreateDate());
     }
+
     public Date getModifyDateAsDate() {
-        /* Dates in the volume header are, contrary to elsewhere is HFS+, stored
-         * in local time. */
+        // Dates in the volume header are, contrary to elsewhere is HFS+, stored
+        // in local time.
         return HFSPlusDate.localTimestampToDate(getModifyDate());
     }
+
     public Date getBackupDateAsDate() {
-        /* Dates in the volume header are, contrary to elsewhere is HFS+, stored
-         * in local time. */
+        // Dates in the volume header are, contrary to elsewhere is HFS+, stored
+        // in local time.
         return HFSPlusDate.localTimestampToDate(getBackupDate());
     }
+
     public Date getCheckedDateAsDate() {
-        /* Dates in the volume header are, contrary to elsewhere is HFS+, stored
-         * in local time. */
+        // Dates in the volume header are, contrary to elsewhere is HFS+, stored
+        // in local time.
         return HFSPlusDate.localTimestampToDate(getCheckedDate());
     }
 
-    public boolean getAttributeVolumeHardwareLock()     { return ((getAttributes() >> 7) & 0x1) != 0; }
-    public boolean getAttributeVolumeUnmounted()        { return ((getAttributes() >> 8) & 0x1) != 0; }
-    public boolean getAttributeVolumeSparedBlocks()     { return ((getAttributes() >> 9) & 0x1) != 0; }
-    public boolean getAttributeVolumeNoCacheRequired()  { return ((getAttributes() >> 10) & 0x1) != 0; }
-    public boolean getAttributeBootVolumeInconsistent() { return ((getAttributes() >> 11) & 0x1) != 0; }
-    public boolean getAttributeCatalogNodeIDsReused()   { return ((getAttributes() >> 12) & 0x1) != 0; }
-    public boolean getAttributeVolumeJournaled()        { return ((getAttributes() >> 13) & 0x1) != 0; }
-    public boolean getAttributeVolumeSoftwareLock()     { return ((getAttributes() >> 15) & 0x1) != 0; }
+    public boolean getAttributeVolumeHardwareLock() {
+        return ((getAttributes() >> 7) & 0x1) != 0;
+    }
+
+    public boolean getAttributeVolumeUnmounted() {
+        return ((getAttributes() >> 8) & 0x1) != 0;
+    }
+
+    public boolean getAttributeVolumeSparedBlocks() {
+        return ((getAttributes() >> 9) & 0x1) != 0;
+    }
+
+    public boolean getAttributeVolumeNoCacheRequired() {
+        return ((getAttributes() >> 10) & 0x1) != 0;
+    }
+
+    public boolean getAttributeBootVolumeInconsistent() {
+        return ((getAttributes() >> 11) & 0x1) != 0;
+    }
+
+    public boolean getAttributeCatalogNodeIDsReused() {
+        return ((getAttributes() >> 12) & 0x1) != 0;
+    }
+
+    public boolean getAttributeVolumeJournaled() {
+        return ((getAttributes() >> 13) & 0x1) != 0;
+    }
+
+    public boolean getAttributeVolumeSoftwareLock() {
+        return ((getAttributes() >> 15) & 0x1) != 0;
+    }
 
     private void _printFields(PrintStream ps, String prefix) {
 
@@ -261,27 +365,28 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
         attributesFile.print(ps, prefix + "  ");
         ps.println(prefix + "startupFile: ");
         startupFile.print(ps, prefix + "  ");
-    // 	    ps.println(prefix + ": " + );
+//        ps.println(prefix + ": " + );
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         _printFields(ps, prefix + " ");
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSPlusVolumeHeader:");
         _printFields(ps, prefix + " ");
     }
 
     public void printAttributes(PrintStream ps, int pregap) {
-        String pregapString = "";
-        for(int i = 0; i < pregap; ++i)
-            pregapString += " ";
-        printAttributes(ps, pregapString);
+        StringBuilder pregapString = new StringBuilder();
+        pregapString.append(" ".repeat(Math.max(0, pregap)));
+        printAttributes(ps, pregapString.toString());
     }
 
     public void printAttributes(PrintStream ps, String prefix) {
-        /* 32 bits of attributes exist. Bits 0-6, 14 and 16-31 are reserved. */
+        // 32 bits of attributes exist. Bits 0-6, 14 and 16-31 are reserved.
 
         int attributesInt = getAttributes();
         ps.println(prefix + "kHFSVolumeHardwareLockBit = " + ((attributesInt >> 7) & 0x1));
@@ -294,90 +399,68 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
         ps.println(prefix + "kHFSVolumeSoftwareLockBit = " + ((attributesInt >> 15) & 0x1));
     }
 
-    /*
-    public static void main(String[] args) throws Exception {
-        if(args.length != 2)
-            System.err.println("usage: main <file> <byte position>");
-        else {
-            Long pos = Long.parseLong(args[1]);
-
-            java.io.RandomAccessFile raf =
-                new java.io.RandomAccessFile(args[0], "r");
-            raf.seek(pos);
-            byte[] buf = new byte[_getSize()];
-            raf.readFully(buf);
-            raf.close();
-
-            new HFSPlusVolumeHeader(buf).print(System.out, "");
-        }
-    }
-    */
+//    public static void main(String[] args) throws Exception {
+//        if (args.length != 2)
+//            logger.log(Level.DEBUG, "usage: main <file> <byte position>");
+//        else {
+//            Long pos = Long.parseLong(args[1]);
+//
+//            java.io.RandomAccessFile raf =
+//                    new java.io.RandomAccessFile(args[0], "r");
+//            raf.seek(pos);
+//            byte[] buf = new byte[_getSize()];
+//            raf.readFully(buf);
+//            raf.close();
+//
+//            new HFSPlusVolumeHeader(buf).print(System.out, "");
+//        }
+//    }
 
     private Dictionary getAttributeElements() {
         DictionaryBuilder db = new DictionaryBuilder("Attributes");
 
-        db.addFlag("kHFSVolumeHardwareLockBit", attributes, 7,
-                "Volume hardware lock");
-        db.addFlag("kHFSVolumeUnmountedBit", attributes, 8,
-                "Volume unmounted");
-        db.addFlag("kHFSVolumeSparedBlocksBit", attributes, 9,
-                "Volume spared blocks");
-        db.addFlag("kHFSVolumeNoCacheRequiredBit", attributes, 10,
-                "No cache required");
-        db.addFlag("kHFSBootVolumeInconsistentBit", attributes, 11,
-                "Boot volume inconsistent");
-        db.addFlag("kHFSCatalogNodeIDsReusedBit", attributes, 12,
-                "Catalog node IDs reused");
-        db.addFlag("kHFSVolumeJournaledBit", attributes, 13,
-                "Volume journaled");
-        db.addFlag("kHFSVolumeSoftwareLockBit", attributes, 15,
-                "Volume software lock");
+        db.addFlag("kHFSVolumeHardwareLockBit", attributes, 7, "Volume hardware lock");
+        db.addFlag("kHFSVolumeUnmountedBit", attributes, 8, "Volume unmounted");
+        db.addFlag("kHFSVolumeSparedBlocksBit", attributes, 9, "Volume spared blocks");
+        db.addFlag("kHFSVolumeNoCacheRequiredBit", attributes, 10, "No cache required");
+        db.addFlag("kHFSBootVolumeInconsistentBit", attributes, 11, "Boot volume inconsistent");
+        db.addFlag("kHFSCatalogNodeIDsReusedBit", attributes, 12, "Catalog node IDs reused");
+        db.addFlag("kHFSVolumeJournaledBit", attributes, 13, "Volume journaled");
+        db.addFlag("kHFSVolumeSoftwareLockBit", attributes, 15, "Volume software lock");
 
         return db.getResult();
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(HFSPlusVolumeHeader.class.getSimpleName());
 
-        db.add("signature", new ASCIIStringField(signature),
-                "Volume signature");
+        db.add("signature", new ASCIIStringField(signature), "Volume signature");
         db.addUIntBE("version", version, "File system version");
         db.add("attributes", getAttributeElements(), "Attributes");
-        db.add("lastMountedVersion", new ASCIIStringField(lastMountedVersion),
-                "Last mounted version");
-        db.addUIntBE("journalInfoBlock", journalInfoBlock,
-                "Journal info block ID");
-        db.add("createDate", new HFSPlusDateField(createDate, true),
-                "Date created");
-        db.add("modifyDate", new HFSPlusDateField(modifyDate, true),
-                "Date last modified");
-        db.add("backupDate", new HFSPlusDateField(backupDate, true),
-                "Date last backuped");
-        db.add("checkedDate", new HFSPlusDateField(checkedDate, true),
-                "Date last checked");
+        db.add("lastMountedVersion", new ASCIIStringField(lastMountedVersion), "Last mounted version");
+        db.addUIntBE("journalInfoBlock", journalInfoBlock, "Journal info block ID");
+        db.add("createDate", new HFSPlusDateField(createDate, true), "Date created");
+        db.add("modifyDate", new HFSPlusDateField(modifyDate, true), "Date last modified");
+        db.add("backupDate", new HFSPlusDateField(backupDate, true), "Date last backuped");
+        db.add("checkedDate", new HFSPlusDateField(checkedDate, true), "Date last checked");
         db.addUIntBE("fileCount", fileCount, "File count");
         db.addUIntBE("folderCount", folderCount, "Folder count");
         db.addUIntBE("blockSize", blockSize, "Block size", "bytes");
         db.addUIntBE("totalBlocks", totalBlocks, "Number of blocks");
         db.addUIntBE("freeBlocks", freeBlocks, "Number of free blocks");
-        db.addUIntBE("nextAllocation", nextAllocation,
-                "Start of next allocation search");
-        db.addUIntBE("rsrcClumpSize", rsrcClumpSize,
-                "Resource fork default clump size", "bytes");
-        db.addUIntBE("dataClumpSize", dataClumpSize,
-                "Data fork default clump size", "bytes");
-        db.add("nextCatalogID", nextCatalogID.getOpaqueStructElement(),
-                "Next unused catalog ID");
+        db.addUIntBE("nextAllocation", nextAllocation, "Start of next allocation search");
+        db.addUIntBE("rsrcClumpSize", rsrcClumpSize, "Resource fork default clump size", "bytes");
+        db.addUIntBE("dataClumpSize", dataClumpSize, "Data fork default clump size", "bytes");
+        db.add("nextCatalogID", nextCatalogID.getOpaqueStructElement(), "Next unused catalog ID");
         db.addUIntBE("writeCount", writeCount, "Write count");
         db.addUIntBE("encodingsBitmap", encodingsBitmap, "Encodings bitmap",
                 IntegerFieldRepresentation.HEXADECIMAL);
         db.add("finderInfo", finderInfo.getStructElements(), "Finder info");
-        db.add("allocationFile", allocationFile.getStructElements(),
-                "Allocation file");
+        db.add("allocationFile", allocationFile.getStructElements(), "Allocation file");
         db.add("extentsFile", extentsFile.getStructElements(), "Extents file");
         db.add("catalogFile", catalogFile.getStructElements(), "Catalog file");
-        db.add("attributesFile", attributesFile.getStructElements(),
-                "Attributes file");
+        db.add("attributesFile", attributesFile.getStructElements(), "Attributes file");
         db.add("startupFile", startupFile.getStructElements(), "Startup file");
 
         return db.getResult();
@@ -385,78 +468,78 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
 
     public boolean isValid() {
         short sig = getSignature();
-        if(sig != SIGNATURE_HFS_PLUS && sig != SIGNATURE_HFSX)
+        if (sig != SIGNATURE_HFS_PLUS && sig != SIGNATURE_HFSX)
             return false;
 
         return true;
     }
 
     private void _setSignature(short signature) {
-        Util.arrayPutBE(this.signature, 0, (short) signature);
+        Util.arrayPutBE(this.signature, 0, signature);
     }
 
     private void _setVersion(short version) {
-        Util.arrayPutBE(this.version, 0, (short) version);
+        Util.arrayPutBE(this.version, 0, version);
     }
 
     private void _setAttributes(int attributes) {
-        Util.arrayPutBE(this.attributes, 0, (int) attributes);
+        Util.arrayPutBE(this.attributes, 0, attributes);
     }
 
     private void _setLastMountedVersion(int lastMountedVersion) {
-        Util.arrayPutBE(this.lastMountedVersion, 0, (int) lastMountedVersion);
+        Util.arrayPutBE(this.lastMountedVersion, 0, lastMountedVersion);
     }
 
     private void _setJournalInfoBlock(int journalInfoBlock) {
-        Util.arrayPutBE(this.journalInfoBlock, 0, (int) journalInfoBlock);
+        Util.arrayPutBE(this.journalInfoBlock, 0, journalInfoBlock);
     }
 
     private void _setCreateDate(int createDate) {
-        Util.arrayPutBE(this.createDate, 0, (int) createDate);
+        Util.arrayPutBE(this.createDate, 0, createDate);
     }
 
     private void _setModifyDate(int modifyDate) {
-        Util.arrayPutBE(this.modifyDate, 0, (int) modifyDate);
+        Util.arrayPutBE(this.modifyDate, 0, modifyDate);
     }
 
     private void _setBackupDate(int backupDate) {
-        Util.arrayPutBE(this.backupDate, 0, (int) backupDate);
+        Util.arrayPutBE(this.backupDate, 0, backupDate);
     }
 
     private void _setCheckedDate(int checkedDate) {
-        Util.arrayPutBE(this.checkedDate, 0, (int) checkedDate);
+        Util.arrayPutBE(this.checkedDate, 0, checkedDate);
     }
 
     private void _setFileCount(int fileCount) {
-        Util.arrayPutBE(this.fileCount, 0, (int) fileCount);
+        Util.arrayPutBE(this.fileCount, 0, fileCount);
     }
 
     private void _setFolderCount(int folderCount) {
-        Util.arrayPutBE(this.folderCount, 0, (int) folderCount);
+        Util.arrayPutBE(this.folderCount, 0, folderCount);
     }
 
     private void _setBlockSize(int blockSize) {
-        Util.arrayPutBE(this.blockSize, 0, (int) blockSize);
+        Util.arrayPutBE(this.blockSize, 0, blockSize);
     }
 
     private void _setTotalBlocks(int totalBlocks) {
-        Util.arrayPutBE(this.totalBlocks, 0, (int) totalBlocks);
+        Util.arrayPutBE(this.totalBlocks, 0, totalBlocks);
     }
 
     private void _setFreeBlocks(int freeBlocks) {
-        Util.arrayPutBE(this.freeBlocks, 0, (int) freeBlocks);
+        Util.arrayPutBE(this.freeBlocks, 0, freeBlocks);
     }
 
     private void _setNextAllocation(int nextAllocation) {
-        Util.arrayPutBE(this.nextAllocation, 0, (int) nextAllocation);
+        Util.arrayPutBE(this.nextAllocation, 0, nextAllocation);
     }
 
     private void _setRsrcClumpSize(int rsrcClumpSize) {
-        Util.arrayPutBE(this.rsrcClumpSize, 0, (int) rsrcClumpSize);
+        Util.arrayPutBE(this.rsrcClumpSize, 0, rsrcClumpSize);
     }
 
     private void _setDataClumpSize(int dataClumpSize) {
-        Util.arrayPutBE(this.dataClumpSize, 0, (int) dataClumpSize);
+        Util.arrayPutBE(this.dataClumpSize, 0, dataClumpSize);
     }
 
     private HFSCatalogNodeID.Mutable _getMutableNextCatalogID() {
@@ -468,11 +551,11 @@ public class HFSPlusVolumeHeader extends MutableStruct implements
     }
 
     private void _setWriteCount(int writeCount) {
-        Util.arrayPutBE(this.writeCount, 0, (int) writeCount);
+        Util.arrayPutBE(this.writeCount, 0, writeCount);
     }
 
     private void _setEncodingsBitmap(long encodingsBitmap) {
-        Util.arrayPutBE(this.encodingsBitmap, 0, (long) encodingsBitmap);
+        Util.arrayPutBE(this.encodingsBitmap, 0, encodingsBitmap);
     }
 
     private HFSVolumeFinderInfo.Mutable _getMutableFinderInfo() {

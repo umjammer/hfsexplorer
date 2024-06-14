@@ -18,18 +18,20 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
 import org.catacombae.hfs.types.hfs.ExtKeyRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentKey;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey> implements StructElements {
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName() + ":");
         printFields(ps, prefix + " ");
@@ -46,25 +48,18 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
     private static int commonCompare(CommonHFSExtentKey k1, CommonHFSExtentKey k2) {
         long fileID1 = k1.getFileID().toLong();
         long fileID2 = k2.getFileID().toLong();
-        if(fileID1 == fileID2) {
+        if (fileID1 == fileID2) {
             int forkType1 = k1.getForkType();
             int forkType2 = k2.getForkType();
-            if(forkType1 == forkType2) {
+            if (forkType1 == forkType2) {
                 long startBlock1 = k1.getStartBlock();
                 long startBlock2 = k2.getStartBlock();
-                if(startBlock1 == startBlock2)
-                    return 0;
-                else if(startBlock1 < startBlock2)
-                    return -1;
-                else
-                    return 1;
-            }
-            else if(forkType1 < forkType2)
+                return Long.compare(startBlock1, startBlock2);
+            } else if (forkType1 < forkType2)
                 return -1;
             else
                 return 1;
-        }
-        else if(fileID1 < fileID2)
+        } else if (fileID1 < fileID2)
             return -1;
         else
             return 1;
@@ -77,6 +72,7 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
     public abstract long getStartBlock();
 
     public static class HFSPlusImplementation extends CommonHFSExtentKey {
+
         private final HFSPlusExtentKey key;
 
         public HFSPlusImplementation(HFSPlusExtentKey key) {
@@ -103,36 +99,34 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
             return key.getBytes();
         }
 
-        /* @Override */
+        @Override
         public int maxSize() {
             return key.length();
         }
 
-        /* @Override */
+        @Override
         public int occupiedSize() {
             return key.length();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
 
-        /* @Override */
+        @Override
         public int compareTo(CommonHFSExtentKey o) {
-            if(o instanceof HFSPlusImplementation) {
+            if (o instanceof HFSPlusImplementation) {
                 return commonCompare(this, o);
-            }
-            else {
-                if(o != null)
-                    throw new RuntimeException("Can't compare a " + o.getClass() +
-                            " with a " + this.getClass());
+            } else {
+                if (o != null)
+                    throw new RuntimeException("Can't compare a " + o.getClass() + " with a " + this.getClass());
                 else
                     throw new RuntimeException("o == null !!");
             }
@@ -140,6 +134,7 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
     }
 
     public static class HFSImplementation extends CommonHFSExtentKey {
+
         private final ExtKeyRec key;
 
         public HFSImplementation(ExtKeyRec key) {
@@ -166,36 +161,34 @@ public abstract class CommonHFSExtentKey extends CommonBTKey<CommonHFSExtentKey>
             return key.getBytes();
         }
 
-        /* @Override */
+        @Override
         public int maxSize() {
-            return key.length();
+            return ExtKeyRec.length();
         }
 
-        /* @Override */
+        @Override
         public int occupiedSize() {
-            return key.length();
+            return ExtKeyRec.length();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             ps.println(prefix + "key:");
             key.print(ps, prefix + " ");
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             return key.getStructElements();
         }
 
-        /* @Override */
+        @Override
         public int compareTo(CommonHFSExtentKey o) {
-            if(o instanceof HFSImplementation) {
+            if (o instanceof HFSImplementation) {
                 return commonCompare(this, o);
-            }
-            else {
-                if(o != null)
-                    throw new RuntimeException("Can't compare a " + o.getClass() +
-                            " with a " + this.getClass());
+            } else {
+                if (o != null)
+                    throw new RuntimeException("Can't compare a " + o.getClass() + " with a " + this.getClass());
                 else
                     throw new RuntimeException("o == null !!");
             }

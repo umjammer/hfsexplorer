@@ -17,12 +17,18 @@
 
 package org.catacombae.storage.ps.container;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.storage.ps.container.hfs.HFSContainerHandlerFactory;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -33,12 +39,14 @@ public enum ContainerType {
     APPLE_UNIX_SVR2,
     LINUX_NATIVE;
 
-    private LinkedList<Class<? extends ContainerHandlerFactory>> factoryClasses =
-            new LinkedList<Class<? extends ContainerHandlerFactory>>();
+    private static final Logger logger = getLogger(ContainerType.class.getName());
 
-    private ContainerType() {}
+    private final LinkedList<Class<? extends ContainerHandlerFactory>> factoryClasses = new LinkedList<>();
 
-    private ContainerType(Class<? extends ContainerHandlerFactory> defaultFactoryClass) {
+    ContainerType() {
+    }
+
+    ContainerType(Class<? extends ContainerHandlerFactory> defaultFactoryClass) {
         this.factoryClasses.addLast(defaultFactoryClass);
     }
 
@@ -56,10 +64,11 @@ public enum ContainerType {
     /**
      * Returns all registered factory classes for this type. The first entry in
      * the list will be the default factory class.
+     *
      * @return all registered factory classes for this type.
      */
     public List<Class<? extends ContainerHandlerFactory>> getFactoryClasses() {
-        return new ArrayList<Class<? extends ContainerHandlerFactory>>(factoryClasses);
+        return new ArrayList<>(factoryClasses);
     }
 
     /**
@@ -70,11 +79,10 @@ public enum ContainerType {
      * @return a newly created factory from the type's default factory class.
      */
     public ContainerHandlerFactory createDefaultHandlerFactory() {
-        if(factoryClasses.size() == 0)
+        if (factoryClasses.isEmpty())
             return null;
         else {
-            Class<? extends ContainerHandlerFactory> factoryClass =
-                    factoryClasses.getFirst();
+            Class<? extends ContainerHandlerFactory> factoryClass = factoryClasses.getFirst();
             return createHandlerFactory(factoryClass);
         }
     }
@@ -87,19 +95,11 @@ public enum ContainerType {
      */
     public static ContainerHandlerFactory createHandlerFactory(Class<? extends ContainerHandlerFactory> factoryClass) {
         try {
-            Constructor<? extends ContainerHandlerFactory> c =
-                    factoryClass.getConstructor();
+            Constructor<? extends ContainerHandlerFactory> c = factoryClass.getConstructor();
             return c.newInstance();
-        } catch(NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch(InstantiationException e) {
-            e.printStackTrace();
-        } catch(IllegalAccessException e) {
-            e.printStackTrace();
-        } catch(IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch(InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException |
+                 InvocationTargetException e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         return null;
     }

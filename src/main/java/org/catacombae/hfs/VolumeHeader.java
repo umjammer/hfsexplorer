@@ -19,10 +19,11 @@ package org.catacombae.hfs;
 
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class VolumeHeader {
-    public abstract CommonHFSVolumeHeader getHeaderStruct();
 
+    public abstract CommonHFSVolumeHeader getHeaderStruct();
 }

@@ -17,21 +17,22 @@
 
 package org.catacombae.hfsexplorer;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
-import java.io.File;
-import java.io.IOException;
 import java.awt.Image;
 import java.awt.Window;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+
 
 /**
  * This class should encapsulate all of the logic in HFSExplorer that is
@@ -41,6 +42,7 @@ import javax.swing.table.TableModel;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class Java6Util extends org.catacombae.util.Java6Util {
+
     /**
      * Checks whether openFile can be invoked for this platform. (Internally,
      * checks whether the Java 6 operation Desktop.open(..) is supported for the
@@ -53,11 +55,11 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     public static boolean canOpen() {
         try {
             return canOpenInternal();
-        } catch(Exception e) {
-            if(e instanceof InvocationTargetException) {
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException) {
                 Throwable cause = e.getCause();
 
-                if(cause instanceof RuntimeException) {
+                if (cause instanceof RuntimeException) {
                     throw (RuntimeException) cause;
                 }
             }
@@ -69,32 +71,27 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     private static boolean canOpenInternal()
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException,
-            NoSuchFieldException
-    {
+            NoSuchFieldException {
         Class<?> desktopClass = Class.forName("java.awt.Desktop");
         Class<?> desktopActionClass = Class.forName("java.awt.Desktop$Action");
 
-        /* Desktop desktop = Desktop.getDesktop(); */
+//        Desktop desktop = Desktop.getDesktop();
         Method desktopGetDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = desktopGetDesktopMethod.invoke(null);
 
-        /* Desktop.Action openAction = Desktop.Action.OPEN); */
+//        Desktop.Action openAction = Desktop.Action.OPEN);
         Field desktopActionOpenField = desktopActionClass.getField("OPEN");
         Object openActionObject = desktopActionOpenField.get(null);
 
-        /* return desktop.isSupported(openAction); */
-        Method desktopIsSupportedMethod =
-                desktopClass.getMethod("isSupported", desktopActionClass);
-        Object returnObject =
-                desktopIsSupportedMethod.invoke(desktopObject,
-                openActionObject);
-        if(!(returnObject instanceof Boolean)) {
+//        return desktop.isSupported(openAction);
+        Method desktopIsSupportedMethod = desktopClass.getMethod("isSupported", desktopActionClass);
+        Object returnObject = desktopIsSupportedMethod.invoke(desktopObject, openActionObject);
+        if (!(returnObject instanceof Boolean)) {
             throw new RuntimeException("Unexpected type returned from " +
-                    "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " +
-                    returnObject.getClass());
+                    "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " + returnObject.getClass());
         }
 
-        return ((Boolean) returnObject).booleanValue();
+        return (Boolean) returnObject;
     }
 
     /**
@@ -107,16 +104,15 @@ public class Java6Util extends org.catacombae.util.Java6Util {
      * @throws java.io.IOException if the file could not be opened.
      */
     public static void openFile(File f) throws IOException {
-	try {
+        try {
             openFileInternal(f);
-        } catch(Exception e) {
-            if(e instanceof InvocationTargetException) {
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException) {
                 Throwable cause = e.getCause();
 
-                if(cause instanceof RuntimeException) {
+                if (cause instanceof RuntimeException) {
                     throw (RuntimeException) cause;
-                }
-                else if(cause instanceof IOException) {
+                } else if (cause instanceof IOException) {
                     throw (IOException) cause;
                 }
             }
@@ -128,17 +124,15 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     private static void openFileInternal(File f)
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException,
-            NoSuchFieldException
-    {
+            NoSuchFieldException {
         Class<?> desktopClass = Class.forName("java.awt.Desktop");
 
-        /* Desktop desktop = Desktop.getDesktop(); */
+//        Desktop desktop = Desktop.getDesktop();
         Method desktopGetDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = desktopGetDesktopMethod.invoke(null);
 
-        /* desktop.openFile(f); */
-        Method desktopOpenFileMethod =
-                desktopClass.getMethod("open", File.class);
+//        desktop.openFile(f);
+        Method desktopOpenFileMethod = desktopClass.getMethod("open", File.class);
         desktopOpenFileMethod.invoke(desktopObject, f);
     }
 
@@ -154,11 +148,11 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     public static boolean canBrowse() {
         try {
             return canBrowseInternal();
-        } catch(Exception e) {
-            if(e instanceof InvocationTargetException) {
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException) {
                 Throwable cause = e.getCause();
 
-                if(cause instanceof RuntimeException) {
+                if (cause instanceof RuntimeException) {
                     throw (RuntimeException) cause;
                 }
             }
@@ -170,32 +164,27 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     private static boolean canBrowseInternal()
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException,
-            NoSuchFieldException
-    {
+            NoSuchFieldException {
         Class<?> desktopClass = Class.forName("java.awt.Desktop");
         Class<?> desktopActionClass = Class.forName("java.awt.Desktop$Action");
 
-        /* Desktop desktop = Desktop.getDesktop(); */
+//        Desktop desktop = Desktop.getDesktop();
         Method desktopGetDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = desktopGetDesktopMethod.invoke(null);
 
-        /* Desktop.Action browseAction = Desktop.Action.BROWSE); */
+//        Desktop.Action browseAction = Desktop.Action.BROWSE);
         Field desktopActionOpenField = desktopActionClass.getField("BROWSE");
         Object browseActionObject = desktopActionOpenField.get(null);
 
-        /* return desktop.isSupported(browseAction); */
-        Method desktopIsSupportedMethod =
-                desktopClass.getMethod("isSupported", desktopActionClass);
-        Object returnObject =
-                desktopIsSupportedMethod.invoke(desktopObject,
-                browseActionObject);
-        if(!(returnObject instanceof Boolean)) {
+//        return desktop.isSupported(browseAction);
+        Method desktopIsSupportedMethod = desktopClass.getMethod("isSupported", desktopActionClass);
+        Object returnObject = desktopIsSupportedMethod.invoke(desktopObject, browseActionObject);
+        if (!(returnObject instanceof Boolean)) {
             throw new RuntimeException("Unexpected type returned from " +
-                    "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " +
-                    returnObject.getClass());
+                    "java.awt.Desktop.isSupported(java.awt.Desktop.Action): " + returnObject.getClass());
         }
 
-        return ((Boolean) returnObject).booleanValue();
+        return (Boolean) returnObject;
     }
 
     /**
@@ -210,14 +199,13 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     public static void browse(URI uri) throws IOException {
         try {
             browseInternal(uri);
-        } catch(Exception e) {
-            if(e instanceof InvocationTargetException) {
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException) {
                 Throwable cause = e.getCause();
 
-                if(cause instanceof RuntimeException) {
+                if (cause instanceof RuntimeException) {
                     throw (RuntimeException) cause;
-                }
-                else if(cause instanceof IOException) {
+                } else if (cause instanceof IOException) {
                     throw (IOException) cause;
                 }
             }
@@ -229,17 +217,15 @@ public class Java6Util extends org.catacombae.util.Java6Util {
     private static void browseInternal(URI uri)
             throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, IllegalAccessException,
-            NoSuchFieldException
-    {
+            NoSuchFieldException {
         Class<?> desktopClass = Class.forName("java.awt.Desktop");
 
-        /* Desktop desktop = Desktop.getDesktop(); */
+//        Desktop desktop = Desktop.getDesktop();
         Method desktopGetDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = desktopGetDesktopMethod.invoke(null);
 
-        /* desktop.browse(uri); */
-        Method desktopOpenFileMethod =
-                desktopClass.getMethod("browse", URI.class);
+//        desktop.browse(uri);
+        Method desktopOpenFileMethod = desktopClass.getMethod("browse", URI.class);
         desktopOpenFileMethod.invoke(desktopObject, uri);
     }
 
@@ -249,31 +235,26 @@ public class Java6Util extends org.catacombae.util.Java6Util {
      * <b>Invoking this method on a non-Java 6 JRE will cause a class loading
      * exception.</b>
      *
-     * @param icons the different sizes of icon images that should be displayed
-     * for the window.
+     * @param icons  the different sizes of icon images that should be displayed
+     *               for the window.
      * @param window the window that the icons should be applied to.
      */
     public static void setIconImages(ImageIcon[] icons, Window window) {
-	LinkedList<Image> iconImages = new LinkedList<Image>();
-	for(ImageIcon ii : icons)
-	    iconImages.addLast(ii.getImage());
+        LinkedList<Image> iconImages = new LinkedList<>();
+        for (ImageIcon ii : icons)
+            iconImages.addLast(ii.getImage());
 
         try {
             Class<? extends Window> c = window.getClass();
             Method m = c.getMethod("setIconImages", List.class);
             m.invoke(window, iconImages);
-        } catch(NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (NoSuchMethodException | IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
-            if(cause instanceof RuntimeException) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw new RuntimeException(ex);
             }
         }
@@ -292,25 +273,20 @@ public class Java6Util extends org.catacombae.util.Java6Util {
      * @param columnComparators
      */
     public static void addRowSorter(JTable table, DefaultTableModel tableModel,
-            int defaultSortColumn, List<Comparator<?>> columnComparators) {
+                                    int defaultSortColumn, List<Comparator<?>> columnComparators) {
 
         try {
-            final Class<? extends Object> rowSorterClass =
-                Class.forName("javax.swing.RowSorter");
-            final Class<? extends Object> tableRowSorterClass =
-                Class.forName("javax.swing.table.TableRowSorter");
-            final Method tableRowSorterSetComparatorMethod =
-                    tableRowSorterClass.getMethod("setComparator", int.class,
-                    Comparator.class);
-            final Method tableRowSorterToggleSortOrderMethod =
+            Class<?> rowSorterClass = Class.forName("javax.swing.RowSorter");
+            Class<?> tableRowSorterClass = Class.forName("javax.swing.table.TableRowSorter");
+            Method tableRowSorterSetComparatorMethod =
+                    tableRowSorterClass.getMethod("setComparator", int.class, Comparator.class);
+            Method tableRowSorterToggleSortOrderMethod =
                     tableRowSorterClass.getMethod("toggleSortOrder", int.class);
-            final Object sorter =
-                    tableRowSorterClass.getConstructor(TableModel.class).
-                    newInstance(tableModel);
+            Object sorter = tableRowSorterClass.getConstructor(TableModel.class).newInstance(tableModel);
 
             int i = 0;
-            for(Comparator<?> c : columnComparators) {
-                if(c != null) {
+            for (Comparator<?> c : columnComparators) {
+                if (c != null) {
                     tableRowSorterSetComparatorMethod.invoke(sorter, i, c);
                 }
 
@@ -323,22 +299,14 @@ public class Java6Util extends org.catacombae.util.Java6Util {
             Class<? extends JTable> c = table.getClass();
             Method m = c.getMethod("setRowSorter", rowSorterClass);
             m.invoke(table, sorter);
-        } catch(ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        } catch(InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch(NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException | NoSuchMethodException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
-            if(cause instanceof RuntimeException) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
-            }
-            else {
+            } else {
                 throw new RuntimeException(ex);
             }
         }

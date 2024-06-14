@@ -17,13 +17,15 @@
 
 package org.catacombae.hfs.types.hfscommon;
 
-import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfsplus.HFSCatalogNodeID;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogNodeID {
+
     public enum ReservedID {
         ROOT_PARENT,
         ROOT_FOLDER,
@@ -38,19 +40,20 @@ public abstract class CommonHFSCatalogNodeID {
         FIRST_USER_CATALOG_NODE_ID
     }
 
-    /**
-     * Returns an <code>int</code> representation of this catalog node ID.
-     * @return an <code>int</code> representation of this catalog node ID.
-     */
-    //public abstract int toInt();
+//    /**
+//     * Returns an <code>int</code> representation of this catalog node ID.
+//     * @return an <code>int</code> representation of this catalog node ID.
+//     */
+//    public abstract int toInt();
 
-     /**
+    /**
      * Returns an <code>long</code> representation of this catalog node ID.
+     *
      * @return an <code>long</code> representation of this catalog node ID.
      */
-   public abstract long toLong();
+    public abstract long toLong();
 
-   public abstract CommonHFSCatalogNodeID add(long value);
+    public abstract CommonHFSCatalogNodeID add(long value);
 
     /**
      * Returns a CommonHFSCatalogNodeID for a specified reserved ID, if the
@@ -91,15 +94,15 @@ public abstract class CommonHFSCatalogNodeID {
 
     @Override
     public boolean equals(Object o) {
-        if(o instanceof CommonHFSCatalogNodeID)
-            return ((CommonHFSCatalogNodeID)o).toLong() == this.toLong();
+        if (o instanceof CommonHFSCatalogNodeID)
+            return ((CommonHFSCatalogNodeID) o).toLong() == this.toLong();
         else
             return false;
     }
 
     @Override
     public int hashCode() {
-        return (int)toLong();
+        return (int) toLong();
     }
 
 
@@ -112,6 +115,7 @@ public abstract class CommonHFSCatalogNodeID {
     }
 
     public static class HFSPlusImplementation extends CommonHFSCatalogNodeID {
+
         private static final HFSPlusImplementation ROOT_PARENT_ID = new HFSPlusImplementation(HFSCatalogNodeID.kHFSRootParentID);
         private static final HFSPlusImplementation ROOT_FOLDER_ID = new HFSPlusImplementation(HFSCatalogNodeID.kHFSRootFolderID);
         private static final HFSPlusImplementation EXTENTS_FILE_ID = new HFSPlusImplementation(HFSCatalogNodeID.kHFSExtentsFileID);
@@ -130,12 +134,10 @@ public abstract class CommonHFSCatalogNodeID {
             this.fileID = fileID;
         }
 
-        /*
-        @Override
-        public int toInt() {
-            return fileID.toInt();
-        }
-         * */
+//        @Override
+//        public int toInt() {
+//            return fileID.toInt();
+//        }
 
         public HFSCatalogNodeID getHFSCatalogNodeID() {
             return fileID;
@@ -152,47 +154,33 @@ public abstract class CommonHFSCatalogNodeID {
         }
 
         public static CommonHFSCatalogNodeID getReservedIDStatic(ReservedID id) {
-            switch(id) {
-                case ROOT_PARENT:
-                    return ROOT_PARENT_ID;
-                case ROOT_FOLDER:
-                    return ROOT_FOLDER_ID;
-                case EXTENTS_FILE:
-                    return EXTENTS_FILE_ID;
-                case CATALOG_FILE:
-                    return CATALOG_FILE_ID;
-                case BAD_BLOCKS_FILE:
-                    return BAD_BLOCKS_FILE_ID;
-                case ALLOCATION_FILE:
-                    return ALLOCATION_FILE_ID;
-                case STARTUP_FILE:
-                    return STARTUP_FILE_ID;
-                case ATTRIBUTES_FILE:
-                    return ATTRIBUTES_FILE_ID;
-                case REPAIR_CATALOG_FILE:
-                    return REPAIR_CATALOG_FILE_ID;
-                case BOGUS_EXTENT_FILE:
-                    return BOGUS_EXTENT_FILE_ID;
-                case FIRST_USER_CATALOG_NODE_ID:
-                    return FIRST_USER_CATALOG_NODE_ID;
-                default:
-                    throw new RuntimeException("Unknown reserved id: " + id +
-                            "!");
-            }
+            return switch (id) {
+                case ROOT_PARENT -> ROOT_PARENT_ID;
+                case ROOT_FOLDER -> ROOT_FOLDER_ID;
+                case EXTENTS_FILE -> EXTENTS_FILE_ID;
+                case CATALOG_FILE -> CATALOG_FILE_ID;
+                case BAD_BLOCKS_FILE -> BAD_BLOCKS_FILE_ID;
+                case ALLOCATION_FILE -> ALLOCATION_FILE_ID;
+                case STARTUP_FILE -> STARTUP_FILE_ID;
+                case ATTRIBUTES_FILE -> ATTRIBUTES_FILE_ID;
+                case REPAIR_CATALOG_FILE -> REPAIR_CATALOG_FILE_ID;
+                case BOGUS_EXTENT_FILE -> BOGUS_EXTENT_FILE_ID;
+                case FIRST_USER_CATALOG_NODE_ID -> FIRST_USER_CATALOG_NODE_ID;
+            };
         }
 
         @Override
         public CommonHFSCatalogNodeID add(long value) {
-            if(value < 0 || value > 0xFFFFFFFFL) {
+            if (value < 0 || value > 0xffff_ffffL) {
                 throw new RuntimeException("Invalid value: " + value);
             }
 
-            return new HFSPlusImplementation(
-                    new HFSCatalogNodeID((int) (toLong() + value)));
+            return new HFSPlusImplementation(new HFSCatalogNodeID((int) (toLong() + value)));
         }
     }
 
     public static class HFSImplementation extends CommonHFSCatalogNodeID {
+
         private static final HFSImplementation ROOT_PARENT_ID = new HFSImplementation(1);
         private static final HFSImplementation ROOT_FOLDER_ID = new HFSImplementation(2);
         private static final HFSImplementation EXTENTS_FILE_ID = new HFSImplementation(3);
@@ -206,12 +194,10 @@ public abstract class CommonHFSCatalogNodeID {
             this.filFlNum = filFlNum;
         }
 
-        /*
-        @Override
-        public int toInt() {
-            return filFlNum;
-        }
-         * */
+//        @Override
+//        public int toInt() {
+//            return filFlNum;
+//        }
 
         @Override
         public long toLong() {
@@ -224,34 +210,21 @@ public abstract class CommonHFSCatalogNodeID {
         }
 
         public static CommonHFSCatalogNodeID getReservedIDStatic(ReservedID id) {
-            switch(id) {
-                case ROOT_PARENT:
-                    return ROOT_PARENT_ID;
-                case ROOT_FOLDER:
-                    return ROOT_FOLDER_ID;
-                case EXTENTS_FILE:
-                    return EXTENTS_FILE_ID;
-                case CATALOG_FILE:
-                    return CATALOG_FILE_ID;
-                case BAD_BLOCKS_FILE:
-                    return BAD_BLOCKS_FILE_ID;
-                case ALLOCATION_FILE:
-                case STARTUP_FILE:
-                case ATTRIBUTES_FILE:
-                case REPAIR_CATALOG_FILE:
-                case BOGUS_EXTENT_FILE:
-                    return null; // Not applicable for HFS.
-                case FIRST_USER_CATALOG_NODE_ID:
-                    return FIRST_USER_CATALOG_NODE_ID;
-                default:
-                    throw new RuntimeException("Unknown reserved id: " + id +
-                            "!");
-            }
+            return switch (id) {
+                case ROOT_PARENT -> ROOT_PARENT_ID;
+                case ROOT_FOLDER -> ROOT_FOLDER_ID;
+                case EXTENTS_FILE -> EXTENTS_FILE_ID;
+                case CATALOG_FILE -> CATALOG_FILE_ID;
+                case BAD_BLOCKS_FILE -> BAD_BLOCKS_FILE_ID;
+                case ALLOCATION_FILE, STARTUP_FILE, ATTRIBUTES_FILE, REPAIR_CATALOG_FILE, BOGUS_EXTENT_FILE ->
+                        null; // Not applicable for HFS.
+                case FIRST_USER_CATALOG_NODE_ID -> FIRST_USER_CATALOG_NODE_ID;
+            };
         }
 
         @Override
         public CommonHFSCatalogNodeID add(long value) {
-            if(value < 0 || value > 0xFFFFFFFFL) {
+            if (value < 0 || value > 0xFFFFFFFFL) {
                 throw new RuntimeException("Invalid value: " + value);
             }
 

@@ -17,14 +17,20 @@
 
 package org.catacombae.storage.fs;
 
-import org.catacombae.storage.fs.hfsx.HFSXFileSystemHandlerFactory;
-import org.catacombae.storage.fs.hfsplus.HFSPlusFileSystemHandlerFactory;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.storage.fs.hfs.HFSFileSystemHandlerFactory;
+import org.catacombae.storage.fs.hfsplus.HFSPlusFileSystemHandlerFactory;
+import org.catacombae.storage.fs.hfsx.HFSXFileSystemHandlerFactory;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * Contains the possible "major file system types" that the library will work
@@ -41,34 +47,32 @@ public enum FileSystemMajorType {
     APPLE_UFS, APPLE_PRODOS, FAT12, FAT16, FAT32, EXFAT, NTFS, HPFS, EXT3,
     REISERFS, REISER4, XFS, JFS, ZFS, UNKNOWN;
 
-    /*
-    private static final Map<String, List<Class<? extends FileSystemHandlerFactory>>> DEFINED_FACTORIES;
+    private static final Logger logger = getLogger(FileSystemMajorType.class.getName());
 
-    static {
-        DEFINED_FACTORIES =
-                new HashMap<String, List<Class<? extends FileSystemHandlerFactory>>>();
+//    private static final Map<String, List<Class<? extends FileSystemHandlerFactory>>> DEFINED_FACTORIES;
+//
+//    static {
+//        DEFINED_FACTORIES = new HashMap<String, List<Class<? extends FileSystemHandlerFactory>>>();
+//
+//        LinkedList<Class<? extends FileSystemHandlerFactory>> hfsPlusHandlers =
+//                new LinkedList<Class<? extends FileSystemHandlerFactory>>();
+//        hfsPlusHandlers.addLast(HFSPlusFileSystemHandlerFactory.class);
+//        DEFINED_FACTORIES.put("HFS+", hfsPlusHandlers);
+//    }
+//
+//    public static Class[] getFactories(String fsType) {
+//        List<Class<? extends FileSystemHandlerFactory>> factoryList =
+//                DEFINED_FACTORIES.get(fsType);
+//        return factoryList.toArray(Class[]::new);
+//    }
 
-        LinkedList<Class<? extends FileSystemHandlerFactory>> hfsPlusHandlers =
-                new LinkedList<Class<? extends FileSystemHandlerFactory>>();
-        hfsPlusHandlers.addLast(HFSPlusFileSystemHandlerFactory.class);
-        DEFINED_FACTORIES.put("HFS+", hfsPlusHandlers);
-    }
-
-    public static Class[] getFactories(String fsType) {
-        List<Class<? extends FileSystemHandlerFactory>> factoryList =
-                DEFINED_FACTORIES.get(fsType);
-        return factoryList.toArray(new Class[factoryList.size()]);
-    }
-     * */
-
-    private final LinkedList<Class<? extends FileSystemHandlerFactory>> factoryClasses =
-            new LinkedList<Class<? extends FileSystemHandlerFactory>>();
+    private final LinkedList<Class<? extends FileSystemHandlerFactory>> factoryClasses = new LinkedList<>();
 
     /**
      * Creates a FileSystemMajorType with no file system handler implementations
      * specified.
      */
-    private FileSystemMajorType() {
+    FileSystemMajorType() {
     }
 
     /**
@@ -76,9 +80,9 @@ public enum FileSystemMajorType {
      * file system handler implementations for this file system. The first argument
      * is assumed to be the default implementation.
      *
-     * @param pFactoryClasses
+     * @param factoryClass
      */
-    private FileSystemMajorType(Class<? extends FileSystemHandlerFactory> factoryClass) {
+    FileSystemMajorType(Class<? extends FileSystemHandlerFactory> factoryClass) {
         this.factoryClasses.add(factoryClass);
     }
 
@@ -96,10 +100,11 @@ public enum FileSystemMajorType {
     /**
      * Returns all registered factory classes for this type. The first entry in
      * the list will be the default factory class.
+     *
      * @return all registered factory classes for this type.
      */
     public List<Class<? extends FileSystemHandlerFactory>> getFactoryClasses() {
-        return new ArrayList<Class<? extends FileSystemHandlerFactory>>(factoryClasses);
+        return new ArrayList<>(factoryClasses);
     }
 
     /**
@@ -110,11 +115,10 @@ public enum FileSystemMajorType {
      * @return a newly created factory from the type's default factory class.
      */
     public FileSystemHandlerFactory createDefaultHandlerFactory() {
-        if(factoryClasses.size() == 0)
+        if (factoryClasses.isEmpty())
             return null;
         else {
-            Class<? extends FileSystemHandlerFactory> factoryClass =
-                    factoryClasses.getFirst();
+            Class<? extends FileSystemHandlerFactory> factoryClass = factoryClasses.getFirst();
             return createHandlerFactory(factoryClass);
         }
     }
@@ -125,21 +129,13 @@ public enum FileSystemMajorType {
      * @param factoryClass the factory class of the new object.
      * @return a newly created factory from a specified factory class.
      */
-    public static FileSystemHandlerFactory createHandlerFactory(Class <? extends FileSystemHandlerFactory> factoryClass) {
+    public static FileSystemHandlerFactory createHandlerFactory(Class<? extends FileSystemHandlerFactory> factoryClass) {
         try {
-            Constructor<? extends FileSystemHandlerFactory> c =
-                    factoryClass.getConstructor();
+            Constructor<? extends FileSystemHandlerFactory> c = factoryClass.getConstructor();
             return c.newInstance();
-        } catch(NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch(InstantiationException e) {
-            e.printStackTrace();
-        } catch(IllegalAccessException e) {
-            e.printStackTrace();
-        } catch(IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch(InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException |
+                 InvocationTargetException e) {
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
         return null;
     }

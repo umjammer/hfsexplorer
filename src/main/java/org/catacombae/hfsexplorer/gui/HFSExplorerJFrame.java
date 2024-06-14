@@ -19,8 +19,10 @@ package org.catacombae.hfsexplorer.gui;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+
 import org.catacombae.hfsexplorer.Java6Util;
 import org.catacombae.hfsexplorer.Resources;
+
 
 /**
  * Base class for all HFSExplorer windows, setting up common properties such as
@@ -29,19 +31,19 @@ import org.catacombae.hfsexplorer.Resources;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSExplorerJFrame extends JFrame implements Resources {
+
     private static final ImageIcon[] WINDOW_ICONS = {
-        new ImageIcon(APPLICATION_ICON_16),
-        new ImageIcon(APPLICATION_ICON_32),
-        new ImageIcon(APPLICATION_ICON_48),
+            new ImageIcon(APPLICATION_ICON_16),
+            new ImageIcon(APPLICATION_ICON_32),
+            new ImageIcon(APPLICATION_ICON_48),
     };
 
     public HFSExplorerJFrame(String title) {
         super(title);
 
-        if(Java6Util.isJava6OrHigher()) {
+        if (Java6Util.isJava6OrHigher()) {
             Java6Util.setIconImages(WINDOW_ICONS, this);
-        }
-        else {
+        } else {
             setIconImage(WINDOW_ICONS[0].getImage());
         }
     }

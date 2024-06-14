@@ -23,8 +23,7 @@ package org.catacombae.hfs;
 public class HFSNotEnoughDataException extends HFSException {
 
     public HFSNotEnoughDataException(boolean dynamic, int arrayLength,
-            int arrayOffset, int minimumLength, Class<?> clazz)
-    {
+                                     int arrayOffset, int minimumLength, Class<?> clazz) {
         super("Not enough data for " + clazz.getSimpleName() + " " +
                 (dynamic ? "dynamic" : "static") + " fields (array " +
                 "length: " + arrayLength + ", offset: " +

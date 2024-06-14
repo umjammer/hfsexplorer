@@ -19,6 +19,7 @@ package org.catacombae.storage.ps;
 
 import java.io.PrintStream;
 
+
 /**
  * A basic implementation of the Partition interface, which just takes the
  * variables as parameters.
@@ -26,6 +27,7 @@ import java.io.PrintStream;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class StandardPartition implements Partition {
+
     private final long startOffset;
     private final long length;
     private final PartitionType type;
@@ -36,32 +38,31 @@ public class StandardPartition implements Partition {
         this.type = type;
     }
 
-    /* @Override */
+    @Override
     public long getStartOffset() {
         return startOffset;
     }
 
-    /* @Override */
+    @Override
     public long getLength() {
         return length;
     }
 
-    /* @Override */
+    @Override
     public PartitionType getType() {
         return type;
     }
 
-    /* @Override */
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "startOffset: " + startOffset);
         ps.println(prefix + "length: " + length);
         ps.println(prefix + "type: " + type);
     }
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName());
         printFields(ps, prefix + " ");
     }
-
 }

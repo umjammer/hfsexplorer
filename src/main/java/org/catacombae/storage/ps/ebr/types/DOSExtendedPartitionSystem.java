@@ -20,94 +20,112 @@ package org.catacombae.storage.ps.ebr.types;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.legacy.PartitionSystem;
 import org.catacombae.storage.ps.ebr.ExtendedBootRecord;
+
 import java.io.PrintStream;
 import java.util.LinkedList;
+
 import org.catacombae.io.ReadableRandomAccessStream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class DOSExtendedPartitionSystem implements PartitionSystem {
+
     private final ExtendedBootRecord[] extendedBootRecords;
 
     public DOSExtendedPartitionSystem(ReadableRandomAccessStream llf, long extendedPartitionOffset,
                                       long extendedPartitionLength, int sectorSize) {
-        // System.err.println("creating a new DOSExtendedPartitionSystem with:");
-        // System.err.println("  extendedPartitionOffset=" + extendedPartitionOffset);
-        // System.err.println("  extendedPartitionLength=" + extendedPartitionLength);
-        // System.err.println("  sectorSize=" + sectorSize);
-        LinkedList<ExtendedBootRecord> recordList = new LinkedList<ExtendedBootRecord>();
+//        logger.log(Level.TRACE, "creating a new DOSExtendedPartitionSystem with:");
+//        logger.log(Level.TRACE, "  extendedPartitionOffset=" + extendedPartitionOffset);
+//        logger.log(Level.TRACE, "  extendedPartitionLength=" + extendedPartitionLength);
+//        logger.log(Level.TRACE, "  sectorSize=" + sectorSize);
+        LinkedList<ExtendedBootRecord> recordList = new LinkedList<>();
         byte[] block = new byte[sectorSize];
         long seekLocation = extendedPartitionOffset;
-        if(seekLocation > extendedPartitionOffset + extendedPartitionLength)
+        if (seekLocation > extendedPartitionOffset + extendedPartitionLength)
             throw new RuntimeException("Invalid DOS Extended partition system (seekLocation=" + seekLocation + ").");
         llf.seek(seekLocation);
         llf.readFully(block);
         ExtendedBootRecord ebr = new ExtendedBootRecord(block, 0, extendedPartitionOffset, seekLocation, sectorSize);
         recordList.addLast(ebr);
         int i = 0;
-        // System.err.println("ebr[" + i++ + "]:");
-        // ebr.print(System.err, " ");
-        while(ebr.getSecondEntry().getLBAPartitionLength() != 0 ||
-                ebr.getSecondEntry().getLBAFirstSector() != 0) {
+//        logger.log(Level.TRACE, "ebr[" + i++ + "]:");
+//        ebr.print(System.err, " ");
+        while (ebr.getSecondEntry().getLBAPartitionLength() != 0 || ebr.getSecondEntry().getLBAFirstSector() != 0) {
             seekLocation = ebr.getSecondEntry().getStartOffset();
-            if(seekLocation > extendedPartitionOffset+extendedPartitionLength)
+            if (seekLocation > extendedPartitionOffset + extendedPartitionLength)
                 throw new RuntimeException("Invalid DOS Extended partition system (seekLocation=" + seekLocation + ").");
             llf.seek(seekLocation);
             llf.readFully(block);
             ebr = new ExtendedBootRecord(block, 0, extendedPartitionOffset, seekLocation, sectorSize);
             recordList.addLast(ebr);
-            // System.err.println("ebr[" + i++ + "]:");
-            // ebr.print(System.err, " ");
+//            logger.log(Level.TRACE, "ebr[" + i++ + "]:");
+//            ebr.print(System.err, " ");
         }
 
-        this.extendedBootRecords = recordList.toArray(new ExtendedBootRecord[recordList.size()]);
+        this.extendedBootRecords = recordList.toArray(ExtendedBootRecord[]::new);
     }
 
+    @Override
     public boolean isValid() {
-        for(ExtendedBootRecord ebr : extendedBootRecords) {
-            if(!ebr.isValid())
+        for (ExtendedBootRecord ebr : extendedBootRecords) {
+            if (!ebr.isValid())
                 return false;
         }
         return true;
     }
 
+    @Override
     public int getPartitionCount() {
         return extendedBootRecords.length;
     }
 
+    @Override
     public int getUsedPartitionCount() {
         // There shouldn't be any superfluous entries as it would be meaningless
         return getPartitionCount();
     }
 
+    @Override
     public Partition getPartitionEntry(int index) {
         return extendedBootRecords[index].getFirstEntry();
     }
 
+    @Override
     public Partition[] getPartitionEntries() {
         Partition[] result = new Partition[extendedBootRecords.length];
-        for(int i = 0; i < result.length; ++i) {
+        for (int i = 0; i < result.length; ++i) {
             result[i] = extendedBootRecords[i].getFirstEntry();
         }
         return result;
     }
 
+    @Override
     public Partition[] getUsedPartitionEntries() {
         return getPartitionEntries();
     }
-    public String getLongName() { return "DOS Extended"; }
 
-    public String getShortName() { return "EBR"; }
+    @Override
+    public String getLongName() {
+        return "DOS Extended";
+    }
 
+    @Override
+    public String getShortName() {
+        return "EBR";
+    }
+
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " extendedBootRecords:");
-        for(int i = 0; i < extendedBootRecords.length; ++i) {
+        for (int i = 0; i < extendedBootRecords.length; ++i) {
             ps.println(prefix + "  [" + i + "]:");
             extendedBootRecords[i].print(ps, prefix + "   ");
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + this.getClass().getSimpleName() + ":");
         printFields(ps, prefix);

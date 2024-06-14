@@ -21,20 +21,19 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafRecord;
 import org.catacombae.storage.fs.FSFile;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSCommonFSFile extends HFSCommonAbstractFile implements FSFile {
-    protected HFSCommonFSFile(HFSCommonFileSystemHandler parent,
-            CommonHFSCatalogFileRecord fileRecord)
-    {
+
+    protected HFSCommonFSFile(HFSCommonFileSystemHandler parent, CommonHFSCatalogFileRecord fileRecord) {
         super(parent, fileRecord);
     }
 
     protected HFSCommonFSFile(HFSCommonFileSystemHandler parent,
-            CommonHFSCatalogLeafRecord hardLinkRecord,
-            CommonHFSCatalogFileRecord fileRecord)
-    {
+                              CommonHFSCatalogLeafRecord hardLinkRecord,
+                              CommonHFSCatalogFileRecord fileRecord) {
         super(parent, hardLinkRecord, fileRecord);
     }
 }

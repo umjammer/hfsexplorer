@@ -22,33 +22,41 @@ import org.catacombae.hfs.types.hfsplus.JournalHeader;
 import org.catacombae.hfs.types.hfsplus.JournalInfoBlock;
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class Journal {
+
     public abstract byte[] getInfoBlockData();
+
     public abstract ReadableRandomAccessStream getJournalDataStream();
+
     public abstract byte[] getJournalData();
 
     /**
      * Returns the journal info block if a journal is present, null otherwise.
+     *
      * @return the journal info block if a journal is present, null otherwise.
      */
     public abstract JournalInfoBlock getJournalInfoBlock();
 
     /**
      * Returns the journal header if a journal is present, null otherwise.
+     *
      * @return the journal header if a journal is present, null otherwise.
      */
     public abstract JournalHeader getJournalHeader();
 
     /**
      * Returns whether the journal is clean, i.e. has no pending transactions.
+     *
      * @return whether the journal is clean, i.e. has no pending transactions.
      */
     public abstract boolean isClean();
 
-    public class Transaction {
+    public static class Transaction {
+
         public final BlockList[] blockLists;
 
         public Transaction(BlockList[] blockLists) {

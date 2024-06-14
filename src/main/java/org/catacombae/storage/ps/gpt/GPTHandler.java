@@ -23,12 +23,13 @@ import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class GPTHandler extends PartitionSystemHandler {
 
-    private DataLocator partitionData;
+    private final DataLocator partitionData;
 
     public GPTHandler(DataLocator partitionData) {
         this.partitionData = partitionData;
@@ -57,14 +58,13 @@ public class GPTHandler extends PartitionSystemHandler {
             llf = partitionData.createReadOnlyFile();
             GUIDPartitionTable gpt = new GUIDPartitionTable(llf, 0);
 
-            if(gpt.isValid())
+            if (gpt.isValid())
                 return gpt;
             else
                 return null;
         } finally {
-            if(llf != null)
+            if (llf != null)
                 llf.close();
         }
     }
-
 }

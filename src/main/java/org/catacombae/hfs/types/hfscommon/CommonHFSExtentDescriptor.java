@@ -18,19 +18,22 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSExtentDescriptor implements StructElements,
-        PrintableStruct {
+public abstract class CommonHFSExtentDescriptor implements StructElements, PrintableStruct {
+
     public abstract long getStartBlock();
+
     public abstract long getBlockCount();
 
     public static CommonHFSExtentDescriptor create(HFSPlusExtentDescriptor hped) {
@@ -42,6 +45,7 @@ public abstract class CommonHFSExtentDescriptor implements StructElements,
     }
 
     public static class HFSPlusImplementation extends CommonHFSExtentDescriptor {
+
         private final HFSPlusExtentDescriptor hped;
 
         public HFSPlusImplementation(HFSPlusExtentDescriptor hped) {
@@ -58,22 +62,24 @@ public abstract class CommonHFSExtentDescriptor implements StructElements,
             return Util.unsign(hped.getBlockCount());
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hped.printFields(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             hped.print(ps, prefix);
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hped.getStructElements();
         }
     }
 
     public static class HFSImplementation extends CommonHFSExtentDescriptor {
+
         private final ExtDescriptor hped;
 
         public HFSImplementation(ExtDescriptor hped) {
@@ -90,16 +96,17 @@ public abstract class CommonHFSExtentDescriptor implements StructElements,
             return Util.unsign(hped.getXdrNumABlks());
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hped.printFields(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             hped.print(ps, prefix);
         }
 
+        @Override
         public Dictionary getStructElements() {
             return hped.getStructElements();
         }

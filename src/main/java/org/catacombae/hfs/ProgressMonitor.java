@@ -22,8 +22,11 @@ package org.catacombae.hfs;
  */
 public interface ProgressMonitor {
 
-    public void signalCancel();
-    public boolean cancelSignaled();
-    public void confirmCancel();
-    public void addDataProgress(long dataSize);
+    void signalCancel();
+
+    boolean cancelSignaled();
+
+    void confirmCancel();
+
+    void addDataProgress(long dataSize);
 }

@@ -17,10 +17,16 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.io.AbstractFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
 import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * This contains methods to detect if the file system is of type MFS, HFS, HFS+
@@ -30,14 +36,16 @@ import org.catacombae.util.Util;
  */
 public class HFSCommonFileSystemRecognizer {
 
+    private static final Logger logger = getLogger(HFSCommonFileSystemRecognizer.class.getName());
+
     private static final short SIGNATURE_MFS = (short) 0xD2D7; // Extreme legacy... won't be used
     private static final short SIGNATURE_HFS = (short) 0x4244; // ASCII: 'BD' Legacy...
     private static final short SIGNATURE_HFS_PLUS = (short) 0x482B; // ASCII: 'H+'
     private static final short SIGNATURE_HFSX = (short) 0x4858; // ASCII: 'HX'
 
-    public static enum FileSystemType {
+    public enum FileSystemType {
         MFS, HFS, HFS_PLUS, HFS_WRAPPED_HFS_PLUS, HFSX, UNKNOWN
-    };
+    }
 
     /**
      * Detects one of the following file systems:
@@ -51,7 +59,7 @@ public class HFSCommonFileSystemRecognizer {
      * NOTE: This method should never ever throw an exception, and instead just returns UNKNOWN.
      *
      * @param bitstream the stream to check for a file system.
-     * @param offset the offset in the stream to the start of the file system.
+     * @param offset    the offset in the stream to the start of the file system.
      * @return the detected file system type (UNKNOWN if none could be detected).
      */
     public static FileSystemType detectFileSystem(ReadableRandomAccessStream bitstream, long offset) {
@@ -59,21 +67,20 @@ public class HFSCommonFileSystemRecognizer {
             bitstream.seek(offset);
             byte[] signatureData = new byte[4096];
             int bytesRead = bitstream.read(signatureData);
-            if(bytesRead < 4096) {
+            if (bytesRead < 4096) {
                 return FileSystemType.UNKNOWN;
             }
 
             short signature = Util.readShortBE(signatureData, 1024);
-            switch(signature) {
+            switch (signature) {
                 case SIGNATURE_MFS:
                     return FileSystemType.MFS;
                 case SIGNATURE_HFS:
                     short embeddedSignature =
                             Util.readShortBE(signatureData, 1024 + 124);
-                    if(embeddedSignature == SIGNATURE_HFS_PLUS) {
+                    if (embeddedSignature == SIGNATURE_HFS_PLUS) {
                         return FileSystemType.HFS_WRAPPED_HFS_PLUS;
-                    }
-                    else {
+                    } else {
                         return FileSystemType.HFS;
                     }
                 case SIGNATURE_HFS_PLUS:
@@ -83,24 +90,20 @@ public class HFSCommonFileSystemRecognizer {
                 default:
                     return FileSystemType.UNKNOWN;
             }
-        } catch(RuntimeIOException e) {
-            final String streamString =
-                    !(bitstream instanceof AbstractFileStream) ? "" :
-                    (" at " + ((AbstractFileStream) bitstream).getOpenPath());
-            System.err.println("Error while detecting file system" +
-                    streamString + ": " + e.getIOCause().getMessage());
-            if(!(bitstream instanceof AbstractFileStream)) {
-                e.printStackTrace();
+        } catch (RuntimeIOException e) {
+            String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
+                            (" at " + ((AbstractFileStream) bitstream).getOpenPath());
+            logger.log(Level.DEBUG, "Error while detecting file system" + streamString + ": " + e.getIOCause().getMessage());
+            if (!(bitstream instanceof AbstractFileStream)) {
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
 
             return FileSystemType.UNKNOWN;
-        } catch(Exception e) {
-            final String streamString =
-                    !(bitstream instanceof AbstractFileStream) ? "" :
-                    (" at " + ((AbstractFileStream) bitstream).getOpenPath());
-            System.err.println("Exception while detecting file system" +
-                    streamString + ": " + e);
-            e.printStackTrace();
+        } catch (Exception e) {
+            String streamString = !(bitstream instanceof AbstractFileStream) ? "" :
+                            (" at " + ((AbstractFileStream) bitstream).getOpenPath());
+            logger.log(Level.DEBUG, "Exception while detecting file system" + streamString + ": " + e);
+            logger.log(Level.ERROR, e.getMessage(), e);
             return FileSystemType.UNKNOWN;
         }
     }
@@ -110,15 +113,15 @@ public class HFSCommonFileSystemRecognizer {
      * FileSystemHandler supports.
      */
     public static final FileSystemType[] supportedTypes = {
-        FileSystemType.HFS,
-        FileSystemType.HFS_PLUS,
-        FileSystemType.HFS_WRAPPED_HFS_PLUS,
-        FileSystemType.HFSX,
+            FileSystemType.HFS,
+            FileSystemType.HFS_PLUS,
+            FileSystemType.HFS_WRAPPED_HFS_PLUS,
+            FileSystemType.HFSX,
     };
 
     public static boolean isTypeSupported(FileSystemType fst) {
-        for(FileSystemType cur : supportedTypes)
-            if(cur == fst)
+        for (FileSystemType cur : supportedTypes)
+            if (cur == fst)
                 return true;
         return false;
     }

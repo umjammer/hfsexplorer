@@ -18,51 +18,48 @@
 package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.DynamicStruct;
 import org.catacombae.csjc.PrintableStruct;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class BlockList implements DynamicStruct, PrintableStruct {
+
     public final BlockListHeader header;
     public final BlockInfo[] binfo;
     public final byte[] reserved;
     public final byte[][] bdata;
 
-    public BlockList(BlockListHeader header, BlockInfo[] binfo, byte[] reserved,
-            byte[][] data)
-    {
+    public BlockList(BlockListHeader header, BlockInfo[] binfo, byte[] reserved, byte[][] data) {
         this.header = header;
         this.binfo = binfo;
         this.reserved = reserved;
         this.bdata = data;
     }
 
-    public BlockList(byte[] data, int offset, int blockListHeaderSize,
-            boolean littleEndian)
-    {
+    public BlockList(byte[] data, int offset, int blockListHeaderSize, boolean littleEndian) {
         int curOffset = offset;
 
         this.header = new BlockListHeader(data, curOffset, littleEndian);
         curOffset += this.header.size();
 
         this.binfo = new BlockInfo[this.header.getNumBlocks()];
-        for(int i = 0; i < binfo.length; ++i) {
+        for (int i = 0; i < binfo.length; ++i) {
             this.binfo[i] = new BlockInfo(data, curOffset, littleEndian);
             curOffset += this.binfo[i].size();
         }
 
         this.reserved = new byte[blockListHeaderSize - (curOffset - offset)];
-        System.arraycopy(data, curOffset, this.reserved, 0,
-                this.reserved.length);
+        System.arraycopy(data, curOffset, this.reserved, 0, this.reserved.length);
 
         this.bdata = new byte[this.header.getNumBlocks()][];
-        for(int i = 0; i < binfo.length; ++i) {
-            final int bsize = binfo[i].getRawBsize();
-            if(bsize < 0) {
-                throw new RuntimeException("'int' overflow in 'bsize' (" +
-                            bsize + ").");
+        for (int i = 0; i < binfo.length; ++i) {
+            int bsize = binfo[i].getRawBsize();
+            if (bsize < 0) {
+                throw new RuntimeException("'int' overflow in 'bsize' (" + bsize + ").");
             }
 
             this.bdata[i] = new byte[bsize];
@@ -71,49 +68,58 @@ public class BlockList implements DynamicStruct, PrintableStruct {
         }
     }
 
+    @Override
     public int maxSize() {
         return Integer.MAX_VALUE;
     }
 
+    @Override
     public int occupiedSize() {
-        int occupiedSize =
-                BlockListHeader.length() + binfo.length * BlockInfo.length() +
-                reserved.length;
+        int occupiedSize = BlockListHeader.length() + binfo.length * BlockInfo.length() + reserved.length;
 
-        for(byte[] curData : bdata) {
+        for (byte[] curData : bdata) {
             occupiedSize += curData.length;
         }
 
         return occupiedSize;
     }
 
-    public BlockListHeader getHeader() { return header; }
+    public BlockListHeader getHeader() {
+        return header;
+    }
 
-    public int getBlockInfoCount() { return binfo.length; }
-    public BlockInfo getBlockInfo(int index) { return binfo[index]; }
+    public int getBlockInfoCount() {
+        return binfo.length;
+    }
 
+    public BlockInfo getBlockInfo(int index) {
+        return binfo[index];
+    }
+
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + " header: ");
         header.print(ps, prefix + "  ");
         ps.println(prefix + " binfo: ");
-        for(int i = 0; i < binfo.length; ++i) {
+        for (int i = 0; i < binfo.length; ++i) {
             ps.println(prefix + "  [" + i + "]: ");
             binfo[i].print(ps, prefix + "   ");
         }
-        ps.println(prefix + " reserved: { ... [length=" + reserved.length +
-                "] }");
+        ps.println(prefix + " reserved: { ... [length=" + reserved.length + "] }");
         ps.println(prefix + " bdata: ");
-        for(int i = 0; i < bdata.length; ++i) {
+        for (int i = 0; i < bdata.length; ++i) {
             ps.println(prefix + "  [" + i + "]: ");
             ps.println(prefix + "   { ... [length=" + bdata[i].length + "] }");
         }
     }
 
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "BlockList:");
         printFields(ps, prefix);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] result = new byte[occupiedSize()];
         getBytes(result, 0);
@@ -121,15 +127,15 @@ public class BlockList implements DynamicStruct, PrintableStruct {
     }
 
     public int getBytes(byte[] result, int offset) {
-        final int originalOffset = offset;
+        int originalOffset = offset;
 
         offset += header.getBytes(result, offset);
-        for(BlockInfo bi : binfo) {
+        for (BlockInfo bi : binfo) {
             offset += bi.getBytes(result, offset);
         }
         System.arraycopy(reserved, 0, result, offset, reserved.length);
         offset += reserved.length;
-        for(byte[] data : bdata) {
+        for (byte[] data : bdata) {
             System.arraycopy(data, 0, result, offset, data.length);
             offset += data.length;
         }

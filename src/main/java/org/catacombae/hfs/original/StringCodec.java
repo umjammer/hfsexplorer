@@ -23,23 +23,24 @@ package org.catacombae.hfs.original;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface StringCodec {
-    /**
-     * Decodes the specified data into a string.
-     *
-     * @param data the data to decode.
-     * @return the decoded string.
-     */
-    public String decode(byte[] data);
 
     /**
      * Decodes the specified data into a string.
      *
      * @param data the data to decode.
-     * @param off the offset in <code>data</code> to start reading at.
-     * @param len the amount of data to process.
      * @return the decoded string.
      */
-    public String decode(byte[] data, int off, int len);
+    String decode(byte[] data);
+
+    /**
+     * Decodes the specified data into a string.
+     *
+     * @param data the data to decode.
+     * @param off  the offset in <code>data</code> to start reading at.
+     * @param len  the amount of data to process.
+     * @return the decoded string.
+     */
+    String decode(byte[] data, int off, int len);
 
     /**
      * Encodes the specified string into bytes.
@@ -47,7 +48,7 @@ public interface StringCodec {
      * @param str the string to encode.
      * @return encoded data.
      */
-    public byte[] encode(String str);
+    byte[] encode(String str);
 
     /**
      * Encodes the specified string into bytes.
@@ -57,20 +58,21 @@ public interface StringCodec {
      * @param len the number of bytes to read from the string.
      * @return encoded data.
      */
-    public byte[] encode(String str, int off, int len);
+    byte[] encode(String str, int off, int len);
 
     /**
      * Returns the charset name as a string.
      *
      * @return the charset name as a string.
      */
-    public String getCharsetName();
+    String getCharsetName();
 
     /**
      * Exception which should be thrown only when a conversion between binary
      * data and Unicode fails.
      */
-    public static class StringCodecException extends RuntimeException {
+    class StringCodecException extends RuntimeException {
+
         public StringCodecException(String message) {
             super(message);
         }

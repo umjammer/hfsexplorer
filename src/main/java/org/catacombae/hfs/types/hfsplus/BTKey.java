@@ -19,32 +19,31 @@ package org.catacombae.hfs.types.hfsplus;
 
 import org.catacombae.csjc.PrintableStruct;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class BTKey implements Comparable<BTKey>, PrintableStruct {
+
     public abstract short getKeyLength();
+
     public abstract int length();
+
     public abstract byte[] getBytes();
 
-    /* @Override */
+    @Override
     public int compareTo(BTKey btk) {
-	byte[] thisData = getBytes();
-	byte[] thatData = btk.getBytes();
+        byte[] thisData = getBytes();
+        byte[] thatData = btk.getBytes();
 
-	for(int i = 0; i < Math.min(thisData.length, thatData.length); ++i) {
+        for (int i = 0; i < Math.min(thisData.length, thatData.length); ++i) {
             int a = thisData[i] & 0xFF;
             int b = thatData[i] & 0xff;
-	    if(a < b)
-		return -1;
-	    else if(a > b)
-		return 1;
-	}
-	if(thisData.length < thatData.length)
-	    return -1;
-	else if(thisData.length > thatData.length)
-	    return 1;
-	else
-	    return 0;
+            if (a < b)
+                return -1;
+            else if (a > b)
+                return 1;
+        }
+        return Integer.compare(thisData.length, thatData.length);
     }
 }

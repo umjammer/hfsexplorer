@@ -23,12 +23,13 @@ import org.catacombae.storage.io.DataLocator;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class EBRHandler extends PartitionSystemHandler {
 
-    private DataLocator partitionData;
+    private final DataLocator partitionData;
 
     public EBRHandler(DataLocator partitionData) {
         this.partitionData = partitionData;
@@ -61,16 +62,15 @@ public class EBRHandler extends PartitionSystemHandler {
             llf.readFully(firstBlock);
 
             EBRPartitionSystem ebs = new EBRPartitionSystem(llf, 0, 512);
-            if(ebs.isValid())
+            if (ebs.isValid())
                 return ebs;
 
         } finally {
-            if(llf != null) {
+            if (llf != null) {
                 llf.close();
             }
         }
 
         return null;
     }
-
 }

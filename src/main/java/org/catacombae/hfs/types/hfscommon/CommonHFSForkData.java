@@ -18,17 +18,20 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
-import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
-import org.catacombae.hfs.types.hfsplus.HFSPlusForkData;
 import org.catacombae.hfs.types.hfs.ExtDataRec;
 import org.catacombae.hfs.types.hfs.ExtDescriptor;
+import org.catacombae.hfs.types.hfsplus.HFSPlusExtentDescriptor;
+import org.catacombae.hfs.types.hfsplus.HFSPlusForkData;
 import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSForkData implements PrintableStruct {
+
     public abstract boolean hasTotalBlocks();
 
     public abstract long getTotalBlocks();
@@ -46,6 +49,7 @@ public abstract class CommonHFSForkData implements PrintableStruct {
     }
 
     public static class HFSImplementation extends CommonHFSForkData {
+
         private final ExtDataRec edr;
         private final long logicalSize;
 
@@ -54,73 +58,82 @@ public abstract class CommonHFSForkData implements PrintableStruct {
             this.logicalSize = logicalSize;
         }
 
+        @Override
         public final boolean hasTotalBlocks() {
             return false;
         }
 
+        @Override
         public final long getTotalBlocks() {
             throw new UnsupportedOperationException("Information about the " +
                     "total number of blocks in a fork does not exist in HFS.");
         }
 
+        @Override
         public long getLogicalSize() {
             return logicalSize;
         }
 
+        @Override
         public CommonHFSExtentDescriptor[] getBasicExtents() {
             ExtDescriptor[] src = edr.getExtDataRecs();
             CommonHFSExtentDescriptor[] result = new CommonHFSExtentDescriptor[src.length];
-            for(int i = 0; i < result.length; ++i) {
+            for (int i = 0; i < result.length; ++i) {
                 result[i] = CommonHFSExtentDescriptor.create(src[i]);
             }
             return result;
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             edr.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             edr.printFields(ps, prefix);
         }
     }
 
     public static class HFSPlusImplementation extends CommonHFSForkData {
+
         private final HFSPlusForkData hper;
 
         public HFSPlusImplementation(HFSPlusForkData hper) {
             this.hper = hper;
         }
 
+        @Override
         public final boolean hasTotalBlocks() {
             return true;
         }
 
+        @Override
         public final long getTotalBlocks() {
             return Util.unsign(hper.getTotalBlocks());
         }
 
+        @Override
         public long getLogicalSize() {
             return hper.getLogicalSize();
         }
 
+        @Override
         public CommonHFSExtentDescriptor[] getBasicExtents() {
             HFSPlusExtentDescriptor[] src = hper.getExtents().getExtentDescriptors();
             CommonHFSExtentDescriptor[] result = new CommonHFSExtentDescriptor[src.length];
-            for(int i = 0; i < result.length; ++i) {
+            for (int i = 0; i < result.length; ++i) {
                 result[i] = CommonHFSExtentDescriptor.create(src[i]);
             }
             return result;
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             hper.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             hper.printFields(ps, prefix);
         }

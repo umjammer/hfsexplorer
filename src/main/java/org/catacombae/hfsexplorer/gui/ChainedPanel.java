@@ -19,15 +19,18 @@ package org.catacombae.hfsexplorer.gui;
 
 import java.awt.Component;
 
+
 /**
  * Interface for a panel which can chain-link another Component inside itself.
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface ChainedPanel {
+
     /**
      * Sets the chained-linked contents for this panel.
+     *
      * @param c the chain-linked component.
      */
-    public void setChainedContents(Component c);
+    void setChainedContents(Component c);
 }

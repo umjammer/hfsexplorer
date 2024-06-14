@@ -24,26 +24,30 @@ import java.util.LinkedList;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.storage.io.DataLocator;
-import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.io.RandomAccessFileDataLocator;
 import org.catacombae.storage.ps.Partition;
-import org.catacombae.storage.ps.PartitionSystemRecognizer;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
+import org.catacombae.storage.ps.PartitionSystemRecognizer;
+import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.apm.types.APMPartition;
+
+import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class MainController {
-    private MainWindow mainWindow;
-    private MainPanel mainPanel;
+
+    private final MainWindow mainWindow;
+    private final MainPanel mainPanel;
 
     // Model variables
-    LinkedList<PartitionSystemHandler> psHandlers =
-            new LinkedList<PartitionSystemHandler>();
+    LinkedList<PartitionSystemHandler> psHandlers = new LinkedList<>();
 
     public MainController() {
         this.mainPanel = new MainPanel();
@@ -58,13 +62,14 @@ public class MainController {
 
         mainWindow.setDefaultCloseOperation(MainWindow.EXIT_ON_CLOSE);
     }
+
     public JPanel getPanel() {
         return mainPanel;
     }
 
     public void showMainWindow() {
         // Initialize
-        mainPanel.setPartitionSystemsBoxContents(new LinkedList<String>());
+        mainPanel.setPartitionSystemsBoxContents(new LinkedList<>());
         mainPanel.setPartitionSystemsBoxEnabled(false);
         mainPanel.setSynchronizeButtonEnabled(false);
 
@@ -78,36 +83,31 @@ public class MainController {
 
     private void loadPartitionSystem(DataLocator loc) {
 
-        LinkedList<PartitionSystemHandler> detectedPartitionSystems =
-                new LinkedList<PartitionSystemHandler>();
-        LinkedList<String> detectedPartitionSystemDescriptions = new LinkedList<String>();
+        LinkedList<PartitionSystemHandler> detectedPartitionSystems = new LinkedList<>();
+        LinkedList<String> detectedPartitionSystemDescriptions = new LinkedList<>();
         for (PartitionSystemType curType : PartitionSystemType.values()) {
             if (curType.isTopLevelCapable()) {
-                PartitionSystemHandlerFactory fac =
-                        curType.createDefaultHandlerFactory();
+                PartitionSystemHandlerFactory fac = curType.createDefaultHandlerFactory();
                 if (fac != null) {
-                    PartitionSystemRecognizer recognizer =
-                            fac.getRecognizer();
+                    PartitionSystemRecognizer recognizer = fac.getRecognizer();
                     ReadableRandomAccessStream stream = loc.createReadOnlyFile();
                     long streamLength = -1;
                     try {
                         streamLength = stream.length();
                     } catch (Exception e) {
                     }
-                    //fac.createDetector(loc);
+//                    fac.createDetector(loc);
                     if (recognizer.detect(stream, 0, streamLength)) {
                         PartitionSystemHandler handler = fac.createHandler(loc);
                         detectedPartitionSystems.add(fac.createHandler(loc));
-                        detectedPartitionSystemDescriptions.add(
-                                fac.getInfo().getPartitionSystemName() +
-                                " (" + handler.getPartitionCount() +
-                                " partitions)");
+                        detectedPartitionSystemDescriptions.add(fac.getInfo().getPartitionSystemName() +
+                                        " (" + handler.getPartitionCount() + " partitions)");
                     }
                 }
             }
         }
 
-        if (detectedPartitionSystemDescriptions.size() > 0) {
+        if (!detectedPartitionSystemDescriptions.isEmpty()) {
             mainPanel.setPartitionSystemsBoxEnabled(true);
             mainPanel.setPartitionSystemsBoxContents(detectedPartitionSystemDescriptions);
         } else {
@@ -115,15 +115,14 @@ public class MainController {
         }
 
         mainPanel.clearPartitionList();
-        if (detectedPartitionSystems.size() > 0) {
-            PartitionSystemHandler handler =
-                    detectedPartitionSystems.getFirst();
+        if (!detectedPartitionSystems.isEmpty()) {
+            PartitionSystemHandler handler = detectedPartitionSystems.getFirst();
             Partition[] partitions = handler.getPartitions();
             int i = 0;
             for (Partition p : partitions) {
                 String name = "";
-                if(p instanceof APMPartition)
-                    name = ((APMPartition)p).getPmPartNameAsString();
+                if (p instanceof APMPartition)
+                    name = ((APMPartition) p).getPmPartNameAsString();
 
                 mainPanel.addPartition("" + ((i++) + 1), p.getType().toString(),
                         name, "" + p.getStartOffset(),
@@ -132,22 +131,23 @@ public class MainController {
         } else {
             JOptionPane.showMessageDialog(mainPanel,
                     "No partition systems found.", "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    INFORMATION_MESSAGE);
         }
     }
 
     private class LoadFileItemListener implements ActionListener {
+
+        @Override
         public void actionPerformed(ActionEvent evt) {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setMultiSelectionEnabled(false);
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            if(fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
+            if (fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
 
                 mainWindow.setCurrentFilename(selectedFile.getPath());
 
-                RandomAccessFileDataLocator loc =
-                        new RandomAccessFileDataLocator(selectedFile);
+                RandomAccessFileDataLocator loc = new RandomAccessFileDataLocator(selectedFile);
 
                 loadPartitionSystem(loc);
             }
@@ -155,23 +155,22 @@ public class MainController {
     }
 
     private class LoadPathItemListener implements ActionListener {
+
+        @Override
         public void actionPerformed(ActionEvent evt) {
             String path = JOptionPane.showInputDialog(mainPanel, "Path:",
                     "Enter path to partition system",
                     JOptionPane.PLAIN_MESSAGE);
-            if(path != null) {
+            if (path != null) {
                 File selectedFile = new File(path);
-                if(!selectedFile.exists())
-                    JOptionPane.showMessageDialog(mainPanel, "Path:\n    " +
-                            path + "\ndoes not seem to exist.");
-                else if(!selectedFile.canRead())
-                    JOptionPane.showMessageDialog(mainPanel, "Can not read:\n" +
-                            "    " + path);
+                if (!selectedFile.exists())
+                    JOptionPane.showMessageDialog(mainPanel, "Path:\n    " + path + "\ndoes not seem to exist.");
+                else if (!selectedFile.canRead())
+                    JOptionPane.showMessageDialog(mainPanel, "Can not read:\n    " + path);
                 else {
                     mainWindow.setCurrentFilename(selectedFile.getPath());
 
-                    RandomAccessFileDataLocator loc =
-                            new RandomAccessFileDataLocator(selectedFile);
+                    RandomAccessFileDataLocator loc = new RandomAccessFileDataLocator(selectedFile);
 
                     loadPartitionSystem(loc);
                 }
@@ -180,25 +179,32 @@ public class MainController {
     }
 
     private class ExitItemListener implements ActionListener {
+
+        @Override
         public void actionPerformed(ActionEvent evt) {
             exitProgram();
         }
     }
 
     private class AboutItemListener implements ActionListener {
-        public void actionPerformed(ActionEvent evt) {
-            JOptionPane.showMessageDialog(mainPanel, "jParted 0.1", "About",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-    private class PartitionSystemsBoxListener implements ActionListener {
-        public void actionPerformed(ActionEvent evt) {
 
-        }
-    }
-    private class SynchronizeButtonListener implements ActionListener {
+        @Override
         public void actionPerformed(ActionEvent evt) {
+            JOptionPane.showMessageDialog(mainPanel, "jParted 0.1", "About", INFORMATION_MESSAGE);
         }
     }
 
+    private static class PartitionSystemsBoxListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+        }
+    }
+
+    private static class SynchronizeButtonListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+        }
+    }
 }

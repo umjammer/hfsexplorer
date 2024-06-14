@@ -27,6 +27,7 @@ import org.catacombae.io.ReadableConcatenatedStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.util.Util;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -75,7 +76,7 @@ public class AppleSingleHandler {
         EntryDescriptor[] result = new EntryDescriptor[Util.unsign(header.getNumEntries())];
         byte[] descriptorData = new byte[EntryDescriptor.length()];
 
-        for(int i = 0; i < result.length; ++i) {
+        for (int i = 0; i < result.length; ++i) {
             stream.readFullyFrom(pos, descriptorData);
             pos += EntryDescriptor.length();
             result[i] = new EntryDescriptor(descriptorData, 0);
@@ -99,8 +100,8 @@ public class AppleSingleHandler {
         stream.seek(offset);
         stream.readFully(magicBytes);
         int magic = Util.readIntBE(magicBytes);
-        for(FileType f : FileType.values()) {
-            if(f.getMagic() == magic)
+        for (FileType f : FileType.values()) {
+            if (f.getMagic() == magic)
                 return f;
         }
         return null;
@@ -114,8 +115,8 @@ public class AppleSingleHandler {
      * if none exists.
      */
     public EntryDescriptor getResourceEntryDescriptor() {
-        for(EntryDescriptor descriptor : getEntryDescriptors()) {
-            if(descriptor.getEntryId() == EntryType.RESOURCE_FORK.getTypeNumber())
+        for (EntryDescriptor descriptor : getEntryDescriptors()) {
+            if (descriptor.getEntryId() == EntryType.RESOURCE_FORK.getTypeNumber())
                 return descriptor;
         }
         return null;

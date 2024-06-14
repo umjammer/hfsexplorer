@@ -28,6 +28,7 @@ package org.catacombae.storage.fs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface FSFile extends FSEntry {
+
     /**
      * Returns the main (data) fork of this file, containing the data that users
      * normally will see. All implementors must make sure that this FSFork
@@ -35,5 +36,5 @@ public interface FSFile extends FSEntry {
      *
      * @return the main (data) fork of this file.
      */
-    public abstract FSFork getMainFork();
+    FSFork getMainFork();
 }

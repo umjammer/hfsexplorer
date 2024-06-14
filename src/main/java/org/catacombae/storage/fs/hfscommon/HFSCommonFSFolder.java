@@ -17,6 +17,8 @@
 
 package org.catacombae.storage.fs.hfscommon;
 
+import java.util.Objects;
+
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFolder;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFolderRecord;
@@ -27,10 +29,12 @@ import org.catacombae.storage.fs.FSEntry;
 import org.catacombae.storage.fs.FSFolder;
 import org.catacombae.storage.fs.FSFork;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSCommonFSFolder extends HFSCommonFSEntry implements FSFolder {
+
     /**
      * The record from which this file was referenced. In the case of a
      * non-hardlinked directory, this variable is equal to
@@ -57,69 +61,63 @@ public class HFSCommonFSFolder extends HFSCommonFSEntry implements FSFolder {
         super(iParent, iFolderRecord.getData());
 
         // Input check
-        if(iParent == null)
+        if (iParent == null)
             throw new IllegalArgumentException("iParent must not be null!");
-        if(iFolderRecord == null)
+        if (iFolderRecord == null)
             throw new IllegalArgumentException("iFolderRecord must not be null!");
 
-        if(iHardLinkFileRecord != null)
-            this.keyRecord = iHardLinkFileRecord;
-        else
-            this.keyRecord = iFolderRecord;
+        this.keyRecord = Objects.requireNonNullElse(iHardLinkFileRecord, iFolderRecord);
         this.folderRecord = iFolderRecord;
 
-        this.attributes =
-                new HFSCommonFSAttributes(this, folderRecord.getData());
+        this.attributes = new HFSCommonFSAttributes(this, folderRecord.getData());
     }
 
-    /* @Override */
+    @Override
     public String[] list() {
         return fsHandler.listNames(folderRecord);
     }
 
-    /* @Override */
+    @Override
     public FSEntry[] listEntries() {
         return fsHandler.listFSEntries(folderRecord);
     }
 
-    /* @Override */
+    @Override
     public FSEntry getChild(String name) {
         return fsHandler.getEntry(folderRecord, name);
     }
 
-    /* @Override */
+    @Override
     public long getValence() {
         return folderRecord.getData().getValence();
     }
 
-    /* @Override */
+    @Override
     public FSAttributes getAttributes() {
         return attributes;
     }
 
-    /* @Override */
+    @Override
     public String getName() {
         return fsHandler.getProperNodeName(keyRecord);
     }
 
-    /*
-    @Override
-    public FSFolder getParent() {
-        return fsHandler.lookupParentFolder(keyRecord);
-    }
-     * */
+//    @Override
+//    public FSFolder getParent() {
+//        return fsHandler.lookupParentFolder(keyRecord);
+//    }
 
-    /* @Override */
+    @Override
     public boolean isCompressed() {
         return false;
     }
 
-    /* @Override */
+    @Override
     protected CommonHFSCatalogNodeID getCatalogNodeID() {
         return folderRecord.getData().getFolderID();
     }
 
-    /* @Override */
+    @Override
     protected FSFork getResourceFork() {
         return null;
     }
@@ -127,6 +125,7 @@ public class HFSCommonFSFolder extends HFSCommonFSEntry implements FSFolder {
     public CommonHFSCatalogFolder getInternalCatalogFolder() {
         return folderRecord.getData();
     }
+
     CommonHFSCatalogFolderRecord getInternalCatalogFolderRecord() {
         return folderRecord;
     }

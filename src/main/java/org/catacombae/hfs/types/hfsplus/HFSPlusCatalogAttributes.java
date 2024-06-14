@@ -19,49 +19,63 @@ package org.catacombae.hfs.types.hfsplus;
 
 import java.util.Date;
 
+
 /**
  * Generalization of the common attributes of HFSPlusCatalogFolder and HFSPlusCatalogFile.
  *
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public interface HFSPlusCatalogAttributes {
-    public static short kHFSFileLockedBit = 0x0000;
-    public static short kHFSFileLockedMask = 0x0001;
 
-    public static short kHFSThreadExistsBit = 0x0001;
-    public static short kHFSThreadExistsMask = 0x0002;
+    short kHFSFileLockedBit = 0x0000;
+    short kHFSFileLockedMask = 0x0001;
 
-    public static short kHFSHasAttributesBit = 0x0002;
-    public static short kHFSHasAttributesMask = 0x0004;
+    short kHFSThreadExistsBit = 0x0001;
+    short kHFSThreadExistsMask = 0x0002;
 
-    public static short kHFSHasSecurityBit = 0x0003;
-    public static short kHFSHasSecurityMask = 0x0008;
+    short kHFSHasAttributesBit = 0x0002;
+    short kHFSHasAttributesMask = 0x0004;
 
-    public static short kHFSHasFolderCountBit = 0x0004;
-    public static short kHFSHasFolderCountMask = 0x0010;
+    short kHFSHasSecurityBit = 0x0003;
+    short kHFSHasSecurityMask = 0x0008;
 
-    public static short kHFSHasLinkChainBit = 0x0005;
-    public static short kHFSHasLinkChainMask = 0x0020;
+    short kHFSHasFolderCountBit = 0x0004;
+    short kHFSHasFolderCountMask = 0x0010;
 
-    public static short kHFSHasChildLinkBit = 0x0006;
-    public static short kHFSHasChildLinkMask = 0x0040;
+    short kHFSHasLinkChainBit = 0x0005;
+    short kHFSHasLinkChainMask = 0x0020;
 
-    public static short kHFSHasDateAddedBit = 0x0007;
-    public static short kHFSHasDateAddedMask = 0x0080;
+    short kHFSHasChildLinkBit = 0x0006;
+    short kHFSHasChildLinkMask = 0x0040;
 
-    public short getRecordType();
-    public short getFlags();
-    public int getCreateDate();
-    public int getContentModDate();
-    public int getAttributeModDate();
-    public int getAccessDate();
-    public int getBackupDate();
-    public HFSPlusBSDInfo getPermissions();
-    public int getTextEncoding();
+    short kHFSHasDateAddedBit = 0x0007;
+    short kHFSHasDateAddedMask = 0x0080;
 
-    public Date getCreateDateAsDate();
-    public Date getContentModDateAsDate();
-    public Date getAttributeModDateAsDate();
-    public Date getAccessDateAsDate();
-    public Date getBackupDateAsDate();
+    short getRecordType();
+
+    short getFlags();
+
+    int getCreateDate();
+
+    int getContentModDate();
+
+    int getAttributeModDate();
+
+    int getAccessDate();
+
+    int getBackupDate();
+
+    HFSPlusBSDInfo getPermissions();
+
+    int getTextEncoding();
+
+    Date getCreateDateAsDate();
+
+    Date getContentModDateAsDate();
+
+    Date getAttributeModDateAsDate();
+
+    Date getAccessDateAsDate();
+
+    Date getBackupDateAsDate();
 }

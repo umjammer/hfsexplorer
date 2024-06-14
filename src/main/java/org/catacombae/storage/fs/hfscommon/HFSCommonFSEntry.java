@@ -20,9 +20,9 @@ package org.catacombae.storage.fs.hfscommon;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.hfs.AttributesFile;
 import org.catacombae.hfs.types.hfscommon.CommonHFSAttributesLeafRecord;
-import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogAttributes;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogNodeID;
 import org.catacombae.hfs.types.hfscommon.CommonHFSFinderInfo;
@@ -30,7 +30,9 @@ import org.catacombae.storage.fs.BasicFSEntry;
 import org.catacombae.storage.fs.FSFork;
 import org.catacombae.storage.fs.FSForkType;
 import org.catacombae.storage.fs.FSLink;
+import org.catacombae.util.Util;
 import org.catacombae.util.Util.Pair;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -38,8 +40,8 @@ import org.catacombae.util.Util.Pair;
 public abstract class HFSCommonFSEntry extends BasicFSEntry {
 
     private static final char[] SECURITY_ATTRIBUTE_NAME = {
-        'c', 'o', 'm', '.', 'a', 'p', 'p', 'l', 'e', '.', 's', 'y', 's', 't',
-        'e', 'm', '.', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
+            'c', 'o', 'm', '.', 'a', 'p', 'p', 'l', 'e', '.', 's', 'y', 's', 't',
+            'e', 'm', '.', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
     };
 
     protected final HFSCommonFileSystemHandler fsHandler;
@@ -49,7 +51,7 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
     LinkedList<FSFork> attributeForkList = null;
 
     protected HFSCommonFSEntry(HFSCommonFileSystemHandler parentFileSystem,
-            CommonHFSCatalogAttributes catalogAttributes) {
+                               CommonHFSCatalogAttributes catalogAttributes) {
         super(parentFileSystem);
 
         this.fsHandler = parentFileSystem;
@@ -57,63 +59,43 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
     }
 
     protected synchronized void fillAttributeForks(List<FSFork> forkList) {
-        if(attributeForkList == null) {
-            LinkedList<FSFork> tmpAttributeForkList = new LinkedList<FSFork>();
+        if (attributeForkList == null) {
+            LinkedList<FSFork> tmpAttributeForkList = new LinkedList<>();
 
-            AttributesFile attributesFile =
-                    fsHandler.getFSView().getAttributesFile();
-            if(attributesFile != null) {
-                LinkedList<Pair<char[],
-                        LinkedList<CommonHFSAttributesLeafRecord>>>
-                        attributeBucketList =
-                        new LinkedList<Pair<char[],
-                        LinkedList<CommonHFSAttributesLeafRecord>>>();
+            AttributesFile attributesFile = fsHandler.getFSView().getAttributesFile();
+            if (attributesFile != null) {
+                LinkedList<Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>>> attributeBucketList =
+                        new LinkedList<>();
 
-                for(CommonHFSAttributesLeafRecord attributeRecord :
-                        attributesFile.listAttributeRecords(getCatalogNodeID()))
-                {
+                for (CommonHFSAttributesLeafRecord attributeRecord :
+                        attributesFile.listAttributeRecords(getCatalogNodeID())) {
                     Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>> p;
 
-                    if(Arrays.equals(attributeRecord.getKey().getAttrName(),
-                            SECURITY_ATTRIBUTE_NAME))
-                    {
-                        /* Skip the "com.apple.system.Security" attribute since
-                         * it contains access control lists and is supposed to
-                         * be hidden. */
+                    if (Arrays.equals(attributeRecord.getKey().getAttrName(), SECURITY_ATTRIBUTE_NAME)) {
+                        // Skip the "com.apple.system.Security" attribute since
+                        // it contains access control lists and is supposed to
+                        // be hidden.
                         continue;
                     }
 
-                    if(!attributeBucketList.isEmpty() &&
-                           (p = attributeBucketList.getLast()) != null)
-                    {
-                        if(Arrays.equals(p.getA(),
-                                attributeRecord.getKey().getAttrName()))
-                        {
-                            p.getB().addLast(attributeRecord);
-                        }
-                    }
-                    else {
-                        LinkedList<CommonHFSAttributesLeafRecord> bucket =
-                                new LinkedList<CommonHFSAttributesLeafRecord>();
+                    if (!attributeBucketList.isEmpty() &&
+                            (p = attributeBucketList.getLast()) != null &&
+                            Arrays.equals(p.getA(), attributeRecord.getKey().getAttrName())) {
+                        p.getB().addLast(attributeRecord);
+                    } else {
+                        LinkedList<CommonHFSAttributesLeafRecord> bucket = new LinkedList<>();
                         bucket.add(attributeRecord);
 
-                        p = new Pair<char[],
-                                LinkedList<CommonHFSAttributesLeafRecord>>(
-                                attributeRecord.getKey().getAttrName(), bucket);
+                        p = new Pair<>(attributeRecord.getKey().getAttrName(), bucket);
                         attributeBucketList.add(p);
                     }
                 }
 
-                for(Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>> p :
-                        attributeBucketList)
-                {
-                    LinkedList<CommonHFSAttributesLeafRecord> recordList =
-                            p.getB();
+                for (Pair<char[], LinkedList<CommonHFSAttributesLeafRecord>> p : attributeBucketList) {
+                    LinkedList<CommonHFSAttributesLeafRecord> recordList = p.getB();
 
                     tmpAttributeForkList.add(new HFSCommonAttributeFork(this,
-                            recordList.toArray(
-                            new CommonHFSAttributesLeafRecord[recordList.
-                            size()])));
+                            recordList.toArray(CommonHFSAttributesLeafRecord[]::new)));
                 }
             }
 
@@ -127,42 +109,42 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
         return fsHandler;
     }
 
-    /* @Override */
+    @Override
     public FSFork[] getAllForks() {
-        LinkedList<FSFork> forkList = new LinkedList<FSFork>();
+        LinkedList<FSFork> forkList = new LinkedList<>();
 
         fillForks(forkList);
 
-        return forkList.toArray(new FSFork[forkList.size()]);
+        return forkList.toArray(FSFork[]::new);
     }
 
     protected void fillForks(List<FSFork> forkList) {
         FSFork fork = getFinderInfoFork();
-        if(fork != null)
+        if (fork != null)
             forkList.add(fork);
 
         FSFork resourceFork = getResourceFork();
-        if(resourceFork != null) {
+        if (resourceFork != null) {
             forkList.add(resourceFork);
         }
 
         fillAttributeForks(forkList);
     }
 
-    /* @Override */
+    @Override
     public FSFork getForkByType(FSForkType type) {
 
-        if(type == FSForkType.MACOS_FINDERINFO)
+        if (type == FSForkType.MACOS_FINDERINFO)
             return getFinderInfoFork();
         else
             return null;
     }
 
-    /* @Override */
+    @Override
     public long getCombinedLength() {
 
         FSFork fork = getFinderInfoFork();
-        if(fork != null)
+        if (fork != null)
             return finderInfoFork.getLength();
         else
             return 0;
@@ -171,28 +153,27 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
     protected abstract CommonHFSCatalogNodeID getCatalogNodeID();
 
     public FSFork getFinderInfoFork() {
-        if(!finderInfoForkLoaded) {
+        if (!finderInfoForkLoaded) {
             CommonHFSFinderInfo finderInfo = catalogAttributes.getFinderInfo();
             byte[] finderInfoBytes = finderInfo.getBytes();
 
-            /* Imitating the Mac OS X hfs kernel driver, we zero the fields
-             * 'document_id', 'date_added' and 'write_gen_counter' before
-             * checking if whole struct is zeroed. */
+            // Imitating the Mac OS X hfs kernel driver, we zero the fields
+            // 'document_id', 'date_added' and 'write_gen_counter' before
+            // checking if whole struct is zeroed.
             Arrays.fill(finderInfoBytes, 16, 20, (byte) 0);
             Arrays.fill(finderInfoBytes, 20, 24, (byte) 0);
             Arrays.fill(finderInfoBytes, 28, 32, (byte) 0);
 
-            /* Also, if this is a link then clear the type/creator fields in the
-             * FinderInfo before comparing. */
-            if(this instanceof FSLink) {
+            // Also, if this is a link then clear the type/creator fields in the
+            // FinderInfo before comparing.
+            if (this instanceof FSLink) {
                 Arrays.fill(finderInfoBytes, 0, 4, (byte) 0);
                 Arrays.fill(finderInfoBytes, 4, 8, (byte) 0);
             }
 
-            if(!Util.zeroed(finderInfoBytes)) {
+            if (!Util.zeroed(finderInfoBytes)) {
                 finderInfoFork = new HFSCommonFinderInfoFork(finderInfo);
-            }
-            else
+            } else
                 finderInfoFork = null;
             finderInfoForkLoaded = true;
         }

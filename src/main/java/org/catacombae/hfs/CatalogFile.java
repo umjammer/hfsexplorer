@@ -20,9 +20,9 @@ package org.catacombae.hfs;
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.hfs.io.ForkFilter;
-import org.catacombae.io.ReadableRandomAccessSubstream;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderNode;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderRecord;
 import org.catacombae.hfs.types.hfscommon.CommonBTIndexRecord;
@@ -46,34 +46,34 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogThread;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogThreadRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSVolumeHeader;
 import org.catacombae.io.ReadableRandomAccessStream;
+import org.catacombae.io.ReadableRandomAccessSubstream;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class CatalogFile
-    extends BTreeFile<CommonHFSCatalogKey, CommonHFSCatalogLeafRecord>
-{
+        extends BTreeFile<CommonHFSCatalogKey, CommonHFSCatalogLeafRecord> {
+
     CatalogFile(HFSVolume vol) {
         super(vol);
     }
 
     class CatalogFileSession extends BTreeFileSession {
+
         @Override
-        protected ReadableRandomAccessStream getBTreeStream(
-                CommonHFSVolumeHeader header) {
-            //if(catalogCache != null)
-            //    return catalogCache;
-            //printStructArray(System.err, "    ", "allCatalogFileDescriptors",
-            //        allCatalogFileDescriptors);
+        protected ReadableRandomAccessStream getBTreeStream(CommonHFSVolumeHeader header) {
+//            if (catalogCache != null)
+//                return catalogCache;
+//            printStructArray(System.err, "    ", "allCatalogFileDescriptors", allCatalogFileDescriptors);
             return new ForkFilter(ForkFilter.ForkType.DATA,
-                    vol.getCommonHFSCatalogNodeID(ReservedID.CATALOG_FILE).
-                    toLong(),
+                    vol.getCommonHFSCatalogNodeID(ReservedID.CATALOG_FILE).toLong(),
                     header.getCatalogFile(),
                     vol.extentsOverflowFile,
                     new ReadableRandomAccessSubstream(vol.hfsFile),
                     0,
                     header.getAllocationBlockSize(),
-                    header.getAllocationBlockStart()*vol.physicalBlockSize);
+                    header.getAllocationBlockStart() * vol.physicalBlockSize);
         }
     }
 
@@ -81,38 +81,33 @@ public class CatalogFile
      * Opens the catalog file for reading and reads the value of some important
      * variables (the "session").
      */
+    @Override
     BTreeFileSession openSession() {
         return new CatalogFileSession();
     }
 
-    protected CommonHFSCatalogIndexNode createIndexNode(byte[] nodeData,
-            int offset, int nodeSize)
-    {
+    @Override
+    protected CommonHFSCatalogIndexNode createIndexNode(byte[] nodeData, int offset, int nodeSize) {
         return newCatalogIndexNode(nodeData, 0, nodeSize);
     }
 
-    protected CommonHFSCatalogLeafNode createLeafNode(byte[] nodeData,
-            int offset, int nodeSize)
-    {
+    @Override
+    protected CommonHFSCatalogLeafNode createLeafNode(byte[] nodeData, int offset, int nodeSize) {
         return newCatalogLeafNode(nodeData, 0, nodeSize);
     }
 
-    /** Switches to cached mode for reading the catalog file. */
-    /*
-    public void retainCatalogFile() {
-        CatalogInitProcedure init = new CatalogInitProcedure();
-        ReadableRandomAccessStream ff = init.forkFilterFile;
-        catalogCache = new ReadableBlockCachingStream(ff, 512 * 1024, 32); // 512 KiB blocks, 32 of them
-        catalogCache.preloadBlocks();
-    }
-    */
+//    /** Switches to cached mode for reading the catalog file. */
+//    public void retainCatalogFile() {
+//        CatalogInitProcedure init = new CatalogInitProcedure();
+//        ReadableRandomAccessStream ff = init.forkFilterFile;
+//        catalogCache = new ReadableBlockCachingStream(ff, 512 * 1024, 32); // 512 KiB blocks, 32 of them
+//        catalogCache.preloadBlocks();
+//    }
 
-    /** Disables cached mode for reading the catalog file. */
-    /*
-    public void releaseCatalogFile() {
-        catalogCache = null;
-    }
-    */
+//    /** Disables cached mode for reading the catalog file. */
+//    public void releaseCatalogFile() {
+//        catalogCache = null;
+//    }
 
     public CommonHFSCatalogFolderRecord getRootFolder() {
         BTreeFileSession ses = openSession();
@@ -125,66 +120,55 @@ public class CatalogFile
 
     private CommonHFSCatalogFolderRecord doGetRootFolder(BTreeFileSession ses) {
         // Search down through the layers of indices to the record with parentID 1.
-        CommonHFSCatalogNodeID parentID =
-                vol.getCommonHFSCatalogNodeID(ReservedID.ROOT_PARENT);
-        final int nodeSize = ses.bthr.getNodeSize();
+        CommonHFSCatalogNodeID parentID = vol.getCommonHFSCatalogNodeID(ReservedID.ROOT_PARENT);
+        int nodeSize = ses.bthr.getNodeSize();
         long currentNodeOffset = ses.bthr.getRootNodeNumber() * ses.bthr.getNodeSize();
 
-        //System.err.println("Got header record: ");
-        //init.bthr.print(System.err, " ");
+//        logger.log(Level.DEBUG, "Got header record: ");
+//        init.bthr.print(System.err, " ");
 
         byte[] currentNodeData = new byte[nodeSize];
         ses.btreeStream.seek(currentNodeOffset);
         ses.btreeStream.readFully(currentNodeData);
         CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
-        while(nodeDescriptor.getNodeType() == NodeType.INDEX) {
-            CommonHFSCatalogIndexNode currentNode =
-                    newCatalogIndexNode(currentNodeData, 0,
-                    ses.bthr.getNodeSize());
-            //System.err.println("currentNode:");
-            //currentNode.print(System.err, "  ");
-            CommonBTIndexRecord matchingRecord = findKey(currentNode, parentID);
+        while (nodeDescriptor.getNodeType() == NodeType.INDEX) {
+            CommonHFSCatalogIndexNode currentNode = newCatalogIndexNode(currentNodeData, 0, ses.bthr.getNodeSize());
+//            logger.log(Level.DEBUG, "currentNode:");
+//            currentNode.print(System.err, "  ");
+            CommonBTIndexRecord<CommonHFSCatalogKey> matchingRecord = findKey(currentNode, parentID);
 
-            //currentNodeNumber = matchingRecord.getIndex();
-            currentNodeOffset = matchingRecord.getIndex()*nodeSize;
+//            currentNodeNumber = matchingRecord.getIndex();
+            currentNodeOffset = matchingRecord.getIndex() * nodeSize;
             ses.btreeStream.seek(currentNodeOffset);
             ses.btreeStream.readFully(currentNodeData);
             nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
         }
 
         // Leaf node reached. Find record with parent id 1. (or whatever value is in the parentID variable :) )
-        if(nodeDescriptor.getNodeType() == NodeType.LEAF) {
-            CommonHFSCatalogLeafNode leaf =
-                    newCatalogLeafNode(currentNodeData, 0, nodeSize);
+        if (nodeDescriptor.getNodeType() == NodeType.LEAF) {
+            CommonHFSCatalogLeafNode leaf = newCatalogLeafNode(currentNodeData, 0, nodeSize);
             CommonHFSCatalogLeafRecord[] recs = leaf.getLeafRecords();
-            for(CommonHFSCatalogLeafRecord rec : recs) {
-                if(rec != null && rec.getKey().getParentID().toLong() ==
-                        parentID.toLong())
-                {
-                    if(rec instanceof CommonHFSCatalogFolderRecord)
-                        return (CommonHFSCatalogFolderRecord)rec;
+            for (CommonHFSCatalogLeafRecord rec : recs) {
+                if (rec != null && rec.getKey().getParentID().toLong() == parentID.toLong()) {
+                    if (rec instanceof CommonHFSCatalogFolderRecord)
+                        return (CommonHFSCatalogFolderRecord) rec;
                     else
                         throw new RuntimeException("Error in internal structures: " +
-                                " root node is not a folder record, but a " +
-                                rec.getClass());
+                                " root node is not a folder record, but a " + rec.getClass());
                 }
             }
             return null;
-        }
-        else {
-            throw new RuntimeException("Expected leaf node. Found other kind: " +
-                    nodeDescriptor.getNodeType());
+        } else {
+            throw new RuntimeException("Expected leaf node. Found other kind: " + nodeDescriptor.getNodeType());
         }
     }
 
     public CommonBTHeaderNode getCatalogHeaderNode() {
-        CommonBTNode firstNode = getCatalogNode(0);
-        if(firstNode instanceof CommonBTHeaderNode) {
-            return (CommonBTHeaderNode)firstNode;
-        }
-        else
-            throw new RuntimeException("Unexpected node type at catalog node 0: " +
-                    firstNode.getClass());
+        CommonBTNode<?> firstNode = getCatalogNode(0);
+        if (firstNode instanceof CommonBTHeaderNode) {
+            return (CommonBTHeaderNode) firstNode;
+        } else
+            throw new RuntimeException("Unexpected node type at catalog node 0: " + firstNode.getClass());
     }
 
     /**
@@ -197,21 +181,20 @@ public class CatalogFile
      * @param nodeNumber the node number inside the catalog file, or a negative value if we want the root
      * @return the requested node if it exists and has type index node or leaf node, null otherwise
      */
-    public CommonBTNode getCatalogNode(long nodeNumber) {
+    public CommonBTNode<?> getCatalogNode(long nodeNumber) {
 
-        final BTreeFileSession ses = openSession();
+        BTreeFileSession ses = openSession();
         try {
             long currentNodeNumber;
-            if(nodeNumber < 0) {
+            if (nodeNumber < 0) {
                 // Means that we should get the root node
                 currentNodeNumber = ses.bthr.getRootNodeNumber();
-                if(currentNodeNumber == 0) {
+                if (currentNodeNumber == 0) {
                     // There is no index node, or other content. So the node we
                     // seek does not exist. Return null.
                     return null;
                 }
-            }
-            else {
+            } else {
                 currentNodeNumber = nodeNumber;
             }
 
@@ -227,17 +210,18 @@ public class CatalogFile
      * always exist in the root index node at position 0, and the same all the way
      * down the tree.
      * So this method is actually too complicated for its purpose. (: But whatever...
+     *
      * @return the corresponding index record if found, null otherwise
      */
     private static CommonBTIndexRecord<CommonHFSCatalogKey> findKey(CommonHFSCatalogIndexNode indexNode,
-            CommonHFSCatalogNodeID parentID) {
+                                                                    CommonHFSCatalogNodeID parentID) {
 
-	for(CommonBTIndexRecord<CommonHFSCatalogKey> rec : indexNode.getBTRecords()) {
-	    CommonHFSCatalogKey key = rec.getKey();
-            if(key.getParentID().toLong() == parentID.toLong())
+        for (CommonBTIndexRecord<CommonHFSCatalogKey> rec : indexNode.getBTRecords()) {
+            CommonHFSCatalogKey key = rec.getKey();
+            if (key.getParentID().toLong() == parentID.toLong())
                 return rec;
-	}
-	return null;
+        }
+        return null;
     }
 
 
@@ -252,37 +236,29 @@ public class CatalogFile
      * <code>leaf</code> as tail.
      */
     public LinkedList<CommonHFSCatalogLeafRecord> getPathTo(CommonHFSCatalogNodeID leafID) {
-        final CommonHFSCatalogLeafRecord leafThreadRec =
-                getRecord(leafID, vol.getEmptyString());
+        CommonHFSCatalogLeafRecord leafThreadRec = getRecord(leafID, vol.getEmptyString());
 
-        if(leafThreadRec != null) {
-            final CommonHFSCatalogNodeID parentID;
-            final CommonHFSCatalogString nodeName;
+        if (leafThreadRec != null) {
+            CommonHFSCatalogNodeID parentID;
+            CommonHFSCatalogString nodeName;
 
-            if(leafThreadRec instanceof CommonHFSCatalogThreadRecord) {
-                final CommonHFSCatalogThread thread =
-                        ((CommonHFSCatalogThreadRecord) leafThreadRec).
-                        getData();
+            if (leafThreadRec instanceof CommonHFSCatalogThreadRecord) {
+                CommonHFSCatalogThread thread = ((CommonHFSCatalogThreadRecord<?>) leafThreadRec).getData();
                 parentID = thread.getParentID();
                 nodeName = thread.getNodeName();
-            }
-            else {
+            } else {
                 throw new RuntimeException("Expected a catalog thread record " +
-                        "for key " + leafID.toLong() + ":\"\", got " +
-                        leafThreadRec.getClass() + ".");
+                        "for key " + leafID.toLong() + ":\"\", got " + leafThreadRec.getClass() + ".");
             }
 
             CommonHFSCatalogLeafRecord leaf = getRecord(parentID, nodeName);
-            if(leaf == null) {
-                throw new RuntimeException("No record found for leaf id " +
-                        leafID.toLong());
+            if (leaf == null) {
+                throw new RuntimeException("No record found for leaf id " + leafID.toLong());
             }
 
             return getPathTo(leaf);
-        }
-        else {
-            throw new RuntimeException("No thread record found for leaf id " +
-                    leafID.toLong() + "!");
+        } else {
+            throw new RuntimeException("No thread record found for leaf id " + leafID.toLong() + "!");
         }
     }
 
@@ -297,29 +273,27 @@ public class CatalogFile
      * <code>leaf</code> as tail.
      */
     public LinkedList<CommonHFSCatalogLeafRecord> getPathTo(CommonHFSCatalogLeafRecord leaf) {
-        if(leaf == null)
+        if (leaf == null)
             throw new IllegalArgumentException("argument \"leaf\" must not be null!");
 
-	LinkedList<CommonHFSCatalogLeafRecord> pathList = new LinkedList<CommonHFSCatalogLeafRecord>();
-	pathList.addLast(leaf);
-	CommonHFSCatalogNodeID parentID = leaf.getKey().getParentID();
-	while(!parentID.equals(parentID.getReservedID(ReservedID.ROOT_PARENT))) {
-	    CommonHFSCatalogLeafRecord parent = getRecord(parentID, vol.getEmptyString()); // Look for the thread record associated with the parent dir
-	    if(parent == null)
-		throw new RuntimeException("No folder thread found!");
-	    //CommonHFSCatalogLeafRecord data = parent.getData();
-	    if(parent instanceof CommonHFSCatalogFolderThreadRecord) {
-		CommonHFSCatalogFolderThreadRecord threadRec = (CommonHFSCatalogFolderThreadRecord)parent;
+        LinkedList<CommonHFSCatalogLeafRecord> pathList = new LinkedList<>();
+        pathList.addLast(leaf);
+        CommonHFSCatalogNodeID parentID = leaf.getKey().getParentID();
+        while (!parentID.equals(parentID.getReservedID(ReservedID.ROOT_PARENT))) {
+            CommonHFSCatalogLeafRecord parent = getRecord(parentID, vol.getEmptyString()); // Look for the thread record associated with the parent dir
+            if (parent == null)
+                throw new RuntimeException("No folder thread found!");
+//            CommonHFSCatalogLeafRecord data = parent.getData();
+            if (parent instanceof CommonHFSCatalogFolderThreadRecord threadRec) {
                 CommonHFSCatalogFolderThread thread = threadRec.getData();
-		pathList.addFirst(getRecord(thread.getParentID(), thread.getNodeName()));
-		parentID = thread.getParentID();
-	    }
-	    else if(parent instanceof CommonHFSCatalogFileThreadRecord)
-		throw new RuntimeException("Tried to get folder thread (" + parentID + ",\"\") but found a file thread!");
-	    else
-		throw new RuntimeException("Tried to get folder thread (" + parentID + ",\"\") but found a " + parent.getClass() + "!");
-	}
-	return pathList;
+                pathList.addFirst(getRecord(thread.getParentID(), thread.getNodeName()));
+                parentID = thread.getParentID();
+            } else if (parent instanceof CommonHFSCatalogFileThreadRecord)
+                throw new RuntimeException("Tried to get folder thread (" + parentID + ",\"\") but found a file thread!");
+            else
+                throw new RuntimeException("Tried to get folder thread (" + parentID + ",\"\") but found a " + parent.getClass() + "!");
+        }
+        return pathList;
     }
 
     /**
@@ -334,29 +308,27 @@ public class CatalogFile
      * @return the requested record, if any, or <code>null</code> if no such
      * record was found.
      */
-    public CommonHFSCatalogLeafRecord getRecord(CommonHFSCatalogNodeID parentID,
-            CommonHFSCatalogString nodeName) {
+    public CommonHFSCatalogLeafRecord getRecord(CommonHFSCatalogNodeID parentID, CommonHFSCatalogString nodeName) {
         return getRecord(newCatalogKey(parentID, nodeName));
     }
 
     /**
      * List all records belonging to a folder.
-     *
+     * <p>
      * More typesafe than {@link #listRecords(CommonHFSCatalogNodeID)} since it
      * checks that <code>folderRecord</code> has an appropriate type first.
      */
     public CommonHFSCatalogLeafRecord[] listRecords(CommonHFSCatalogLeafRecord folderRecord) {
-	if(folderRecord instanceof CommonHFSCatalogFolderRecord) {
-	    CommonHFSCatalogFolder folder = ((CommonHFSCatalogFolderRecord)folderRecord).getData();
-	    return listRecords(folder.getFolderID());
-	}
-	else
-	    throw new RuntimeException("Invalid input (not a folder record).");
+        if (folderRecord instanceof CommonHFSCatalogFolderRecord) {
+            CommonHFSCatalogFolder folder = ((CommonHFSCatalogFolderRecord) folderRecord).getData();
+            return listRecords(folder.getFolderID());
+        } else
+            throw new RuntimeException("Invalid input (not a folder record).");
     }
 
     /**
      * List all records belonging to a folder.
-     *
+     * <p>
      * You should use {@link #listRecords(CommonHFSCatalogLeafRecord)} to access
      * folder listings. However, the folder ID is really all that's needed, but
      * make sure it's a folder ID and not a file ID, or something bad will
@@ -365,131 +337,99 @@ public class CatalogFile
     public CommonHFSCatalogLeafRecord[] listRecords(CommonHFSCatalogNodeID folderID) {
         BTreeFileSession init = openSession();
         try {
-            return collectFilesInDir(folderID, init.bthr.getRootNodeNumber(),
-                    init.header, init.bthr, init.btreeStream);
+            return collectFilesInDir(folderID, init.bthr.getRootNodeNumber(), init.header, init.bthr, init.btreeStream);
         } finally {
             init.close();
         }
     }
 
     private CommonHFSCatalogLeafRecord[] collectFilesInDir(
-            final CommonHFSCatalogNodeID dirID, final long currentNodeIndex,
-            final CommonHFSVolumeHeader header, final CommonBTHeaderRecord bthr,
-            final ReadableRandomAccessStream catalogFile)
-    {
-        final int nodeSize = bthr.getNodeSize();
+            CommonHFSCatalogNodeID dirID, long currentNodeIndex,
+            CommonHFSVolumeHeader header, CommonBTHeaderRecord bthr,
+            ReadableRandomAccessStream catalogFile) {
+        int nodeSize = bthr.getNodeSize();
 
-	byte[] currentNodeData = new byte[nodeSize];
-	catalogFile.seek(currentNodeIndex*nodeSize);
-	catalogFile.readFully(currentNodeData);
+        byte[] currentNodeData = new byte[nodeSize];
+        catalogFile.seek(currentNodeIndex * nodeSize);
+        catalogFile.readFully(currentNodeData);
 
-	CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
-	if(nodeDescriptor.getNodeType() == NodeType.INDEX) {
-	    CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSCatalogKey>>
-                    currentNode =
+        CommonBTNodeDescriptor nodeDescriptor = createCommonBTNodeDescriptor(currentNodeData, 0);
+        if (nodeDescriptor.getNodeType() == NodeType.INDEX) {
+            CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSCatalogKey>> currentNode =
                     newCatalogIndexNode(currentNodeData, 0, nodeSize);
-	    List<CommonBTIndexRecord<CommonHFSCatalogKey>> matchingRecords =
-                    findLEChildKeys(currentNode, dirID);
-	    //System.out.println("Matching records: " + matchingRecords.length);
+            List<CommonBTIndexRecord<CommonHFSCatalogKey>> matchingRecords = findLEChildKeys(currentNode, dirID);
+//            System.out.println("Matching records: " + matchingRecords.length);
 
-	    LinkedList<CommonHFSCatalogLeafRecord> results =
-                    new LinkedList<CommonHFSCatalogLeafRecord>();
+            LinkedList<CommonHFSCatalogLeafRecord> results = new LinkedList<>();
 
-	    for(CommonBTIndexRecord bir : matchingRecords) {
-		CommonHFSCatalogLeafRecord[] partResult =
-                        collectFilesInDir(dirID, bir.getIndex(), header, bthr,
-                        catalogFile);
-		for(CommonHFSCatalogLeafRecord curRes : partResult)
-		    results.addLast(curRes);
-	    }
-	    return results.toArray(new CommonHFSCatalogLeafRecord[results.size()]);
-	}
-	else if(nodeDescriptor.getNodeType() == NodeType.LEAF) {
-	    CommonHFSCatalogLeafNode currentNode =
-                    newCatalogLeafNode(currentNodeData, 0, nodeSize);
+            for (CommonBTIndexRecord<?> bir : matchingRecords) {
+                CommonHFSCatalogLeafRecord[] partResult =
+                        collectFilesInDir(dirID, bir.getIndex(), header, bthr, catalogFile);
+                for (CommonHFSCatalogLeafRecord curRes : partResult)
+                    results.addLast(curRes);
+            }
+            return results.toArray(CommonHFSCatalogLeafRecord[]::new);
+        } else if (nodeDescriptor.getNodeType() == NodeType.LEAF) {
+            CommonHFSCatalogLeafNode currentNode = newCatalogLeafNode(currentNodeData, 0, nodeSize);
 
-	    return getChildrenTo(currentNode, dirID);
-	}
-	else
-	    throw new RuntimeException("Illegal type for node! (" + nodeDescriptor.getNodeType() + ")");
+            return getChildrenTo(currentNode, dirID);
+        } else
+            throw new RuntimeException("Illegal type for node! (" + nodeDescriptor.getNodeType() + ")");
     }
 
     private List<CommonBTIndexRecord<CommonHFSCatalogKey>> findLEChildKeys(
-            CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSCatalogKey>>
-            indexNode,
-            CommonHFSCatalogNodeID rootFolderID)
-    {
-        final CommonHFSCatalogNodeID nextCNID =
-                vol.createCommonHFSCatalogNodeID((int) (rootFolderID.toLong() +
-                1));
-        final CommonHFSCatalogKey minKeyInclusive =
-                vol.createCommonHFSCatalogKey(rootFolderID,
-                vol.getEmptyString());
-        final CommonHFSCatalogKey maxKeyExclusive =
-                vol.createCommonHFSCatalogKey(nextCNID, vol.getEmptyString());
+            CommonBTKeyedNode<CommonBTIndexRecord<CommonHFSCatalogKey>> indexNode,
+            CommonHFSCatalogNodeID rootFolderID) {
+        CommonHFSCatalogNodeID nextCNID = vol.createCommonHFSCatalogNodeID((int) (rootFolderID.toLong() + 1));
+        CommonHFSCatalogKey minKeyInclusive = vol.createCommonHFSCatalogKey(rootFolderID, vol.getEmptyString());
+        CommonHFSCatalogKey maxKeyExclusive = vol.createCommonHFSCatalogKey(nextCNID, vol.getEmptyString());
 
         return findLEKeys(indexNode, minKeyInclusive, maxKeyExclusive, false);
     }
 
     private static CommonHFSCatalogLeafRecord[] getChildrenTo(CommonHFSCatalogLeafNode leafNode,
-            CommonHFSCatalogNodeID nodeID) {
-        LinkedList<CommonHFSCatalogLeafRecord> children =
-                new LinkedList<CommonHFSCatalogLeafRecord>();
+                                                              CommonHFSCatalogNodeID nodeID) {
+        LinkedList<CommonHFSCatalogLeafRecord> children = new LinkedList<>();
         CommonHFSCatalogLeafRecord[] records = leafNode.getLeafRecords();
-        for(int i = 0; i < records.length; ++i) {
-            CommonHFSCatalogLeafRecord curRec = records[i];
-            if(curRec != null &&
-                    curRec.getKey().getParentID().toLong() == nodeID.toLong())
-            {
+        for (CommonHFSCatalogLeafRecord curRec : records) {
+            if (curRec != null && curRec.getKey().getParentID().toLong() == nodeID.toLong()) {
                 children.addLast(curRec);
             }
         }
-        return children.toArray(
-                new CommonHFSCatalogLeafRecord[children.size()]);
+        return children.toArray(CommonHFSCatalogLeafRecord[]::new);
     }
 
-    /*
-    private static HFSPlusCatalogLeafRecord findRecordID(HFSPlusCatalogLeafNode leafNode, HFSCatalogNodeID nodeID) {
-	HFSPlusCatalogLeafRecord[] records = leafNode.getLeafRecords();
-	for(int i = 0; i < records.length; ++i) {
-	    HFSPlusCatalogLeafRecord curRec = records[i];
-	    HFSPlusCatalogLeafRecordData curRecData = curRec.getData();
-	    if(curRecData instanceof HFSPlusCatalogFile &&
-	       ((HFSPlusCatalogFile)curRecData).getFileID().toInt() == nodeID.toInt()) {
-		return (HFSPlusCatalogFile)curRecData;
-	    }
-	}
-	return null;
-    }
-    */
+//    private static HFSPlusCatalogLeafRecord findRecordID(HFSPlusCatalogLeafNode leafNode, HFSCatalogNodeID nodeID) {
+//        HFSPlusCatalogLeafRecord[] records = leafNode.getLeafRecords();
+//        for (int i = 0; i < records.length; ++i) {
+//            HFSPlusCatalogLeafRecord curRec = records[i];
+//            HFSPlusCatalogLeafRecordData curRecData = curRec.getData();
+//            if (curRecData instanceof HFSPlusCatalogFile &&
+//                    ((HFSPlusCatalogFile) curRecData).getFileID().toInt() == nodeID.toInt()) {
+//                return (HFSPlusCatalogFile) curRecData;
+//            }
+//        }
+//        return null;
+//    }
 
-    protected CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data,
-            int offset, int nodeSize)
-    {
+    protected CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data, int offset, int nodeSize) {
         return vol.newCatalogIndexNode(data, offset, nodeSize);
     }
 
-    protected CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID,
-            CommonHFSCatalogString searchString)
-    {
+    protected CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString) {
         return vol.newCatalogKey(nodeID, searchString);
     }
 
-    protected CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data,
-            int offset, int nodeSize)
-    {
+    protected CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset, int nodeSize) {
         return vol.newCatalogLeafNode(data, offset, nodeSize);
     }
 
-    protected CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data,
-            int offset)
-    {
+    protected CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data, int offset) {
         return vol.newCatalogLeafRecord(data, offset);
     }
 
-    private static void printStructArray(PrintStream ps, String prefix,
-            String variableName, PrintableStruct[] structs) {
-        for(int i = 0; i < structs.length; ++i) {
+    private static void printStructArray(PrintStream ps, String prefix, String variableName, PrintableStruct[] structs) {
+        for (int i = 0; i < structs.length; ++i) {
             ps.println(prefix + variableName + "[" + i + "]:");
             structs[i].print(ps, prefix + " ");
         }

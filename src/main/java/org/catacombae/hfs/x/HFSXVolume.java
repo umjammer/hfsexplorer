@@ -17,6 +17,7 @@
 
 package org.catacombae.hfs.x;
 
+import org.catacombae.hfs.plus.HFSPlusVolume;
 import org.catacombae.hfs.types.hfscommon.CommonBTHeaderRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogIndexNode;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogKey;
@@ -26,29 +27,28 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogNodeID;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogString;
 import org.catacombae.hfs.types.hfsplus.BTHeaderRec;
 import org.catacombae.hfs.types.hfsplus.HFSCatalogNodeID;
+import org.catacombae.hfs.types.hfsplus.HFSPlusVolumeHeader;
 import org.catacombae.hfs.types.hfsplus.HFSUniStr255;
 import org.catacombae.hfs.types.hfsx.HFSXCatalogKey;
 import org.catacombae.io.ReadableRandomAccessStream;
-import org.catacombae.hfs.plus.HFSPlusVolume;
-import org.catacombae.hfs.types.hfsplus.HFSPlusVolumeHeader;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSXVolume extends HFSPlusVolume {
+
     private final byte keyCompareType;
 
-    public HFSXVolume(ReadableRandomAccessStream hfsFile,
-            boolean cachingEnabled) {
+    public HFSXVolume(ReadableRandomAccessStream hfsFile, boolean cachingEnabled) {
 
         super(hfsFile, cachingEnabled, HFSPlusVolumeHeader.SIGNATURE_HFSX);
 
         CommonBTHeaderRecord.CompareType keyCompareTypeEnum =
-                getCatalogFile().getCatalogHeaderNode().getHeaderRecord().
-                getKeyCompareType();
+                getCatalogFile().getCatalogHeaderNode().getHeaderRecord().getKeyCompareType();
 
 
-        switch(keyCompareTypeEnum) {
+        switch (keyCompareTypeEnum) {
             case CASE_FOLDING:
                 this.keyCompareType = BTHeaderRec.kHFSCaseFolding;
                 break;
@@ -56,23 +56,17 @@ public class HFSXVolume extends HFSPlusVolume {
                 this.keyCompareType = BTHeaderRec.kHFSBinaryCompare;
                 break;
             default:
-                throw new RuntimeException("Unknown key compare type:" +
-                        keyCompareTypeEnum);
+                throw new RuntimeException("Unknown key compare type:" + keyCompareTypeEnum);
         }
     }
 
     @Override
-    public CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data,
-            int offset, int nodeSize)
-    {
-        return CommonHFSCatalogIndexNode.createHFSX(data, offset, nodeSize,
-                keyCompareType);
+    public CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data, int offset, int nodeSize) {
+        return CommonHFSCatalogIndexNode.createHFSX(data, offset, nodeSize, keyCompareType);
     }
 
     @Override
-    public CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID,
-            CommonHFSCatalogString searchString)
-    {
+    public CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString) {
         return CommonHFSCatalogKey.create(new HFSXCatalogKey(
                 new HFSCatalogNodeID((int) nodeID.toLong()),
                 new HFSUniStr255(searchString.getStructBytes(), 0),
@@ -80,18 +74,12 @@ public class HFSXVolume extends HFSPlusVolume {
     }
 
     @Override
-    public CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset,
-            int nodeSize)
-    {
-        return CommonHFSCatalogLeafNode.createHFSX(data, offset, nodeSize,
-                keyCompareType);
+    public CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset, int nodeSize) {
+        return CommonHFSCatalogLeafNode.createHFSX(data, offset, nodeSize, keyCompareType);
     }
 
     @Override
-    public CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data,
-            int offset)
-    {
-        return CommonHFSCatalogLeafRecord.createHFSX(data, offset,
-                offset + data.length, keyCompareType);
+    public CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data, int offset) {
+        return CommonHFSCatalogLeafRecord.createHFSX(data, offset, offset + data.length, keyCompareType);
     }
 }

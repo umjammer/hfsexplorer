@@ -21,14 +21,16 @@ package org.catacombae.storage.ps;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class PartitionSystemImplementationInfo {
-    private String partitionSystemName;
-    private String implementationName;
-    private String implementationVersion;
-    private String author;
+
+    private final String partitionSystemName;
+    private final String implementationName;
+    private final String implementationVersion;
+    private final String author;
 
     public PartitionSystemImplementationInfo(String partitionSystemName,
-            String implementationName, String implementationVersion,
-            String author) {
+                                             String implementationName,
+                                             String implementationVersion,
+                                             String author) {
         this.partitionSystemName = partitionSystemName;
         this.implementationName = implementationName;
         this.implementationVersion = implementationVersion;

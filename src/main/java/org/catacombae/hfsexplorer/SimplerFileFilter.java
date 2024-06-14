@@ -19,6 +19,7 @@ package org.catacombae.hfsexplorer;
 
 import java.io.File;
 
+
 /**
  * Even simpler file filter as it only allows one extension.<br>
  * Directories are always accepted.
@@ -27,33 +28,36 @@ import java.io.File;
  */
 public class SimplerFileFilter extends javax.swing.filechooser.FileFilter {
 
-    private String extension;
-    private String description;
+    private final String extension;
+    private final String description;
 
     public SimplerFileFilter(String extension, String description) {
-	this.extension = extension;
-	this.description = description;
+        this.extension = extension;
+        this.description = description;
     }
 
-    /** {@inheritDoc} */
     @Override
     public boolean accept(File f) {
 
-	if(f.isDirectory())
+        if (f.isDirectory())
             return true;
-        else if(f.getName().endsWith(extension))
+        else if (f.getName().endsWith(extension))
             return true;
         else
             return false;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
     /**
      * Returns the extension that this file filter matches.
+     *
      * @return the extension that this file filter matches.
      */
-    public String getExtension() { return extension; }
+    public String getExtension() {
+        return extension;
+    }
 }

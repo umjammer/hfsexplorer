@@ -18,42 +18,51 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
-import org.catacombae.hfs.types.hfsplus.BTHeaderRec;
 import org.catacombae.hfs.types.hfs.BTHdrRec;
+import org.catacombae.hfs.types.hfsplus.BTHeaderRec;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonBTHeaderRecord extends CommonBTRecord
-        implements PrintableStruct, StructElements
-{
+public abstract class CommonBTHeaderRecord extends CommonBTRecord implements PrintableStruct, StructElements {
+
     public enum CompareType {
-        CASE_FOLDING, BINARY_COMPARE;
+        CASE_FOLDING, BINARY_COMPARE
     }
 
     public abstract int getTreeDepth();
+
     public abstract long getRootNodeNumber();
+
     public abstract long getNumberOfLeafRecords();
+
     public abstract long getFirstLeafNodeNumber();
+
     public abstract long getLastLeafNodeNumber();
+
     public abstract int getNodeSize();
+
     public abstract int getMaximumKeyLength();
+
     public abstract long getTotalNodes();
+
     public abstract long getFreeNodes();
+
     public abstract CompareType getKeyCompareType();
 
+    @Override
     public abstract byte[] getBytes();
 
-    /*
-    public void print(PrintStream ps, String prefix) {
-        ps.println(prefix + getClass().getSimpleName() + ":");
-        printFields(ps, prefix + " ");
-    }
-    */
+//    public void print(PrintStream ps, String prefix) {
+//        ps.println(prefix + getClass().getSimpleName() + ":");
+//        printFields(ps, prefix + " ");
+//    }
 
     public static CommonBTHeaderRecord create(BTHeaderRec bthr) {
         return new HFSPlusImplementation(bthr);
@@ -64,7 +73,8 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
     }
 
     public static class HFSPlusImplementation extends CommonBTHeaderRecord {
-        private BTHeaderRec bthr;
+
+        private final BTHeaderRec bthr;
 
         public HFSPlusImplementation(BTHeaderRec bthr) {
             this.bthr = bthr;
@@ -117,9 +127,9 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
 
         @Override
         public CompareType getKeyCompareType() {
-            if(bthr.getKeyCompareType() == BTHeaderRec.kHFSBinaryCompare)
+            if (bthr.getKeyCompareType() == BTHeaderRec.kHFSBinaryCompare)
                 return CompareType.BINARY_COMPARE;
-            else if(bthr.getKeyCompareType() == BTHeaderRec.kHFSCaseFolding)
+            else if (bthr.getKeyCompareType() == BTHeaderRec.kHFSCaseFolding)
                 return CompareType.CASE_FOLDING;
             else
                 throw new RuntimeException("Unknown key compare type!");
@@ -130,12 +140,12 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
             return bthr.getBytes();
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             bthr.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             bthr.printFields(ps, prefix);
         }
@@ -149,13 +159,15 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
             return bthr;
         }
 
+        @Override
         public Dictionary getStructElements() {
             return bthr.getStructElements();
         }
     }
 
     public static class HFSImplementation extends CommonBTHeaderRecord {
-        private BTHdrRec bthr;
+
+        private final BTHdrRec bthr;
 
         public HFSImplementation(BTHdrRec bthr) {
             this.bthr = bthr;
@@ -217,12 +229,12 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
             return bthr.getBytes();
         }
 
-        /* @Override */
+        @Override
         public void print(PrintStream ps, String prefix) {
             bthr.print(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             bthr.printFields(ps, prefix);
         }
@@ -232,6 +244,7 @@ public abstract class CommonBTHeaderRecord extends CommonBTRecord
             return BTHdrRec.length();
         }
 
+        @Override
         public Dictionary getStructElements() {
             return bthr.getStructElements();
         }

@@ -17,14 +17,16 @@
 
 package org.catacombae.hfs.types.hfscommon;
 
-import org.catacombae.util.Util;
 import org.catacombae.hfs.types.hfsplus.HFSUniStr255;
+import org.catacombae.util.Util;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogString {
-    //public static final CommonHFSCatalogString EMPTY = createHFS(new byte[0]);
+
+//    public static final CommonHFSCatalogString EMPTY = createHFS(new byte[0]);
 
     public static CommonHFSCatalogString createHFSPlus(HFSUniStr255 nodeName) {
         return new HFSPlusImplementation(nodeName);
@@ -34,20 +36,18 @@ public abstract class CommonHFSCatalogString {
         return new HFSImplementation(ckrCName);
     }
 
-    /**
-     * Decodes the string data with a specified StringDecoder. This method is mostly for debug use.
-     * Normal applications should use the BaseHFSFileSystemView.decodeString(...) method to get a
-     * Java string from a CommonHFSCatalogString.
-     *
-     * @param sd the StringDecoder to use for decoding.
-     * @return the string data, decoded with the specified StringDecoder.
-     */
-    /*
-    public String decode(StringDecoder sd) {
-        byte[] data = getStringBytes();
-        return sd.decode(data, 0, data.length);
-    }
-    */
+//    /**
+//     * Decodes the string data with a specified StringDecoder. This method is mostly for debug use.
+//     * Normal applications should use the BaseHFSFileSystemView.decodeString(...) method to get a
+//     * Java string from a CommonHFSCatalogString.
+//     *
+//     * @param sd the StringDecoder to use for decoding.
+//     * @return the string data, decoded with the specified StringDecoder.
+//     */
+//    public String decode(StringDecoder sd) {
+//        byte[] data = getStringBytes();
+//        return sd.decode(data, 0, data.length);
+//    }
 
     /**
      * Returns the raw bytes that make up this string. They need to be interpreted in a context
@@ -60,13 +60,15 @@ public abstract class CommonHFSCatalogString {
     /**
      * Returns the bytes that make up the struct. May include string size and
      * padding in addition to the bytes that make up the string.
+     *
      * @return the bytes that make up the struct.
      */
     public abstract byte[] getStructBytes();
 
 
     public static class HFSPlusImplementation extends CommonHFSCatalogString {
-        private HFSUniStr255 nodeName;
+
+        private final HFSUniStr255 nodeName;
 
         private HFSPlusImplementation(HFSUniStr255 nodeName) {
             this.nodeName = nodeName;
@@ -88,6 +90,7 @@ public abstract class CommonHFSCatalogString {
     }
 
     public static class HFSImplementation extends CommonHFSCatalogString {
+
         private final byte[] ckrCName;
 
         private HFSImplementation(byte[] ckrCName) {

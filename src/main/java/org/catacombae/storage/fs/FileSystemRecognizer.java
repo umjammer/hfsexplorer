@@ -19,6 +19,7 @@ package org.catacombae.storage.fs;
 
 import org.catacombae.io.ReadableRandomAccessStream;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -30,11 +31,11 @@ public interface FileSystemRecognizer {
      * context.
      *
      * @param fsStream
-     * @param offset the offset in fsStream to the start of the file system.
-     * @param length this parameter may be set to -1 if the length isn't
-     * currently known.
+     * @param offset   the offset in fsStream to the start of the file system.
+     * @param length   this parameter may be set to -1 if the length isn't
+     *                 currently known.
      * @return <code>true</code> if a file system can be detected at the
      * specified offset in fsStream, and <code>false</code> otherwise.
      */
-    public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
+    boolean detect(ReadableRandomAccessStream fsStream, long offset, long length);
 }

@@ -18,23 +18,26 @@
 package org.catacombae.storage.ps.gpt.types;
 
 import java.lang.reflect.Field;
+
 import org.catacombae.csjc.StaticStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.csjc.structelements.IntegerFieldRepresentation;
 import org.catacombae.util.Util;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class GUID implements StaticStruct, StructElements {
+
     private int part1;
     private short part2;
     private short part3;
     private long part4;
 
     public GUID(byte[] data, int offset) {
-        if(data.length - offset < 16)
+        if (data.length - offset < 16)
             throw new IllegalArgumentException("Not enough bytes for a " +
                     "GUID (need 16, got " + (data.length - offset) + ").");
 
@@ -78,6 +81,7 @@ public class GUID implements StaticStruct, StructElements {
         copyBytesInternal(data, offset);
     }
 
+    @Override
     public byte[] getBytes() {
         byte[] data = new byte[16];
 
@@ -104,6 +108,7 @@ public class GUID implements StaticStruct, StructElements {
         return f;
     }
 
+    @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(GPTEntry.class.getSimpleName());
 
@@ -116,14 +121,19 @@ public class GUID implements StaticStruct, StructElements {
                     IntegerFieldRepresentation.HEXADECIMAL);
             db.addUIntLE("part4", getPrivateField("part4"), this, null, null,
                     IntegerFieldRepresentation.HEXADECIMAL);
-        } catch(NoSuchFieldException e) {
+        } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
 
         return db.getResult();
     }
 
-    public int size() { return length(); }
+    @Override
+    public int size() {
+        return length();
+    }
 
-    public static int length() { return 16; }
+    public static int length() {
+        return 16;
+    }
 }

@@ -17,11 +17,12 @@
 
 package org.catacombae.storage.fs.hfs;
 
-import org.catacombae.storage.io.DataLocator;
-import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandler;
 import org.catacombae.hfs.original.HFSOriginalVolume;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogFileRecord;
 import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafRecord;
+import org.catacombae.storage.fs.hfscommon.HFSCommonFileSystemHandler;
+import org.catacombae.storage.io.DataLocator;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -29,25 +30,25 @@ import org.catacombae.hfs.types.hfscommon.CommonHFSCatalogLeafRecord;
 public class HFSFileSystemHandler extends HFSCommonFileSystemHandler {
 
     public HFSFileSystemHandler(DataLocator fsLocator, boolean useCaching,
-            boolean posixNames, boolean sfmSubstitutions, String encodingName)
-    {
+                                boolean posixNames, boolean sfmSubstitutions, String encodingName) {
         super(new HFSOriginalVolume(fsLocator.createReadOnlyFile(), useCaching,
                 encodingName), posixNames, sfmSubstitutions, false, false);
     }
 
+    @Override
     protected boolean shouldHide(CommonHFSCatalogLeafRecord rec) {
         // For HFS we have nothing to hide.
         return false;
     }
 
+    @Override
     protected Long getLinkCount(CommonHFSCatalogFileRecord fr) {
         // HFS does not support links.
         return null;
     }
 
-    protected String[] getAbsoluteLinkPath(String[] path, int pathLength,
-            CommonHFSCatalogFileRecord rec)
-    {
+    @Override
+    protected String[] getAbsoluteLinkPath(String[] path, int pathLength, CommonHFSCatalogFileRecord rec) {
         // HFS does not support links.
         return null;
     }

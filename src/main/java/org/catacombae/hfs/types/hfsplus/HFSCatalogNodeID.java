@@ -17,16 +17,18 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
-import org.catacombae.util.Util;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.nio.ByteOrder;
+
 import org.catacombae.csjc.PrintableStruct;
-import org.catacombae.csjc.structelements.Endianness;
 import org.catacombae.csjc.structelements.IntegerField;
 import org.catacombae.csjc.structelements.IntegerFieldBits;
 import org.catacombae.csjc.structelements.IntegerFieldRepresentation;
 import org.catacombae.csjc.structelements.Signedness;
 import org.catacombae.csjc.structelements.StructElement;
+import org.catacombae.util.Util;
+
 
 /**
  * This struct is a representation of the C typedef HFSCatalogNodeID present in
@@ -46,27 +48,27 @@ public class HFSCatalogNodeID implements PrintableStruct {
      */
 
     /** This catalog node ID is reserved for the parent of the root folder. */
-    public static final HFSCatalogNodeID kHFSRootParentID            = new HFSCatalogNodeID(1);
+    public static final HFSCatalogNodeID kHFSRootParentID = new HFSCatalogNodeID(1);
     /** This catalog node ID is reserved for the root folder. */
-    public static final HFSCatalogNodeID kHFSRootFolderID            = new HFSCatalogNodeID(2);
+    public static final HFSCatalogNodeID kHFSRootFolderID = new HFSCatalogNodeID(2);
     /** This catalog node ID is reserved for the extents overflow file. */
-    public static final HFSCatalogNodeID kHFSExtentsFileID           = new HFSCatalogNodeID(3);
+    public static final HFSCatalogNodeID kHFSExtentsFileID = new HFSCatalogNodeID(3);
     /** This catalog node ID is reserved for the catalog file. */
-    public static final HFSCatalogNodeID kHFSCatalogFileID           = new HFSCatalogNodeID(4);
+    public static final HFSCatalogNodeID kHFSCatalogFileID = new HFSCatalogNodeID(4);
     /** This catalog node ID is reserved for the bad blocks file. */
-    public static final HFSCatalogNodeID kHFSBadBlockFileID          = new HFSCatalogNodeID(5);
+    public static final HFSCatalogNodeID kHFSBadBlockFileID = new HFSCatalogNodeID(5);
     /** This catalog node ID is reserved for the allocation file. */
-    public static final HFSCatalogNodeID kHFSAllocationFileID        = new HFSCatalogNodeID(6);
+    public static final HFSCatalogNodeID kHFSAllocationFileID = new HFSCatalogNodeID(6);
     /** This catalog node ID is reserved for the startup file. */
-    public static final HFSCatalogNodeID kHFSStartupFileID           = new HFSCatalogNodeID(7);
+    public static final HFSCatalogNodeID kHFSStartupFileID = new HFSCatalogNodeID(7);
     /** This catalog node ID is reserved for the attributes file. */
-    public static final HFSCatalogNodeID kHFSAttributesFileID        = new HFSCatalogNodeID(8);
+    public static final HFSCatalogNodeID kHFSAttributesFileID = new HFSCatalogNodeID(8);
     /** This catalog node ID is reserved for a temporary repair catalog file. */
-    public static final HFSCatalogNodeID kHFSRepairCatalogFileID     = new HFSCatalogNodeID(14);
+    public static final HFSCatalogNodeID kHFSRepairCatalogFileID = new HFSCatalogNodeID(14);
     /** This catalog node ID is reserved for the ExchangeFiles operation. */
-    public static final HFSCatalogNodeID kHFSBogusExtentFileID       = new HFSCatalogNodeID(15);
+    public static final HFSCatalogNodeID kHFSBogusExtentFileID = new HFSCatalogNodeID(15);
     /** This catalog node ID is the first ID that's available for user files. */
-    public static final HFSCatalogNodeID kHFSFirstUserCatalogNodeID  = new HFSCatalogNodeID(16);
+    public static final HFSCatalogNodeID kHFSFirstUserCatalogNodeID = new HFSCatalogNodeID(16);
 
     private int hfsCatalogNodeID;
 
@@ -74,7 +76,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
      * Creates a new HFSCatalogNodeID from raw data located at offset
      * <code>offset</code> in the array <code>data</code>.
      *
-     * @param data an array containing the catalog node ID data.
+     * @param data   an array containing the catalog node ID data.
      * @param offset offset in the array where the catalog node ID data begins.
      */
     public HFSCatalogNodeID(byte[] data, int offset) {
@@ -87,7 +89,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
      * nevertheless regarded as an unsigned value.
      *
      * @param nodeID the catalog node ID value. This is interpreted as being
-     * unsigned.
+     *               unsigned.
      */
     public HFSCatalogNodeID(int nodeID) {
         this.hfsCatalogNodeID = nodeID;
@@ -95,6 +97,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
 
     /**
      * Returns the length of the data that makes up this struct.
+     *
      * @return the length of the data that makes up this struct.
      */
     public static int length() {
@@ -143,45 +146,20 @@ public class HFSCatalogNodeID implements PrintableStruct {
          * kHFSBogusExtentFileID       = 15,
          * kHFSFirstUserCatalogNodeID  = 16
          */
-        String result;
-        switch(toInt()) {
-            case 1:
-                result = "kHFSRootParentID";
-                break;
-            case 2:
-                result = "kHFSRootFolderID";
-                break;
-            case 3:
-                result = "kHFSExtentsFileID";
-                break;
-            case 4:
-                result = "kHFSCatalogFileID";
-                break;
-            case 5:
-                result = "kHFSBadBlockFileID";
-                break;
-            case 6:
-                result = "kHFSAllocationFileID";
-                break;
-            case 7:
-                result = "kHFSStartupFileID";
-                break;
-            case 8:
-                result = "kHFSAttributesFileID";
-                break;
-            case 14:
-                result = "kHFSRepairCatalogFileID";
-                break;
-            case 15:
-                result = "kHFSBogusExtentFileID";
-                break;
-            case 16:
-                result = "kHFSFirstUserCatalogNodeID";
-                break;
-            default:
-                result = "User Defined ID";
-                break;
-        }
+        String result = switch (toInt()) {
+            case 1 -> "kHFSRootParentID";
+            case 2 -> "kHFSRootFolderID";
+            case 3 -> "kHFSExtentsFileID";
+            case 4 -> "kHFSCatalogFileID";
+            case 5 -> "kHFSBadBlockFileID";
+            case 6 -> "kHFSAllocationFileID";
+            case 7 -> "kHFSStartupFileID";
+            case 8 -> "kHFSAttributesFileID";
+            case 14 -> "kHFSRepairCatalogFileID";
+            case 15 -> "kHFSBogusExtentFileID";
+            case 16 -> "kHFSFirstUserCatalogNodeID";
+            default -> "User Defined ID";
+        };
         return result;
     }
 
@@ -196,16 +174,12 @@ public class HFSCatalogNodeID implements PrintableStruct {
         return "" + toLong(); // + " (" + getDescription() + ")";
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public void printFields(PrintStream ps, String prefix) {
-        ps.println(prefix + " hfsCatalogNodeID: " + toString() + " (" + getDescription() + ")");
+        ps.println(prefix + " hfsCatalogNodeID: " + this + " (" + getDescription() + ")");
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + "HFSCatalogNodeID:");
         printFields(ps, prefix);
@@ -213,6 +187,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
 
     /**
      * Returns the on-disk byte representation of this catalog node ID.
+     *
      * @return the on-disk byte representation of this catalog node ID.
      */
     public byte[] getBytes() {
@@ -229,9 +204,9 @@ public class HFSCatalogNodeID implements PrintableStruct {
         try {
             return new IntegerField(this, getPrivateField("hfsCatalogNodeID"),
                     0, IntegerFieldBits.BITS_32, Signedness.UNSIGNED,
-                    Endianness.BIG_ENDIAN, IntegerFieldRepresentation.DECIMAL,
+                    ByteOrder.BIG_ENDIAN, IntegerFieldRepresentation.DECIMAL,
                     null);
-        } catch(NoSuchFieldException e) {
+        } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
     }
@@ -241,13 +216,14 @@ public class HFSCatalogNodeID implements PrintableStruct {
     }
 
     public static class Mutable extends HFSCatalogNodeID {
+
         /**
          * Creates a new HFSCatalogNodeID.Mutable from raw data located at
          * offset <code>offset</code> in the array <code>data</code>.
          *
-         * @param data an array containing the catalog node ID data.
+         * @param data   an array containing the catalog node ID data.
          * @param offset offset in the array where the catalog node ID data
-         * begins.
+         *               begins.
          */
         public Mutable(byte[] data, int offset) {
             super(data, offset);
@@ -259,7 +235,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
          * thus signed, is nevertheless regarded as an unsigned value.
          *
          * @param nodeID the catalog node ID value. This is interpreted as being
-         * unsigned.
+         *               unsigned.
          */
         public Mutable(int nodeID) {
             super(nodeID);

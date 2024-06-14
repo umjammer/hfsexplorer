@@ -18,16 +18,19 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
 import org.catacombae.hfs.types.hfs.CatKeyRec;
 import org.catacombae.hfs.types.hfs.CdrDirRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafRecord {
+
     protected final CommonHFSCatalogKey key;
     protected final CommonHFSCatalogFolder data;
 
@@ -36,6 +39,7 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         this.data = data;
     }
 
+    @Override
     public CommonHFSCatalogKey getKey() {
         return key;
     }
@@ -44,12 +48,13 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         return data;
     }
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + CommonHFSCatalogFolderRecord.class.getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
+    @Override
     public void printFields(PrintStream ps, String prefix) {
         ps.println(prefix + "key:");
         getKey().print(ps, prefix + " ");
@@ -57,10 +62,10 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
         getData().print(ps, prefix + " ");
     }
 
+    @Override
     public Dictionary getStructElements() {
-        DictionaryBuilder db =
-                new DictionaryBuilder(CommonHFSCatalogFolderRecord.class.getSimpleName(),
-                "Folder record");
+        DictionaryBuilder db = new DictionaryBuilder(CommonHFSCatalogFolderRecord.class.getSimpleName(),
+                        "Folder record");
 
         db.add("key", key.getStructElements(), "Catalog key");
         db.add("data", data.getStructElements(), "Folder data");
@@ -84,8 +89,7 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
     }
 
 
-    public static CommonHFSCatalogFolderRecord create(HFSPlusCatalogKey key,
-            HFSPlusCatalogFolder data) {
+    public static CommonHFSCatalogFolderRecord create(HFSPlusCatalogKey key, HFSPlusCatalogFolder data) {
         return new HFSPlusImplementation(key, data);
     }
 
@@ -106,6 +110,7 @@ public abstract class CommonHFSCatalogFolderRecord extends CommonHFSCatalogLeafR
     }
 
     public static class HFSImplementation extends CommonHFSCatalogFolderRecord {
+
         public HFSImplementation(CatKeyRec key, CdrDirRec data) {
             super(CommonHFSCatalogKey.create(key), CommonHFSCatalogFolder.create(data));
         }

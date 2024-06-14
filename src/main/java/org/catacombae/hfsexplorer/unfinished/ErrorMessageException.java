@@ -23,6 +23,7 @@ package org.catacombae.hfsexplorer.unfinished;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class ErrorMessageException extends RuntimeException {
+
     public ErrorMessageException(String errorMessage) {
         super(errorMessage);
     }

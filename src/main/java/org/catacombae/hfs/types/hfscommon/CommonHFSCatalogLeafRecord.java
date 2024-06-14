@@ -17,38 +17,44 @@
 
 package org.catacombae.hfs.types.hfscommon;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import org.catacombae.csjc.StructElements;
-import org.catacombae.util.Util;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogLeafRecordData;
-import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
-import org.catacombae.hfs.types.hfsx.HFSXCatalogKey;
 import org.catacombae.hfs.types.hfs.CatDataRec;
 import org.catacombae.hfs.types.hfs.CatKeyRec;
 import org.catacombae.hfs.types.hfs.CdrDirRec;
 import org.catacombae.hfs.types.hfs.CdrFThdRec;
 import org.catacombae.hfs.types.hfs.CdrFilRec;
 import org.catacombae.hfs.types.hfs.CdrThdRec;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFile;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogFolder;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogKey;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogLeafRecordData;
+import org.catacombae.hfs.types.hfsplus.HFSPlusCatalogThread;
+import org.catacombae.hfs.types.hfsx.HFSXCatalogKey;
+import org.catacombae.util.Util;
+
+import static java.lang.System.getLogger;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSCatalogLeafRecord
-        extends CommonBTLeafRecord<CommonHFSCatalogKey>
-        implements StructElements
-{
+public abstract class CommonHFSCatalogLeafRecord extends CommonBTLeafRecord<CommonHFSCatalogKey>
+        implements StructElements {
+
+    private static final Logger logger = getLogger(CommonHFSCatalogLeafRecord.class.getName());
 
     public static CommonHFSCatalogLeafRecord createHFS(byte[] data, int offset, int length) {
-        final CatKeyRec key;
-        final CatDataRec recordData;
+        CatKeyRec key;
+        CatDataRec recordData;
 
         key = new CatKeyRec(data, offset);
 
         int recordOffset = offset + key.occupiedSize();
         // Align to word boundary (primitive...)
-        if(recordOffset % 2 != 0)
+        if (recordOffset % 2 != 0)
             recordOffset++;
 
         // Peek at known 8-bit value indicating the record type
@@ -67,9 +73,9 @@ public abstract class CommonHFSCatalogLeafRecord
                 recordData = new CdrFThdRec(data, recordOffset);
                 break;
             default:
-                System.err.println("key:");
+                logger.log(Level.DEBUG, "key:");
                 key.print(System.err, " ");
-                System.err.println("data: " + Util.byteArrayToHexString(data, offset, length));
+                logger.log(Level.DEBUG, "data: " + Util.byteArrayToHexString(data, offset, length));
                 throw new RuntimeException("Invalid HFS record type: " + recordType);
         }
 
@@ -78,93 +84,70 @@ public abstract class CommonHFSCatalogLeafRecord
 
     public static CommonHFSCatalogLeafRecord createHFSPlus(byte[] data, int offset, int length) {
         HFSPlusCatalogKey key = new HFSPlusCatalogKey(data, offset);
-        final HFSPlusCatalogLeafRecordData recordData;
+        HFSPlusCatalogLeafRecordData recordData;
 
         // Peek at known 16-bit value to determine proper subtype
         short recordType = Util.readShortBE(data, offset + key.length());
-        switch(recordType) {
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER:
-                recordData = new HFSPlusCatalogFolder(data, offset + key.length());
-                break;
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE:
-                recordData = new HFSPlusCatalogFile(data, offset + key.length());
-                break;
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD:
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD:
-                recordData = new HFSPlusCatalogThread(data, offset + key.length());
-                break;
-            default:
-                throw new RuntimeException("Invalid record type!");
-        }
+        recordData = switch (recordType) {
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER ->
+                    new HFSPlusCatalogFolder(data, offset + key.length());
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE -> new HFSPlusCatalogFile(data, offset + key.length());
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD,
+                 HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD ->
+                    new HFSPlusCatalogThread(data, offset + key.length());
+            default -> throw new RuntimeException("Invalid record type!");
+        };
         return create(key, recordData);
     }
 
-    public static CommonHFSCatalogLeafRecord createHFSX(byte[] data, int offset,
-            int length, byte keyCompareType)
-    {
-        final HFSXCatalogKey key =
+    public static CommonHFSCatalogLeafRecord createHFSX(byte[] data, int offset, int length, byte keyCompareType) {
+        HFSXCatalogKey key =
                 new HFSXCatalogKey(data, offset, keyCompareType);
-        final HFSPlusCatalogLeafRecordData recordData;
+        HFSPlusCatalogLeafRecordData recordData;
 
         // Peek at known 16-bit value to determine proper subtype
         short recordType = Util.readShortBE(data, offset + key.length());
-        switch(recordType) {
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER:
-                recordData = new HFSPlusCatalogFolder(data, offset + key.length());
-                break;
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE:
-                recordData = new HFSPlusCatalogFile(data, offset + key.length());
-                break;
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD:
-            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD:
-                recordData = new HFSPlusCatalogThread(data, offset + key.length());
-                break;
-            default:
-                throw new RuntimeException("Invalid record type!");
-        }
+        recordData = switch (recordType) {
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER ->
+                    new HFSPlusCatalogFolder(data, offset + key.length());
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE -> new HFSPlusCatalogFile(data, offset + key.length());
+            case HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD,
+                 HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD ->
+                    new HFSPlusCatalogThread(data, offset + key.length());
+            default -> throw new RuntimeException("Invalid record type!");
+        };
         return create(key, recordData);
     }
 
+    @Override
     public abstract CommonHFSCatalogKey getKey();
 
-    public static CommonHFSCatalogLeafRecord create(HFSPlusCatalogKey key,
-            HFSPlusCatalogLeafRecordData data) {
-        if(data instanceof HFSPlusCatalogFolder) {
-            return CommonHFSCatalogFolderRecord.create(key, (HFSPlusCatalogFolder)data);
-        }
-        else if(data instanceof HFSPlusCatalogFile) {
-            return CommonHFSCatalogFileRecord.create(key, (HFSPlusCatalogFile)data);
-        }
-        else if(data instanceof HFSPlusCatalogThread) {
-            if(data.getRecordType() == HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD) {
-                return CommonHFSCatalogFileThreadRecord.create(key, (HFSPlusCatalogThread)data);
-            }
-
-            else if(data.getRecordType() == HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD) {
-                return CommonHFSCatalogFolderThreadRecord.create(key, (HFSPlusCatalogThread)data);
-            }
-            else
+    public static CommonHFSCatalogLeafRecord create(HFSPlusCatalogKey key, HFSPlusCatalogLeafRecordData data) {
+        if (data instanceof HFSPlusCatalogFolder) {
+            return CommonHFSCatalogFolderRecord.create(key, (HFSPlusCatalogFolder) data);
+        } else if (data instanceof HFSPlusCatalogFile) {
+            return CommonHFSCatalogFileRecord.create(key, (HFSPlusCatalogFile) data);
+        } else if (data instanceof HFSPlusCatalogThread) {
+            if (data.getRecordType() == HFSPlusCatalogLeafRecordData.RECORD_TYPE_FILE_THREAD) {
+                return CommonHFSCatalogFileThreadRecord.create(key, (HFSPlusCatalogThread) data);
+            } else if (data.getRecordType() == HFSPlusCatalogLeafRecordData.RECORD_TYPE_FOLDER_THREAD) {
+                return CommonHFSCatalogFolderThreadRecord.create(key, (HFSPlusCatalogThread) data);
+            } else
                 throw new RuntimeException("Unknown catalog thread type: " + data.getRecordType());
-        }
-        else
+        } else
             throw new RuntimeException("Unknown type of HFSPlusCatalogLeafRecordData: " + data.getClass());
     }
 
-    public static CommonHFSCatalogLeafRecord create(CatKeyRec key,
-            CatDataRec data) {
-        if(data instanceof CdrDirRec) {
-            return CommonHFSCatalogFolderRecord.create(key, (CdrDirRec)data);
-        }
-        else if(data instanceof CdrFilRec) {
-            return CommonHFSCatalogFileRecord.create(key, (CdrFilRec)data);
-        }
-        else if(data instanceof CdrFThdRec) {
-            return CommonHFSCatalogFileThreadRecord.create(key, (CdrFThdRec)data);
-        }
-        else if(data instanceof CdrThdRec) {
-            return CommonHFSCatalogFolderThreadRecord.create(key, (CdrThdRec)data);
-        }
-        else
+    public static CommonHFSCatalogLeafRecord create(CatKeyRec key, CatDataRec data) {
+        if (data instanceof CdrDirRec) {
+            return CommonHFSCatalogFolderRecord.create(key, (CdrDirRec) data);
+        } else if (data instanceof CdrFilRec) {
+            return CommonHFSCatalogFileRecord.create(key, (CdrFilRec) data);
+        } else if (data instanceof CdrFThdRec) {
+            return CommonHFSCatalogFileThreadRecord.create(key, (CdrFThdRec) data);
+        } else if (data instanceof CdrThdRec) {
+            return CommonHFSCatalogFolderThreadRecord.create(key, (CdrThdRec) data);
+        } else
             throw new RuntimeException("Unknown type of CatDataRec: " + data.getClass());
     }
 }

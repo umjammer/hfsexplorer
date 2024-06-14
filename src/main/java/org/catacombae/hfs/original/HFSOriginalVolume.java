@@ -18,6 +18,7 @@
 package org.catacombae.hfs.original;
 
 import java.nio.charset.Charset;
+
 import org.catacombae.hfs.AllocationFile;
 import org.catacombae.hfs.AttributesFile;
 import org.catacombae.hfs.HFSVolume;
@@ -51,28 +52,26 @@ import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.ReadableRandomAccessSubstream;
 import org.catacombae.util.Util;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSOriginalVolume extends HFSVolume {
-    private static final CommonHFSCatalogString EMPTY_STRING =
-            CommonHFSCatalogString.createHFS(new byte[0]);
+
+    private static final CommonHFSCatalogString EMPTY_STRING = CommonHFSCatalogString.createHFS(new byte[0]);
 
     private final HFSOriginalAllocationFile allocationFile;
     private MutableStringCodec<StringCodec> stringCodec;
 
-    public HFSOriginalVolume(ReadableRandomAccessStream hfsFile,
-            boolean cachingEnabled, String encodingName) {
+    public HFSOriginalVolume(ReadableRandomAccessStream hfsFile, boolean cachingEnabled, String encodingName) {
 
         super(hfsFile, cachingEnabled);
 
-        final MasterDirectoryBlock mdb = getHFSMasterDirectoryBlock();
-        if(mdb.getDrSigWord() != MasterDirectoryBlock.SIGNATURE_HFS) {
-            throw new RuntimeException("Invalid volume header signature " +
-                    "(expected: 0x" +
+        MasterDirectoryBlock mdb = getHFSMasterDirectoryBlock();
+        if (mdb.getDrSigWord() != MasterDirectoryBlock.SIGNATURE_HFS) {
+            throw new RuntimeException("Invalid volume header signature (expected: 0x" +
                     Util.toHexStringBE(MasterDirectoryBlock.SIGNATURE_HFS) +
-                    " actual: 0x" + Util.toHexStringBE(mdb.getDrSigWord()) +
-                    ").");
+                    " actual: 0x" + Util.toHexStringBE(mdb.getDrSigWord()) + ").");
         }
 
         setStringEncoding(encodingName);
@@ -95,16 +94,16 @@ public class HFSOriginalVolume extends HFSVolume {
         MasterDirectoryBlock mdb = getHFSMasterDirectoryBlock();
 
         int numAllocationBlocks = Util.unsign(mdb.getDrNmAlBlks());
-        int volumeBitmapSize = numAllocationBlocks/8 + (numAllocationBlocks%8 != 0 ? 1 : 0);
+        int volumeBitmapSize = numAllocationBlocks / 8 + (numAllocationBlocks % 8 != 0 ? 1 : 0);
 
         ReadableConcatenatedStream volumeBitmapStream =
                 new ReadableConcatenatedStream(new ReadableRandomAccessSubstream(hfsFile),
-                512*Util.unsign(mdb.getDrVBMSt()),
-                volumeBitmapSize);
+                        512L * Util.unsign(mdb.getDrVBMSt()), volumeBitmapSize);
 
         return new HFSOriginalAllocationFile(this, volumeBitmapStream);
     }
 
+    @Override
     public AllocationFile getAllocationFile() {
         return allocationFile;
     }
@@ -146,25 +145,19 @@ public class HFSOriginalVolume extends HFSVolume {
     }
 
     @Override
-    public CommonHFSCatalogNodeID createCommonHFSCatalogNodeID(int cnid)
-    {
+    public CommonHFSCatalogNodeID createCommonHFSCatalogNodeID(int cnid) {
         return CommonHFSCatalogNodeID.create(cnid);
     }
 
     @Override
-    public CommonHFSExtentKey createCommonHFSExtentKey(boolean isResource,
-            int cnid, long startBlock)
-    {
-        if(startBlock > 0xFFFF) {
-            throw new IllegalArgumentException("Value of 'startBlock' is too " +
-                    "large for an HFS extent key.");
+    public CommonHFSExtentKey createCommonHFSExtentKey(boolean isResource, int cnid, long startBlock) {
+        if (startBlock > 0xFFFF) {
+            throw new IllegalArgumentException("Value of 'startBlock' is too large for an HFS extent key.");
         }
 
         return CommonHFSExtentKey.create(new ExtKeyRec(
-                isResource ? ExtKeyRec.FORK_TYPE_RESOURCE :
-                    ExtKeyRec.FORK_TYPE_DATA,
-                cnid,
-                (short) startBlock));
+                isResource ? ExtKeyRec.FORK_TYPE_RESOURCE : ExtKeyRec.FORK_TYPE_DATA,
+                cnid, (short) startBlock));
     }
 
     @Override
@@ -181,29 +174,23 @@ public class HFSOriginalVolume extends HFSVolume {
     public final void setStringEncoding(String encodingName) {
         StringCodec codec;
 
-        if(encodingName.equals("MacRoman")) {
+        if (encodingName.equals("MacRoman")) {
             codec = MacRomanStringCodec.getInstance();
-        }
-        else if(encodingName.equals("MacJapanese")) {
+        } else if (encodingName.equals("MacJapanese")) {
             codec = new MacJapaneseStringCodec(
                     /* SingleByteCodepageStringCodec fallbackCodec */
                     MacRomanStringCodec.getInstance());
-        }
-        else if(Charset.isSupported(encodingName)) {
+        } else if (Charset.isSupported(encodingName)) {
             codec = new CharsetStringCodec(encodingName);
-        }
-        else if(Charset.isSupported("x-" + encodingName)) {
+        } else if (Charset.isSupported("x-" + encodingName)) {
             codec = new CharsetStringCodec("x-" + encodingName);
-        }
-        else {
-            throw new RuntimeException("Unsupported string encoding: " +
-                    encodingName);
+        } else {
+            throw new RuntimeException("Unsupported string encoding: " + encodingName);
         }
 
-        if(this.stringCodec == null) {
-            this.stringCodec = new MutableStringCodec<StringCodec>(codec);
-        }
-        else {
+        if (this.stringCodec == null) {
+            this.stringCodec = new MutableStringCodec<>(codec);
+        } else {
             this.stringCodec.setDecoder(codec);
         }
     }
@@ -211,6 +198,7 @@ public class HFSOriginalVolume extends HFSVolume {
     /**
      * Returns the charset that is currently used when transforming HFS file
      * names to java Strings, and reverse.
+     *
      * @return the current tranformation charset name.
      */
     public String getStringEncoding() {
@@ -219,11 +207,10 @@ public class HFSOriginalVolume extends HFSVolume {
 
     @Override
     public String decodeString(CommonHFSCatalogString str) {
-        if(str instanceof CommonHFSCatalogString.HFSImplementation)
+        if (str instanceof CommonHFSCatalogString.HFSImplementation)
             return stringCodec.decode(str.getStringBytes());
         else
-            throw new RuntimeException("Invalid string type: " +
-                    str.getClass());
+            throw new RuntimeException("Invalid string type: " + str.getClass());
     }
 
     @Override
@@ -238,14 +225,12 @@ public class HFSOriginalVolume extends HFSVolume {
         super.close();
     }
 
-    /* @Override */
-    public CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData,
-            int offset, int nodeSize)
-    {
+    @Override
+    public CommonBTHeaderNode createCommonBTHeaderNode(byte[] currentNodeData, int offset, int nodeSize) {
         return CommonBTHeaderNode.createHFS(currentNodeData, offset, nodeSize);
     }
 
-    /* @Override */
+    @Override
     public CommonBTNodeDescriptor readNodeDescriptor(Readable rd) {
         byte[] data = new byte[NodeDescriptor.length()];
         rd.readFully(data);
@@ -253,7 +238,7 @@ public class HFSOriginalVolume extends HFSVolume {
         return createCommonBTNodeDescriptor(data, 0);
     }
 
-    /* @Override */
+    @Override
     public CommonBTHeaderRecord readHeaderRecord(Readable rd) {
         byte[] data = new byte[BTHdrRec.length()];
         rd.readFully(data);
@@ -262,81 +247,56 @@ public class HFSOriginalVolume extends HFSVolume {
         return CommonBTHeaderRecord.create(bthr);
     }
 
-    /* @Override */
-    public CommonBTNodeDescriptor createCommonBTNodeDescriptor(
-            byte[] currentNodeData, int i)
-    {
-        final NodeDescriptor nd = new NodeDescriptor(currentNodeData, i);
+    @Override
+    public CommonBTNodeDescriptor createCommonBTNodeDescriptor(byte[] currentNodeData, int i) {
+        NodeDescriptor nd = new NodeDescriptor(currentNodeData, i);
         return CommonBTNodeDescriptor.create(nd);
     }
 
-    /* @Override */
-    public CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data,
-            int offset, int nodeSize)
-    {
+    @Override
+    public CommonHFSCatalogIndexNode newCatalogIndexNode(byte[] data, int offset, int nodeSize) {
         return CommonHFSCatalogIndexNode.createHFS(data, offset, nodeSize);
     }
 
-    /* @Override */
-    public CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID,
-            CommonHFSCatalogString searchString)
-    {
-        return CommonHFSCatalogKey.create(new CatKeyRec((int) nodeID.toLong(),
-                searchString.getStringBytes()));
+    @Override
+    public CommonHFSCatalogKey newCatalogKey(CommonHFSCatalogNodeID nodeID, CommonHFSCatalogString searchString) {
+        return CommonHFSCatalogKey.create(new CatKeyRec((int) nodeID.toLong(), searchString.getStringBytes()));
     }
 
-    /* @Override */
-    public CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset,
-            int nodeSize)
-    {
+    @Override
+    public CommonHFSCatalogLeafNode newCatalogLeafNode(byte[] data, int offset, int nodeSize) {
         return CommonHFSCatalogLeafNode.createHFS(data, offset, nodeSize);
     }
 
-    /* @Override */
-    public CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data,
-            int offset)
-    {
-        return CommonHFSCatalogLeafRecord.createHFS(data, offset,
-                data.length - offset);
+    @Override
+    public CommonHFSCatalogLeafRecord newCatalogLeafRecord(byte[] data, int offset) {
+        return CommonHFSCatalogLeafRecord.createHFS(data, offset, data.length - offset);
     }
 
-    /* @Override */
-    public CommonHFSExtentIndexNode createCommonHFSExtentIndexNode(
-            byte[] currentNodeData, int i, int nodeSize)
-    {
+    @Override
+    public CommonHFSExtentIndexNode createCommonHFSExtentIndexNode(byte[] currentNodeData, int i, int nodeSize) {
         return CommonHFSExtentIndexNode.createHFS(currentNodeData, i, nodeSize);
     }
 
-    /* @Override */
-    public CommonHFSExtentLeafNode createCommonHFSExtentLeafNode(
-            byte[] currentNodeData, int i, int nodeSize)
-    {
+    @Override
+    public CommonHFSExtentLeafNode createCommonHFSExtentLeafNode(byte[] currentNodeData, int i, int nodeSize) {
         return CommonHFSExtentLeafNode.createHFS(currentNodeData, i, nodeSize);
     }
 
-    /* @Override */
+    @Override
     public CommonHFSExtentKey createCommonHFSExtentKey(
-            CommonHFSForkType forkType, CommonHFSCatalogNodeID fileID,
-            int startBlock)
-    {
-        if(startBlock < Short.MIN_VALUE || startBlock > Short.MAX_VALUE)
-            throw new IllegalArgumentException("start block out of range for " +
-                    "short (signed 16-bit integer)");
+            CommonHFSForkType forkType, CommonHFSCatalogNodeID fileID, int startBlock) {
+
+        if (startBlock < Short.MIN_VALUE || startBlock > Short.MAX_VALUE)
+            throw new IllegalArgumentException("start block out of range for short (signed 16-bit integer)");
+
         short startBlockShort = (short) startBlock;
 
-        final byte forkTypeByte;
-        switch(forkType) {
-            case DATA_FORK:
-                forkTypeByte = ExtKeyRec.FORK_TYPE_DATA;
-                break;
-            case RESOURCE_FORK:
-                forkTypeByte = ExtKeyRec.FORK_TYPE_RESOURCE;
-                break;
-            default:
-                throw new RuntimeException("Invalid fork type");
-        }
-        ExtKeyRec key = new ExtKeyRec(forkTypeByte, (int) fileID.toLong(),
-                startBlockShort);
+        byte forkTypeByte = switch (forkType) {
+            case DATA_FORK -> ExtKeyRec.FORK_TYPE_DATA;
+            case RESOURCE_FORK -> ExtKeyRec.FORK_TYPE_RESOURCE;
+        };
+        ExtKeyRec key = new ExtKeyRec(forkTypeByte, (int) fileID.toLong(), startBlockShort);
         return CommonHFSExtentKey.create(key);
     }
 }

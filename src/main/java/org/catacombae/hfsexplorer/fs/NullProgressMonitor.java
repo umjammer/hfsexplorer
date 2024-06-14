@@ -19,6 +19,7 @@ package org.catacombae.hfsexplorer.fs;
 
 import org.catacombae.hfs.ProgressMonitor;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
@@ -26,20 +27,27 @@ public class NullProgressMonitor implements ProgressMonitor {
 
     private static final NullProgressMonitor INSTANCE = new NullProgressMonitor();
 
-    public static NullProgressMonitor getInstance() { return INSTANCE; }
+    public static NullProgressMonitor getInstance() {
+        return INSTANCE;
+    }
 
-    protected NullProgressMonitor() {}
+    protected NullProgressMonitor() {
+    }
 
-    /* @Override */
-    public void signalCancel() {}
+    @Override
+    public void signalCancel() {
+    }
 
-    /* @Override */
-    public boolean cancelSignaled() { return false; }
+    @Override
+    public boolean cancelSignaled() {
+        return false;
+    }
 
-    /* @Override */
-    public void confirmCancel() {}
+    @Override
+    public void confirmCancel() {
+    }
 
-    /* @Override */
-    public void addDataProgress(long dataSize) {}
-
+    @Override
+    public void addDataProgress(long dataSize) {
+    }
 }

@@ -24,6 +24,7 @@ package org.catacombae.hfsexplorer;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class JarMain {
+
     private static final String CONSOLE_ARG = "-dbgconsole";
 
     /**
@@ -34,16 +35,15 @@ public class JarMain {
      * argument array.
      */
     public static void main(String[] args) {
-	String[] fsbArgs;
-	if(args.length <= 0 || !args[0].equals(CONSOLE_ARG)) {
-	    fsbArgs = new String[args.length+1];
-	    fsbArgs[0] = CONSOLE_ARG;
-	    for(int i = 0; i < args.length; ++i)
-		fsbArgs[i+1] = args[i];
-	}
-	else
-	    fsbArgs = args;
+        String[] fsbArgs;
+        if (args.length <= 0 || !args[0].equals(CONSOLE_ARG)) {
+            fsbArgs = new String[args.length + 1];
+            fsbArgs[0] = CONSOLE_ARG;
+            for (int i = 0; i < args.length; ++i)
+                fsbArgs[i + 1] = args[i];
+        } else
+            fsbArgs = args;
 
-	FileSystemBrowserWindow.main(fsbArgs);
+        FileSystemBrowserWindow.main(fsbArgs);
     }
 }

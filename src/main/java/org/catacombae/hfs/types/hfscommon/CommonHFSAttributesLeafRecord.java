@@ -18,37 +18,36 @@
 package org.catacombae.hfs.types.hfscommon;
 
 import java.io.PrintStream;
+
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.hfs.types.hfsplus.HFSPlusAttributesLeafRecord;
 import org.catacombae.hfs.types.hfsplus.HFSPlusAttributesLeafRecordData;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
-public abstract class CommonHFSAttributesLeafRecord
-        extends CommonBTLeafRecord<CommonHFSAttributesKey>
-        implements StructElements
-{
-    public static CommonHFSAttributesLeafRecord create(
-            HFSPlusAttributesLeafRecord record)
-    {
+public abstract class CommonHFSAttributesLeafRecord extends CommonBTLeafRecord<CommonHFSAttributesKey>
+        implements StructElements {
+
+    public static CommonHFSAttributesLeafRecord create(HFSPlusAttributesLeafRecord record) {
         return new HFSPlusImplementation(record);
     }
 
+    @Override
     public abstract CommonHFSAttributesKey getKey();
 
     public abstract HFSPlusAttributesLeafRecordData getRecordData();
 
-    /* @Override */
+    @Override
     public void print(PrintStream ps, String prefix) {
         ps.println(prefix + getClass().getSimpleName() + ":");
         printFields(ps, prefix + " ");
     }
 
-    private static class HFSPlusImplementation
-            extends CommonHFSAttributesLeafRecord
-    {
+    private static class HFSPlusImplementation extends CommonHFSAttributesLeafRecord {
+
         private final HFSPlusAttributesLeafRecord record;
 
         public HFSPlusImplementation(HFSPlusAttributesLeafRecord record) {
@@ -75,12 +74,12 @@ public abstract class CommonHFSAttributesLeafRecord
             return record.getBytes();
         }
 
-        /* @Override */
+        @Override
         public void printFields(PrintStream ps, String prefix) {
             record.printFields(ps, prefix);
         }
 
-        /* @Override */
+        @Override
         public Dictionary getStructElements() {
             DictionaryBuilder db = new DictionaryBuilder(
                     "CommonHFSAttributesLeafRecord.HFSPlusImplementation",

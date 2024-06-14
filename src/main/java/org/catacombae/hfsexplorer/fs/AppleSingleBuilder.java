@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.catacombae.hfsexplorer.types.applesingle.AppleSingleHeader;
 import org.catacombae.hfsexplorer.types.applesingle.AttributeEntry;
 import org.catacombae.hfsexplorer.types.applesingle.AttributeHeader;
 import org.catacombae.hfsexplorer.types.applesingle.EntryDescriptor;
 import org.catacombae.util.Util;
 import org.catacombae.util.Util.Pair;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
@@ -56,7 +58,7 @@ public class AppleSingleBuilder {
     /**
      * Type enumerating all valid file types for an AppleSingle file.
      */
-    public static enum FileType {
+    public enum FileType {
         /**
          * Indicates an AppleSingle file, containing both a data fork and a resource fork (and
          * optionally other attributes).
@@ -70,18 +72,21 @@ public class AppleSingleBuilder {
 
         private final int magic;
 
-        private FileType(int magic) {
+        FileType(int magic) {
             this.magic = magic;
         }
 
         /**
          * Returns the magic number associated with this file type.
+         *
          * @return the magic number associated with this file type.
          */
-        public int getMagic() { return magic; }
+        public int getMagic() {
+            return magic;
+        }
     }
 
-    public static enum AppleSingleVersion {
+    public enum AppleSingleVersion {
         /** The AppleSingle format used in A/UX and possibly Mac OS Classic / early Mac OS X versions. */
         VERSION_1_0(0x00010000),
         /** The version used in Mac OS X Leopard and possibly earlier Mac OS X versions. */
@@ -89,7 +94,7 @@ public class AppleSingleBuilder {
 
         private final int versionNumber;
 
-        private AppleSingleVersion(int versionNumber) {
+        AppleSingleVersion(int versionNumber) {
             this.versionNumber = versionNumber;
         }
 
@@ -98,34 +103,34 @@ public class AppleSingleBuilder {
         }
     }
 
-    public static enum FileSystem {
+    public enum FileSystem {
         MACOS("Macintosh"),
         MACOS_X("Mac OS X"),
         PRODOS("ProDOS"),
         MS_DOS("MS-DOS"),
-        UNIS("Unix"),
+        UNIX("Unix"),
         VMS("VAX VMS");
 
         private final String identifier;
 
-        private FileSystem(String identifier) {
+        FileSystem(String identifier) {
             this.identifier = identifier;
         }
 
         public byte[] getIdentifier() {
             char[] chars = identifier.toCharArray();
             byte[] result = new byte[16];
-            for(int i = 0; i < result.length; ++i) {
-                if(i < chars.length)
-                    result[i] = (byte)(chars[i] & 0x7F);
+            for (int i = 0; i < result.length; ++i) {
+                if (i < chars.length)
+                    result[i] = (byte) (chars[i] & 0x7F);
                 else
-                    result[i] = (byte)' '; // Padding with spaces
+                    result[i] = (byte) ' '; // Padding with spaces
             }
             return result;
         }
     }
 
-    public static enum EntryType {
+    public enum EntryType {
         DATA_FORK(EntryDescriptor.ENTRY_ID_DATA),
         RESOURCE_FORK(EntryDescriptor.ENTRY_ID_RESOURCE),
         REAL_NAME(EntryDescriptor.ENTRY_ID_REALNAME),
@@ -137,86 +142,88 @@ public class AppleSingleBuilder {
 
         private final int typeNumber;
 
-        private EntryType(int typeNumber) {
+        EntryType(int typeNumber) {
             this.typeNumber = typeNumber;
         }
 
-        public int getTypeNumber() { return typeNumber; }
+        public int getTypeNumber() {
+            return typeNumber;
+        }
     }
 
     private static final byte[] EMPTY_RESOURCE_FORK = {
-        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1e,
-        (byte) 0x54, (byte) 0x68, (byte) 0x69, (byte) 0x73,
-        (byte) 0x20, (byte) 0x72, (byte) 0x65, (byte) 0x73,
-        (byte) 0x6f, (byte) 0x75, (byte) 0x72, (byte) 0x63,
-        (byte) 0x65, (byte) 0x20, (byte) 0x66, (byte) 0x6f,
-        (byte) 0x72, (byte) 0x6b, (byte) 0x20, (byte) 0x69,
-        (byte) 0x6e, (byte) 0x74, (byte) 0x65, (byte) 0x6e,
-        (byte) 0x74, (byte) 0x69, (byte) 0x6f, (byte) 0x6e,
-        (byte) 0x61, (byte) 0x6c, (byte) 0x6c, (byte) 0x79,
-        (byte) 0x20, (byte) 0x6c, (byte) 0x65, (byte) 0x66,
-        (byte) 0x74, (byte) 0x20, (byte) 0x62, (byte) 0x6c,
-        (byte) 0x61, (byte) 0x6e, (byte) 0x6b, (byte) 0x20,
-        (byte) 0x20, (byte) 0x20, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1e,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x1c, (byte) 0x00, (byte) 0x1e,
-        (byte) 0xff, (byte) 0xff,
+            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1e,
+            (byte) 0x54, (byte) 0x68, (byte) 0x69, (byte) 0x73,
+            (byte) 0x20, (byte) 0x72, (byte) 0x65, (byte) 0x73,
+            (byte) 0x6f, (byte) 0x75, (byte) 0x72, (byte) 0x63,
+            (byte) 0x65, (byte) 0x20, (byte) 0x66, (byte) 0x6f,
+            (byte) 0x72, (byte) 0x6b, (byte) 0x20, (byte) 0x69,
+            (byte) 0x6e, (byte) 0x74, (byte) 0x65, (byte) 0x6e,
+            (byte) 0x74, (byte) 0x69, (byte) 0x6f, (byte) 0x6e,
+            (byte) 0x61, (byte) 0x6c, (byte) 0x6c, (byte) 0x79,
+            (byte) 0x20, (byte) 0x6c, (byte) 0x65, (byte) 0x66,
+            (byte) 0x74, (byte) 0x20, (byte) 0x62, (byte) 0x6c,
+            (byte) 0x61, (byte) 0x6e, (byte) 0x6b, (byte) 0x20,
+            (byte) 0x20, (byte) 0x20, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1e,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x1c, (byte) 0x00, (byte) 0x1e,
+            (byte) 0xff, (byte) 0xff,
     };
 
     private static final int ALIGNMENT = 4096;
@@ -224,15 +231,14 @@ public class AppleSingleBuilder {
     private final FileType fileType;
     private final AppleSingleVersion version;
     private final FileSystem homeFileSystem;
-    private final LinkedList<Pair<EntryType, AppleSingleEntry>> entryList =
-            new LinkedList<Pair<EntryType, AppleSingleEntry>>();
+    private final LinkedList<Pair<EntryType, AppleSingleEntry>> entryList = new LinkedList<>();
 
     public AppleSingleBuilder(FileType fileType, AppleSingleVersion version, FileSystem homeFileSystem) {
-        if(fileType == null)
+        if (fileType == null)
             throw new IllegalArgumentException("fileType == null");
-        if(version == null)
+        if (version == null)
             throw new IllegalArgumentException("version == null");
-        if(homeFileSystem == null)
+        if (homeFileSystem == null)
             throw new IllegalArgumentException("homeFileSystem == null");
         this.fileType = fileType;
         this.version = version;
@@ -240,67 +246,49 @@ public class AppleSingleBuilder {
     }
 
     public void addDataFork(byte[] resourceForkData) {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(EntryType.DATA_FORK,
-                new RawDataEntry(resourceForkData)));
+        entryList.add(new Pair<>(EntryType.DATA_FORK, new RawDataEntry(resourceForkData)));
     }
 
     public void addResourceFork(byte[] resourceForkData) {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(
-                EntryType.RESOURCE_FORK, new RawDataEntry(resourceForkData)));
+        entryList.add(new Pair<>(EntryType.RESOURCE_FORK, new RawDataEntry(resourceForkData)));
     }
 
     public void addEmptyResourceFork() {
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(
-                EntryType.RESOURCE_FORK,
-                new RawDataEntry(EMPTY_RESOURCE_FORK)));
+        entryList.add(new Pair<>(EntryType.RESOURCE_FORK, new RawDataEntry(EMPTY_RESOURCE_FORK)));
     }
 
-    public void addFinderInfo(byte[] finderInfoData,
-            List<Pair<String, byte[]>> extendedAttributeList)
-    {
-        if(finderInfoData != null && finderInfoData.length != 32) {
+    public void addFinderInfo(byte[] finderInfoData, List<Pair<String, byte[]>> extendedAttributeList) {
+        if (finderInfoData != null && finderInfoData.length != 32) {
             throw new IllegalArgumentException("Incorrect Finder info data " +
-                    "length (expected: 32, actual: " + finderInfoData.length +
-                    ").");
+                    "length (expected: 32, actual: " + finderInfoData.length + ").");
         }
 
-        ArrayList<Pair<byte[], byte[]>> attributeDataList =
-                new ArrayList<Pair<byte[], byte[]>>(
-                        extendedAttributeList.size());
+        ArrayList<Pair<byte[], byte[]>> attributeDataList = new ArrayList<>(extendedAttributeList.size());
 
-        for(Pair<String, byte[]> extendedAttributePair : extendedAttributeList)
-        {
-            /* Note: Is normalization necessary? Other substitutions? */
-            byte[] attributeNameUtf8 =
-                    Util.encodeString(extendedAttributePair.getA() + "\0",
-                    "UTF-8");
-            if(attributeNameUtf8.length > 255) {
+        for (Pair<String, byte[]> extendedAttributePair : extendedAttributeList) {
+            // Note: Is normalization necessary? Other substitutions?
+            byte[] attributeNameUtf8 = Util.encodeString(extendedAttributePair.getA() + "\0", "UTF-8");
+            if (attributeNameUtf8.length > 255) {
                 throw new RuntimeException("Extended attribute name " +
                         "\"" + extendedAttributePair.getA() + "\" is too " +
-                        "long (maximum length: 255, actual length: " +
-                        attributeNameUtf8.length + ").");
+                        "long (maximum length: 255, actual length: " + attributeNameUtf8.length + ").");
             }
 
             byte[] attributeData = extendedAttributePair.getB();
 
-            /* Because of limitations in the XNU kernel's AppleDouble
-             * implementation, the maximum data size of extended attributes
-             * stored inside an AppleDouble file is 128 KiB. */
-            if(attributeData.length > (128 * 1024)) {
+            // Because of limitations in the XNU kernel's AppleDouble
+            // implementation, the maximum data size of extended attributes
+            // stored inside an AppleDouble file is 128 KiB.
+            if (attributeData.length > (128 * 1024)) {
                 throw new RuntimeException("Attribute data size is too large " +
                         "to be stored in an AppleDouble file (maximum " +
-                        "allowed: " + (128 * 1024) + ", actual: " +
-                        attributeData.length + ").");
+                        "allowed: " + (128 * 1024) + ", actual: " + attributeData.length + ").");
             }
 
-            attributeDataList.add(new Pair<byte[], byte[]>(attributeNameUtf8,
-                    extendedAttributePair.getB()));
-
+            attributeDataList.add(new Pair<>(attributeNameUtf8, extendedAttributePair.getB()));
         }
 
-        entryList.add(new Pair<EntryType, AppleSingleEntry>(
-                EntryType.FINDER_INFO,
-                new FinderInfoEntry(finderInfoData, attributeDataList)));
+        entryList.add(new Pair<>(EntryType.FINDER_INFO, new FinderInfoEntry(finderInfoData, attributeDataList)));
     }
 
     /**
@@ -311,14 +299,14 @@ public class AppleSingleBuilder {
      */
     public byte[] getResult() {
         int dataSize = AppleSingleHeader.length();
-        dataSize += EntryDescriptor.length()*entryList.size();
+        dataSize += EntryDescriptor.length() * entryList.size();
         int dataStartOffset = dataSize;
 
-        for(Pair<EntryType, AppleSingleEntry> p : entryList) {
-            dataSize += p.getB().getBytes(dataSize, null, 0);
+        for (Pair<EntryType, AppleSingleEntry> p : entryList) {
+            dataSize += p.getB().getBytes(dataSize, null, 0, 0);
         }
 
-        /* Adjust dataSize for alignment. */
+        // Adjust dataSize for alignment.
         int remainingAlignmentSize = (ALIGNMENT - (dataSize % ALIGNMENT));
         dataSize = dataSize + remainingAlignmentSize;
 
@@ -332,23 +320,21 @@ public class AppleSingleBuilder {
             pointer += headerData.length;
         }
 
-        final EntryDescriptor[] entryDescriptors =
-                new EntryDescriptor[entryList.size()];
+        EntryDescriptor[] entryDescriptors = new EntryDescriptor[entryList.size()];
         int i = 0;
         int dataOffset = dataStartOffset;
-        for(Pair<EntryType, AppleSingleEntry> p : entryList) {
-            int entryDataLength = p.getB().getBytes(dataOffset, null, 0);
-            if(p.getA() == EntryType.FINDER_INFO) {
-                /* If we have a Finder info entry, then make sure that all the
-                 * alignment padding is allocated to this entry. This is done in
-                 * order to have headroom for expansion of extended attribute
-                 * list/data. */
+        for (Pair<EntryType, AppleSingleEntry> p : entryList) {
+            int entryDataLength = p.getB().getBytes(dataOffset, null, 0, 0);
+            if (p.getA() == EntryType.FINDER_INFO) {
+                // If we have a Finder info entry, then make sure that all the
+                // alignment padding is allocated to this entry. This is done in
+                // order to have headroom for expansion of extended attribute
+                // list/ data.
                 entryDataLength += remainingAlignmentSize;
                 remainingAlignmentSize = 0;
             }
 
-            EntryDescriptor ed = new EntryDescriptor(p.getA().getTypeNumber(),
-                    dataOffset, entryDataLength);
+            EntryDescriptor ed = new EntryDescriptor(p.getA().getTypeNumber(), dataOffset, entryDataLength);
             entryDescriptors[i++] = ed;
             dataOffset += entryDataLength;
 
@@ -357,40 +343,37 @@ public class AppleSingleBuilder {
             pointer += entryDescriptorData.length;
         }
 
-        if(pointer != dataStartOffset)
+        if (pointer != dataStartOffset)
             throw new RuntimeException("Internal error: Miscalculation of dataStartOffset (should be: " +
                     pointer + ", was: " + dataStartOffset + ")");
 
         i = 0;
-        for(Pair<EntryType, AppleSingleEntry> p : entryList) {
-            final EntryDescriptor desc = entryDescriptors[i++];
-            final int entryOffset = desc.getEntryOffset();
-            final int entryLength = desc.getEntryLength();
+        for (Pair<AppleSingleBuilder.EntryType, AppleSingleEntry> p : entryList) {
+            EntryDescriptor desc = entryDescriptors[i++];
+            int entryOffset = desc.getEntryOffset();
+            int entryLength = desc.getEntryLength();
 
-            if(pointer != entryOffset) {
+            if (pointer != entryOffset) {
                 throw new RuntimeException("Internal error: Miscalculation " +
                         "of data offset for entry " + i + " (calculated: " +
                         entryOffset + ", actual: " + pointer + ").");
             }
 
-            final int entryDataLength =
-                    p.getB().getBytes(pointer, result, pointer);
+            int entryDataLength = p.getB().getBytes(pointer, result, pointer, entryLength);
             pointer += entryDataLength;
 
-            final int entryPaddingLength = entryLength - entryDataLength;
-            if(entryPaddingLength != 0) {
-                /* Fill trailing bytes in entry with zeroed data. */
-                Arrays.fill(result, pointer, pointer + entryPaddingLength,
-                        (byte) 0);
+            int entryPaddingLength = entryLength - entryDataLength;
+            if (entryPaddingLength != 0) {
+                // Fill trailing bytes in entry with zeroed data.
+                Arrays.fill(result, pointer, pointer + entryPaddingLength, (byte) 0);
                 pointer += entryPaddingLength;
             }
         }
 
-        final int trailingPaddingLength = result.length - pointer;
-        if(trailingPaddingLength != 0) {
-            /* Fill trailing bytes in file with zeroed data. */
-            Arrays.fill(result, pointer, pointer + trailingPaddingLength,
-                    (byte) 0);
+        int trailingPaddingLength = result.length - pointer;
+        if (trailingPaddingLength != 0) {
+            // Fill trailing bytes in file with zeroed data.
+            Arrays.fill(result, pointer, pointer + trailingPaddingLength, (byte) 0);
             pointer += trailingPaddingLength;
         }
 
@@ -398,45 +381,46 @@ public class AppleSingleBuilder {
     }
 
     public interface AppleSingleEntry {
-        public int getBytes(long fileOffset, byte[] data, int offset);
+
+        int getBytes(long fileOffset, byte[] data, int offset, int length);
     }
 
-    public class RawDataEntry implements AppleSingleEntry {
+    public static class RawDataEntry implements AppleSingleEntry {
+
         private final byte[] rawData;
 
         public RawDataEntry(byte[] rawData) {
             this.rawData = rawData;
         }
 
-        public int getBytes(long fileOffset, byte[] data, int offset) {
-            if(data != null) {
-                System.arraycopy(rawData, 0, data, offset, rawData.length);
+        @Override
+        public int getBytes(long fileOffset, byte[] data, int offset, int length) {
+            if (data != null) {
+                System.arraycopy(rawData, 0, data, offset, Math.min(length, rawData.length));
             }
 
             return rawData.length;
         }
     }
 
-    public class FinderInfoEntry implements AppleSingleEntry {
+    public static class FinderInfoEntry implements AppleSingleEntry {
+
         private final byte[] finderInfoData;
         private final ArrayList<Pair<byte[], byte[]>> attributeDataList;
 
-        private FinderInfoEntry(byte[] finderInfoData,
-                ArrayList<Pair<byte[], byte[]>> attributeDataList)
-        {
+        private FinderInfoEntry(byte[] finderInfoData, ArrayList<Pair<byte[], byte[]>> attributeDataList) {
             this.finderInfoData = finderInfoData;
             this.attributeDataList = attributeDataList;
         }
 
-        public int getBytes(long fileOffset, byte[] data, int offset) {
+        @Override
+        public int getBytes(long fileOffset, byte[] data, int offset, int length) {
             int finderInfoDataSize = 0;
 
-            if(data != null) {
-                if(finderInfoData != null) {
-                    System.arraycopy(finderInfoData, 0, data,
-                            offset + finderInfoDataSize, 32);
-                }
-                else {
+            if (data != null) {
+                if (finderInfoData != null) {
+                    System.arraycopy(finderInfoData, 0, data, offset + finderInfoDataSize, 32);
+                } else {
                     Arrays.fill(data, offset + finderInfoDataSize,
                             offset + finderInfoDataSize + 32, (byte) 0);
                 }
@@ -444,96 +428,99 @@ public class AppleSingleBuilder {
 
             finderInfoDataSize += 32;
 
-            if(!attributeDataList.isEmpty()) {
-                /* 2-byte padding. */
-                if(data != null) {
+            if (!attributeDataList.isEmpty()) {
+                // 2-byte padding.
+                if (data != null) {
                     Arrays.fill(data, offset + finderInfoDataSize,
                             offset + finderInfoDataSize + 2, (byte) 0);
                 }
 
                 finderInfoDataSize += 2;
 
-                /* Calculate offsets of header and entries. This is non-trivial
-                 * due to the requirement that entries are variable-sized and
-                 * must be 4-byte aligned. */
-                final int attributeHeaderOffset = offset + finderInfoDataSize;
+                // Calculate offsets of header and entries. This is non-trivial
+                // due to the requirement that entries are variable-sized and
+                // must be 4-byte aligned.
+                int attributeHeaderOffset = offset + finderInfoDataSize;
                 finderInfoDataSize += AttributeHeader.STRUCTSIZE;
 
-                final int[] attributeEntryOffsets =
-                        data != null ? new int[attributeDataList.size()] : null;
+                int[] attributeEntryOffsets = data != null ? new int[attributeDataList.size()] : null;
                 int extendedAttributesDataSize = 0;
                 int i = 0;
-                for(Pair<byte[], byte[]> attributeData : attributeDataList) {
+                for (Pair<byte[], byte[]> attributeData : attributeDataList) {
                     extendedAttributesDataSize += attributeData.getB().length;
 
-                    /* Align to 4-byte boundaries. */
-                    final int remainder =
-                            (int) ((fileOffset + finderInfoDataSize) & 0x3);
-                    if(remainder != 0) {
-                        if(data != null) {
-                            Arrays.fill(data, offset + finderInfoDataSize,
-                                    offset + finderInfoDataSize + remainder,
-                                    (byte) 0);
+                    // Align to 4-byte boundaries.
+                    int remainder = (int) ((fileOffset + finderInfoDataSize) & 0x3);
+                    if (remainder != 0) {
+                        if (data != null) {
+                            Arrays.fill(data, offset + finderInfoDataSize + remainder,
+                                    offset + finderInfoDataSize + (4 - remainder), (byte) 0);
                         }
 
-                        finderInfoDataSize += remainder;
+                        finderInfoDataSize += 4 - remainder;
                     }
 
-                    if(data != null) {
-                        attributeEntryOffsets[i++] =
-                                offset + finderInfoDataSize;
+                    if (data != null) {
+                        attributeEntryOffsets[i++] = offset + finderInfoDataSize;
                     }
 
-                    finderInfoDataSize += AttributeEntry.STATIC_STRUCTSIZE +
-                            attributeData.getA().length;
+                    finderInfoDataSize += AttributeEntry.STATIC_STRUCTSIZE + attributeData.getA().length;
                 }
 
-                /* Header + entries must fit within the first 64 KiB of the file
-                 * beacuse of limitations in the XNU AppleDouble
-                 * implementation. */
-                if(fileOffset + finderInfoDataSize > 65536) {
-                    throw new RuntimeException("Attribute entry list extends " +
-                            "beyond the first 64k of the file (ends at: " +
-                            (fileOffset + finderInfoDataSize) + ").");
+                if (((fileOffset + finderInfoDataSize) & 0x03) != 0) {
+                    // Align end of attribute entry list.
+                    finderInfoDataSize = (int) (finderInfoDataSize + 4 - ((fileOffset + finderInfoDataSize) & 0x3));
                 }
 
-                final int extendedAttributesDataStart =
-                        (int) (fileOffset + finderInfoDataSize);
-                int curDataOffset = finderInfoDataSize;
+                int extendedAttributesDataStart = (int) (fileOffset + finderInfoDataSize);
 
-                /* Write out attribute header. */
-                if(data != null) {
-                    final AttributeHeader header = new AttributeHeader(0,
-                            extendedAttributesDataStart +
-                            extendedAttributesDataSize,
+                // Write out attribute header.
+                if (data != null) {
+                    AttributeHeader header = new AttributeHeader(
+                            /* int debugTag */
+                            0,
+                            /* int totalEnd */
+                            (int) fileOffset + length,
+                            /* int dataStart */
                             extendedAttributesDataStart,
+                            /* int dataLength */
                             extendedAttributesDataSize,
-                            (short) 0, (short) attributeDataList.size());
-                    final byte[] headerBytes = header.getBytes();
-                    System.arraycopy(headerBytes, 0, data,
-                            attributeHeaderOffset, headerBytes.length);
+                            /* short flags */
+                            (short) 0,
+                            /* short numAttrs */
+                            (short) attributeDataList.size());
+                    byte[] headerBytes = header.getBytes();
+                    System.arraycopy(headerBytes, 0, data, attributeHeaderOffset, headerBytes.length);
                 }
 
-                /* Write out attribute entry headers and associated data. */
+                // Write out attribute entry headers and associated data.
                 i = 0;
-                for(Pair<byte[], byte[]> attributeData : attributeDataList) {
-                    final byte[] content = attributeData.getB();
+                for (Pair<byte[], byte[]> attributeData : attributeDataList) {
+                    byte[] content = attributeData.getB();
 
-                    if(data != null) {
-                        final byte[] name = attributeData.getA();
+                    if (data != null) {
+                        byte[] name = attributeData.getA();
 
-                        final AttributeEntry entry = new AttributeEntry(
-                                curDataOffset, content.length, (short) 0, name,
-                                0, (short) name.length);
-                        final byte[] entryData = entry.getBytes();
+                        AttributeEntry entry = new AttributeEntry(
+                                /* long offset */
+                                fileOffset + finderInfoDataSize,
+                                /* long length */
+                                content.length,
+                                /* short flags */
+                                (short) 0,
+                                /* byte[] name */
+                                name,
+                                /* int nameOffset */
+                                0,
+                                /* short nameLength */
+                                (short) name.length);
+                        byte[] entryData = entry.getBytes();
 
-                        /* Write out entry header. */
-                        System.arraycopy(entryData, 0, data,
-                                attributeEntryOffsets[i++], entryData.length);
+                        // Write out entry header.
+                        System.arraycopy(entryData, 0, data, attributeEntryOffsets[i++], entryData.length);
 
-                        /* Write out entry data. */
-                        System.arraycopy(content, 0, data,
-                                offset + finderInfoDataSize, content.length);
+                        // Write out entry data.
+                        System.arraycopy(content, 0, data, offset + finderInfoDataSize, content.length);
                     }
 
                     finderInfoDataSize += content.length;

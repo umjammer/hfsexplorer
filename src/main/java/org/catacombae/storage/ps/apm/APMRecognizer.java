@@ -22,14 +22,16 @@ import org.catacombae.storage.ps.apm.types.ApplePartitionMap;
 import org.catacombae.storage.ps.apm.types.DriverDescriptorRecord;
 import org.catacombae.storage.ps.PartitionSystemRecognizer;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class APMRecognizer implements PartitionSystemRecognizer {
 
+    @Override
     public boolean detect(ReadableRandomAccessStream fsStream, long offset, long length) {
         try {
-            //ReadableRandomAccessStream llf = data.createReadOnlyFile();
+//            ReadableRandomAccessStream llf = data.createReadOnlyFile();
             byte[] firstBlock = new byte[512];
 
             fsStream.seek(0);
@@ -39,40 +41,36 @@ public class APMRecognizer implements PartitionSystemRecognizer {
             int blockSize = 0;
 
             try {
-                DriverDescriptorRecord ddr =
-                        new DriverDescriptorRecord(firstBlock, 0);
-                if(ddr.isValid()) {
+                DriverDescriptorRecord ddr = new DriverDescriptorRecord(firstBlock, 0);
+                if (ddr.isValid()) {
                     blockSize = ddr.getSbBlkSize();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
             }
 
-            if(blockSize == 0) {
-                /* Check if the second block has a valid partition signature. */
+            if (blockSize == 0) {
+                // Check if the second block has a valid partition signature.
                 byte[] secondBlock = new byte[512];
                 fsStream.seek(512);
                 fsStream.readFully(secondBlock);
-                if(secondBlock[0] == 'P' && secondBlock[1] == 'M') {
+                if (secondBlock[0] == 'P' && secondBlock[1] == 'M') {
                     blockSize = 512;
-                }
-                else {
+                } else {
                     blockSize = 0;
                 }
             }
 
-            if(blockSize > 0) {
-                //long numberOfBlocksOnDevice = Util.unsign(ddr.getSbBlkCount());
-                //bitStream.seek(blockSize*1); // second block, first partition in list
+            if (blockSize > 0) {
+//                long numberOfBlocksOnDevice = Util.unsign(ddr.getSbBlkCount());
+//                bitStream.seek(blockSize*1); // second block, first partition in list
                 ApplePartitionMap apm = new ApplePartitionMap(fsStream, blockSize * 1, blockSize);
-                if(apm.getUsedPartitionCount() > 0) {
+                if (apm.getUsedPartitionCount() > 0) {
                     return true;
-                }
-                else if(blockSize != 512) {
-                    /* We may have an APM configured with 512 byte block size
-                     * even though the DDR says otherwise. */
-                    final ApplePartitionMap backupApm =
-                        new ApplePartitionMap(fsStream, 512, 512);
-                    if(backupApm.getUsedPartitionCount() > 0) {
+                } else if (blockSize != 512) {
+                    // We may have an APM configured with 512 byte block size
+                    // even though the DDR says otherwise.
+                    ApplePartitionMap backupApm = new ApplePartitionMap(fsStream, 512, 512);
+                    if (backupApm.getUsedPartitionCount() > 0) {
                         return true;
                     }
                 }

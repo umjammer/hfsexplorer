@@ -19,25 +19,32 @@ package org.catacombae.hfsexplorer;
 
 import org.catacombae.hfsexplorer.fs.NullProgressMonitor;
 
+
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public abstract class BasicExtractProgressMonitor extends NullProgressMonitor implements ExtractProgressMonitor {
 
-    protected BasicExtractProgressMonitor() {}
+    protected BasicExtractProgressMonitor() {
+    }
 
-    /* @Override */
-    public void updateTotalProgress(double fraction, String message) {}
+    @Override
+    public void updateTotalProgress(double fraction, String message) {
+    }
 
-    /* @Override */
-    public void updateCurrentDir(String dirname) {}
+    @Override
+    public void updateCurrentDir(String dirname) {
+    }
 
-    /* @Override */
-    public void updateCurrentFile(String filename, long fileSize) {}
+    @Override
+    public void updateCurrentFile(String filename, long fileSize) {
+    }
 
-    /* @Override */
-    public void setDataSize(long totalSize) {}
+    @Override
+    public void setDataSize(long totalSize) {
+    }
 
-    /* @Override */
-    public void updateCalculateDir(String dirname) {}
+    @Override
+    public void updateCalculateDir(String dirname) {
+    }
 }

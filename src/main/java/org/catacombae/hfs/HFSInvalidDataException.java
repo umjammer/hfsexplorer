@@ -21,6 +21,7 @@ package org.catacombae.hfs;
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSInvalidDataException extends HFSException {
+
     public HFSInvalidDataException(String message) {
         super(message);
     }

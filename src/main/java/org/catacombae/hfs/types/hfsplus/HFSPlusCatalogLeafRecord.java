@@ -17,15 +17,18 @@
 
 package org.catacombae.hfs.types.hfsplus;
 
+import java.io.PrintStream;
+
+import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.hfs.types.hfsx.HFSXCatalogKey;
 import org.catacombae.util.Util;
-import java.io.PrintStream;
-import org.catacombae.csjc.PrintableStruct;
+
 
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
 public class HFSPlusCatalogLeafRecord implements PrintableStruct {
+
     public static final int HFS_PLUS_FOLDER_RECORD = 0x0001;
     public static final int HFS_PLUS_FILE_RECORD = 0x0002;
     public static final int HFS_PLUS_FOLDER_THREAD_RECORD = 0x0003;
@@ -35,39 +38,47 @@ public class HFSPlusCatalogLeafRecord implements PrintableStruct {
     protected final HFSPlusCatalogLeafRecordData recordData;
 
     public HFSPlusCatalogLeafRecord(byte[] data, int offset) {
-	this(data, offset, null);
+        this(data, offset, null);
     }
+
     protected HFSPlusCatalogLeafRecord(byte[] data, int offset, BTHeaderRec catalogHeaderRec) {
-	if(catalogHeaderRec == null)
-	    key = new HFSPlusCatalogKey(data, offset);
-	else
-            key = new HFSXCatalogKey(data, offset,
-                    catalogHeaderRec.getKeyCompareType());
+        if (catalogHeaderRec == null)
+            key = new HFSPlusCatalogKey(data, offset);
+        else
+            key = new HFSXCatalogKey(data, offset, catalogHeaderRec.getKeyCompareType());
 
-	short recordType = Util.readShortBE(data, offset+key.length());
-	if(recordType == HFS_PLUS_FOLDER_RECORD)
-	    recordData = new HFSPlusCatalogFolder(data, offset+key.length());
-	else if(recordType == HFS_PLUS_FILE_RECORD)
-	    recordData = new HFSPlusCatalogFile(data, offset+key.length());
-	else if(recordType == HFS_PLUS_FOLDER_THREAD_RECORD)
-	    recordData = new HFSPlusCatalogThread(data, offset+key.length());
-	else if(recordType == HFS_PLUS_FILE_THREAD_RECORD)
-	    recordData = new HFSPlusCatalogThread(data, offset+key.length());
-	else
-	    throw new RuntimeException("Invalid record type!");
+        short recordType = Util.readShortBE(data, offset + key.length());
+        if (recordType == HFS_PLUS_FOLDER_RECORD)
+            recordData = new HFSPlusCatalogFolder(data, offset + key.length());
+        else if (recordType == HFS_PLUS_FILE_RECORD)
+            recordData = new HFSPlusCatalogFile(data, offset + key.length());
+        else if (recordType == HFS_PLUS_FOLDER_THREAD_RECORD)
+            recordData = new HFSPlusCatalogThread(data, offset + key.length());
+        else if (recordType == HFS_PLUS_FILE_THREAD_RECORD)
+            recordData = new HFSPlusCatalogThread(data, offset + key.length());
+        else
+            throw new RuntimeException("Invalid record type!");
     }
 
-    public HFSPlusCatalogKey getKey() { return key; }
-    public HFSPlusCatalogLeafRecordData getData() { return recordData; }
+    public HFSPlusCatalogKey getKey() {
+        return key;
+    }
 
+    public HFSPlusCatalogLeafRecordData getData() {
+        return recordData;
+    }
+
+    @Override
     public void printFields(PrintStream ps, String prefix) {
-	ps.println(prefix + " key:");
-	key.printFields(ps, prefix + "  ");
-	ps.println(prefix + " recordData:");
-	recordData.printFields(ps, prefix + "  ");
+        ps.println(prefix + " key:");
+        key.printFields(ps, prefix + "  ");
+        ps.println(prefix + " recordData:");
+        recordData.printFields(ps, prefix + "  ");
     }
+
+    @Override
     public void print(PrintStream ps, String prefix) {
-	ps.println(prefix + "HFSPlusCatalogLeafRecord:");
-	printFields(ps, prefix);
+        ps.println(prefix + "HFSPlusCatalogLeafRecord:");
+        printFields(ps, prefix);
     }
 }

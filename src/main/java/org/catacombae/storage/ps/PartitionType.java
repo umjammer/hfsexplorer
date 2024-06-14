@@ -20,6 +20,7 @@ package org.catacombae.storage.ps;
 import org.catacombae.storage.fs.FileSystemMajorType;
 import org.catacombae.storage.ps.container.ContainerType;
 
+
 /**
  * This enum presents a general representation of the partition types that may
  * be encountered. If FAT32 has several different partition types associated in
@@ -82,8 +83,8 @@ public enum PartitionType {
      * system, but on occasion also contains any of the Linux Native file system
      * types when a PPC linux distribution is installed on an older mac).
      */
-    public static enum ContentType {
-        FILE_SYSTEM, PARTITION_SYSTEM, CONTAINER, OTHER;
+    public enum ContentType {
+        FILE_SYSTEM, PARTITION_SYSTEM, CONTAINER, OTHER
     }
 
     private final ContentType contentType;
@@ -93,27 +94,27 @@ public enum PartitionType {
     private PartitionSystemType psType = null;
     private ContainerType containerType = null;
 
-    private PartitionType(ContentType contentType) {
+    PartitionType(ContentType contentType) {
         this.contentType = contentType;
     }
 
-    private PartitionType(ContentType contentType, FileSystemMajorType fsType) {
+    PartitionType(ContentType contentType, FileSystemMajorType fsType) {
         this(contentType);
-        if(contentType != ContentType.FILE_SYSTEM)
+        if (contentType != ContentType.FILE_SYSTEM)
             throw new RuntimeException("Wrong content type for constructor.");
         this.fsType = fsType;
     }
 
-    private PartitionType(ContentType contentType, PartitionSystemType psType) {
+    PartitionType(ContentType contentType, PartitionSystemType psType) {
         this(contentType);
-        if(contentType != ContentType.PARTITION_SYSTEM)
+        if (contentType != ContentType.PARTITION_SYSTEM)
             throw new RuntimeException("Wrong content type for constructor.");
         this.psType = psType;
     }
 
-    private PartitionType(ContentType contentType, ContainerType containerType) {
+    PartitionType(ContentType contentType, ContainerType containerType) {
         this(contentType);
-        if(contentType != ContentType.CONTAINER)
+        if (contentType != ContentType.CONTAINER)
             throw new RuntimeException("Wrong content type for constructor.");
         this.containerType = containerType;
     }
@@ -123,27 +124,24 @@ public enum PartitionType {
     }
 
     public FileSystemMajorType getAssociatedFileSystemType() {
-        if(contentType != ContentType.FILE_SYSTEM)
-            throw new RuntimeException("Trying to get the file system type " +
-                    "for non file system content!");
+        if (contentType != ContentType.FILE_SYSTEM)
+            throw new RuntimeException("Trying to get the file system type for non file system content!");
         else {
             return fsType;
         }
     }
 
     public PartitionSystemType getAssociatedPartitionSystemType() {
-        if(contentType != ContentType.PARTITION_SYSTEM)
-            throw new RuntimeException("Trying to get the partition system type " +
-                    "for non partition system content!");
+        if (contentType != ContentType.PARTITION_SYSTEM)
+            throw new RuntimeException("Trying to get the partition system type for non partition system content!");
         else {
             return psType;
         }
     }
 
     public ContainerType getAssociatedContainerType() {
-        if(contentType != ContentType.CONTAINER)
-            throw new RuntimeException("Trying to get the container type " +
-                    "for non container content!");
+        if (contentType != ContentType.CONTAINER)
+            throw new RuntimeException("Trying to get the container type for non container content!");
         else {
             return containerType;
         }
