@@ -3,21 +3,22 @@
 
   <groupId>catacombae</groupId>
   <artifactId>hfsexplorer</artifactId>
-  <version>0.23.3</version>
+  <version>0.23.4-SNAPSHOT</version>
 
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <release>17</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.2.2</version>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <argLine>
@@ -41,7 +42,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.9.0</version>
+        <version>5.10.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -53,6 +54,13 @@
       <groupId>catacombae</groupId> <!-- catacombae / com.github.umjammer -->
       <artifactId>hfsx_dmglib</artifactId> <!-- hfsx_dmglib / dmgextractor -->
       <version>0.70.3-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.4.1</version>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -68,6 +76,13 @@
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>vavi-commons</artifactId>
+      <version>1.1.13</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

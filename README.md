@@ -1,18 +1,28 @@
 [![jitpack](https://jitpack.io/v/umjammer/hfsexplorer.svg)](https://jitpack.io/#umjammer/hfsexplorer)
-[![Java CI](https://github.com/umjammer/hfsexplorer/workflows/Java%20CI%20with%20Maven/badge.svg)](https://github.com/umjammer/hfsexplorer/actions)
+[![Java CI](https://github.com/umjammer/hfsexplorer/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/hfsexplorer/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/hfsexplorer/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/hfsexplorer/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-8-b07219)
+![Java](https://img.shields.io/badge/Java-17-b07219)
 [![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
 
 # hfs explorer
 
 this is a fork of https://github.com/unsound/hfsexplorer and mavenized
 
+## Install
+
+ * [maven](https://jitpack.io/#umjammer/hfsexplorer)
+
+## Usage
+
+## References
+
 ## TODO
 
 * native (win32) compilation by maven
 
 ----
+
+# [Original](http://www.catacombae.org/hfsexplorer/)
 
 ## What is HFSExplorer?
 
@@ -31,7 +41,3 @@ People that need to access the contents of HFS+-formatted .dmg / .sparsebundle f
 HFSExplorer is written mostly in Java 5, optionally using some Java 6 / 7 features, with some Windows-specific parts written in C in order to be able to get raw access to block devices, and to create a practical launcher application.
 
 Linux and OS X users should in most cases not need HFSExplorer for browsing file systems on devices, since there are native file system drivers available on those systems, but it seems to work fine if you need it. Linux users might find use for opening .dmg / .sparsebundle files.
-
-----
-
-[Project Page](http://www.catacombae.org/hfsexplorer/)
