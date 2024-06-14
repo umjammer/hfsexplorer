@@ -17,6 +17,8 @@
 
 package org.catacombae.hfsexplorer.testcode;
 
+import org.catacombae.hfs.types.finder.ExtendedFileInfo;
+import org.catacombae.hfs.types.finder.FileInfo;
 import org.catacombae.hfsexplorer.fs.AppleSingleHandler;
 import org.catacombae.hfsexplorer.types.applesingle.AttributeEntry;
 import org.catacombae.hfsexplorer.types.applesingle.AttributeHeader;
@@ -40,12 +42,27 @@ public class AppleSingleDebug {
             handler.getHeader().print(System.out, "  ");
 
             int i = 0;
-            for (EntryDescriptor ed : handler.getEntryDescriptors()) {
-                System.out.println("EntryDescriptor[" + i++ + "]:");
+            for(EntryDescriptor ed : handler.getEntryDescriptors()) {
+                System.out.println("EntryDescriptor[" + i++ +"] @ " + ed.getEntryOffset() + ":");
                 ed.print(System.out, "  ");
+
+                if (ed.getEntryId() == EntryDescriptor.ENTRY_ID_FINDERINFO && ed.getEntryLength() >= 32) {
+                    byte[] finderInfoData = new byte[32];
+                    int entryOffset = ed.getEntryOffset();
+
+                    is.seek(entryOffset);
+                    is.readFully(finderInfoData);
+
+                    FileInfo fi = new FileInfo(finderInfoData, 0);
+                    ExtendedFileInfo ei = new ExtendedFileInfo(finderInfoData, 16);
+                    System.out.println("    Finder info:");
+                    fi.print(System.out, "     ");
+                    ei.print(System.out, "     ");
+                }
 
                 if (ed.getEntryId() == EntryDescriptor.ENTRY_ID_FINDERINFO &&
                         ed.getEntryLength() > (32 + 2 + AttributeHeader.STRUCTSIZE)) {
+
                     byte[] finderInfoData = new byte[ed.getEntryLength()];
                     int entryOffset = ed.getEntryOffset();
 
@@ -54,22 +71,22 @@ public class AppleSingleDebug {
 
                     AttributeHeader header = new AttributeHeader(finderInfoData, 32 + 2);
                     if (header.getMagic() == AttributeHeader.MAGIC) {
-                        header.print(System.out, "    ");
+                        System.out.println("    Attribute header @ " + (entryOffset + 32 + 2) + ":");
+                        header.printFields(System.out, "     ");
 
                         int numAttrs = header.getNumAttrs();
                         int curOffset = 32 + 2 + AttributeHeader.STRUCTSIZE;
                         for (i = 0; i < numAttrs; ++i) {
                             AttributeEntry ae = new AttributeEntry(finderInfoData, curOffset);
 
-                            System.out.println("    Attribute entry " + (i + 1) + ":");
+                            System.out.println("    Attribute entry " + (i + 1) + " @ " + (entryOffset + curOffset) + ":");
                             ae.print(System.out, "     ");
 
                             int nextOffset = curOffset + ae.occupiedSize();
 
                             // Entries are always 4-byte aligned, so skip any
                             // bytes up to the next 4 byte boundary.
-                            int remainder =
-                                    (entryOffset + nextOffset) & 0x3;
+                            int remainder = (entryOffset + nextOffset) & 0x3;
                             if (remainder != 0) {
                                 nextOffset += 4 - remainder;
                             }

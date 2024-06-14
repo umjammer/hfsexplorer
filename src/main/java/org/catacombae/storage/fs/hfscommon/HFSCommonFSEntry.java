@@ -78,10 +78,10 @@ public abstract class HFSCommonFSEntry extends BasicFSEntry {
                         continue;
                     }
 
-                    if (!attributeBucketList.isEmpty() && (p = attributeBucketList.getLast()) != null) {
-                        if (Arrays.equals(p.getA(), attributeRecord.getKey().getAttrName())) {
-                            p.getB().addLast(attributeRecord);
-                        }
+                    if (!attributeBucketList.isEmpty() &&
+                            (p = attributeBucketList.getLast()) != null &&
+                            Arrays.equals(p.getA(), attributeRecord.getKey().getAttrName())) {
+                        p.getB().addLast(attributeRecord);
                     } else {
                         LinkedList<CommonHFSAttributesLeafRecord> bucket = new LinkedList<>();
                         bucket.add(attributeRecord);

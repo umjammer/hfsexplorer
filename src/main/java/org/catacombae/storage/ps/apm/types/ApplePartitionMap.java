@@ -63,7 +63,7 @@ public class ApplePartitionMap implements PartitionSystem {
             if (p.isValid()) {
                 short curPmSig = p.getPmSig();
                 short curPmSigPad = p.getPmSigPad();
-                long curPmMapBlkCnt = Util.unsign(p.getPmMapBlkCnt());
+                long curPmMapBlkCnt = p.getPmMapBlkCnt();
 
                 if (pmMapBlkCnt != null && pmSigPad != null && pmSig != null) {
                     if (curPmSig != pmSig || curPmSigPad != pmSigPad || curPmMapBlkCnt != pmMapBlkCnt)
@@ -136,7 +136,9 @@ public class ApplePartitionMap implements PartitionSystem {
     }
 
     public byte[] getData() {
-        byte[] result = new byte[partitions.length * APMPartition.structSize()];
+        byte[] result =
+                new byte[(partitions != null && partitions.length != 0) ?
+                partitions.length * partitions[0].size() : 0];
         int offset = 0;
         for (APMPartition ap : partitions) {
             byte[] tmp = ap.getData();

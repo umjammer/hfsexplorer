@@ -108,7 +108,7 @@ public class AppleSingleBuilder {
         MACOS_X("Mac OS X"),
         PRODOS("ProDOS"),
         MS_DOS("MS-DOS"),
-        UNIS("Unix"),
+        UNIX("Unix"),
         VMS("VAX VMS");
 
         private final String identifier;
@@ -288,8 +288,7 @@ public class AppleSingleBuilder {
             attributeDataList.add(new Pair<>(attributeNameUtf8, extendedAttributePair.getB()));
         }
 
-        entryList.add(new Pair<>(EntryType.FINDER_INFO,
-                new FinderInfoEntry(finderInfoData, attributeDataList)));
+        entryList.add(new Pair<>(EntryType.FINDER_INFO, new FinderInfoEntry(finderInfoData, attributeDataList)));
     }
 
     /**
@@ -304,7 +303,7 @@ public class AppleSingleBuilder {
         int dataStartOffset = dataSize;
 
         for (Pair<EntryType, AppleSingleEntry> p : entryList) {
-            dataSize += p.getB().getBytes(dataSize, null, 0);
+            dataSize += p.getB().getBytes(dataSize, null, 0, 0);
         }
 
         // Adjust dataSize for alignment.
@@ -325,7 +324,7 @@ public class AppleSingleBuilder {
         int i = 0;
         int dataOffset = dataStartOffset;
         for (Pair<EntryType, AppleSingleEntry> p : entryList) {
-            int entryDataLength = p.getB().getBytes(dataOffset, null, 0);
+            int entryDataLength = p.getB().getBytes(dataOffset, null, 0, 0);
             if (p.getA() == EntryType.FINDER_INFO) {
                 // If we have a Finder info entry, then make sure that all the
                 // alignment padding is allocated to this entry. This is done in
@@ -360,7 +359,7 @@ public class AppleSingleBuilder {
                         entryOffset + ", actual: " + pointer + ").");
             }
 
-            int entryDataLength = p.getB().getBytes(pointer, result, pointer);
+            int entryDataLength = p.getB().getBytes(pointer, result, pointer, entryLength);
             pointer += entryDataLength;
 
             int entryPaddingLength = entryLength - entryDataLength;
@@ -383,7 +382,7 @@ public class AppleSingleBuilder {
 
     public interface AppleSingleEntry {
 
-        int getBytes(long fileOffset, byte[] data, int offset);
+        int getBytes(long fileOffset, byte[] data, int offset, int length);
     }
 
     public static class RawDataEntry implements AppleSingleEntry {
@@ -395,9 +394,9 @@ public class AppleSingleBuilder {
         }
 
         @Override
-        public int getBytes(long fileOffset, byte[] data, int offset) {
+        public int getBytes(long fileOffset, byte[] data, int offset, int length) {
             if (data != null) {
-                System.arraycopy(rawData, 0, data, offset, rawData.length);
+                System.arraycopy(rawData, 0, data, offset, Math.min(length, rawData.length));
             }
 
             return rawData.length;
@@ -415,7 +414,7 @@ public class AppleSingleBuilder {
         }
 
         @Override
-        public int getBytes(long fileOffset, byte[] data, int offset) {
+        public int getBytes(long fileOffset, byte[] data, int offset, int length) {
             int finderInfoDataSize = 0;
 
             if (data != null) {
@@ -454,11 +453,11 @@ public class AppleSingleBuilder {
                     int remainder = (int) ((fileOffset + finderInfoDataSize) & 0x3);
                     if (remainder != 0) {
                         if (data != null) {
-                            Arrays.fill(data, offset + finderInfoDataSize,
-                                    offset + finderInfoDataSize + remainder, (byte) 0);
+                            Arrays.fill(data, offset + finderInfoDataSize + remainder,
+                                    offset + finderInfoDataSize + (4 - remainder), (byte) 0);
                         }
 
-                        finderInfoDataSize += remainder;
+                        finderInfoDataSize += 4 - remainder;
                     }
 
                     if (data != null) {
@@ -468,24 +467,28 @@ public class AppleSingleBuilder {
                     finderInfoDataSize += AttributeEntry.STATIC_STRUCTSIZE + attributeData.getA().length;
                 }
 
-                // Header + entries must fit within the first 64 KiB of the file
-                // beacuse of limitations in the XNU AppleDouble
-                // implementation.
-                if (fileOffset + finderInfoDataSize > 65536) {
-                    throw new RuntimeException("Attribute entry list extends " +
-                            "beyond the first 64k of the file (ends at: " + (fileOffset + finderInfoDataSize) + ").");
+                if (((fileOffset + finderInfoDataSize) & 0x03) != 0) {
+                    // Align end of attribute entry list.
+                    finderInfoDataSize = (int) (finderInfoDataSize + 4 - ((fileOffset + finderInfoDataSize) & 0x3));
                 }
 
                 int extendedAttributesDataStart = (int) (fileOffset + finderInfoDataSize);
-                int curDataOffset = finderInfoDataSize;
 
                 // Write out attribute header.
                 if (data != null) {
-                    AttributeHeader header = new AttributeHeader(0,
-                            extendedAttributesDataStart + extendedAttributesDataSize,
+                    AttributeHeader header = new AttributeHeader(
+                            /* int debugTag */
+                            0,
+                            /* int totalEnd */
+                            (int) fileOffset + length,
+                            /* int dataStart */
                             extendedAttributesDataStart,
+                            /* int dataLength */
                             extendedAttributesDataSize,
-                            (short) 0, (short) attributeDataList.size());
+                            /* short flags */
+                            (short) 0,
+                            /* short numAttrs */
+                            (short) attributeDataList.size());
                     byte[] headerBytes = header.getBytes();
                     System.arraycopy(headerBytes, 0, data, attributeHeaderOffset, headerBytes.length);
                 }
@@ -499,13 +502,24 @@ public class AppleSingleBuilder {
                         byte[] name = attributeData.getA();
 
                         AttributeEntry entry = new AttributeEntry(
-                                curDataOffset, content.length, (short) 0, name, 0, (short) name.length);
+                                /* long offset */
+                                fileOffset + finderInfoDataSize,
+                                /* long length */
+                                content.length,
+                                /* short flags */
+                                (short) 0,
+                                /* byte[] name */
+                                name,
+                                /* int nameOffset */
+                                0,
+                                /* short nameLength */
+                                (short) name.length);
                         byte[] entryData = entry.getBytes();
 
-                        /* Write out entry header. */
+                        // Write out entry header.
                         System.arraycopy(entryData, 0, data, attributeEntryOffsets[i++], entryData.length);
 
-                        /* Write out entry data. */
+                        // Write out entry data.
                         System.arraycopy(content, 0, data, offset + finderInfoDataSize, content.length);
                     }
 

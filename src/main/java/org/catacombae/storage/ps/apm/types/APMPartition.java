@@ -86,7 +86,7 @@ public class APMPartition implements Partition {
     private final byte[] pmBootEntry2 = new byte[4];
     private final byte[] pmBootCksum = new byte[4];
     private final byte[] pmProcessor = new byte[16];
-    private final byte[] pmPad = new byte[2 * 188];
+    private final byte[] pmPad;
 
     private final int blockSize;
 
@@ -109,7 +109,8 @@ public class APMPartition implements Partition {
         System.arraycopy(data, offset + 112, pmBootEntry2, 0, 4);
         System.arraycopy(data, offset + 116, pmBootCksum, 0, 4);
         System.arraycopy(data, offset + 120, pmProcessor, 0, 16);
-        System.arraycopy(data, offset + 136, pmPad, 0, 2 * 188);
+        pmPad = new byte[blockSize - 136];
+        System.arraycopy(data, offset + 136, pmPad, 0, blockSize - 136);
 
         this.blockSize = blockSize;
     }
@@ -188,33 +189,32 @@ public class APMPartition implements Partition {
         Util.arrayPutBE(pmBootEntry2, 0, 0);
         Util.arrayPutBE(pmBootCksum, 0, 0);
         Arrays.fill(pmProcessor, (byte) 0);
+        pmPad = new byte[blockSize - 136];
         Arrays.fill(pmPad, (byte) 0);
 
         this.blockSize = blockSize;
     }
 
-    public static int structSize() {
-        return 512;
-    }
+    public int size() { return blockSize; }
 
     // Defined in Partition
     @Override
     public long getStartOffset() {
-        return (Util.unsign(getPmPyPartStart()) + Util.unsign(getPmLgDataStart())) * blockSize;
+        return (getPmPyPartStart() + getPmLgDataStart()) * blockSize;
     }
 
     @Override
     public long getLength() {
-        long dataStartSector = Util.unsign(getPmLgDataStart());
-        long dataSectors = Util.unsign(getPmDataCnt());
+        long dataStartSector = getPmLgDataStart();
+        long dataSectors = getPmDataCnt();
 
         if (dataSectors == 0) {
             //
             // In case 0 is recorded in 'pmDataCnt' we derive the data size from
             // the size of the partition and the offset of the boot data.
             //
-            long partitionSectors = Util.unsign(getPmPartBlkCnt());
-            long bootStartSector = Util.unsign(getPmLgBootStart());
+            long partitionSectors = getPmPartBlkCnt();
+            long bootStartSector = getPmLgBootStart();
 
             dataSectors = ((bootStartSector > dataStartSector) ? bootStartSector : partitionSectors) - dataStartSector;
         }
@@ -238,18 +238,18 @@ public class APMPartition implements Partition {
     }
 
     /** number of blocks in partition map */
-    public int getPmMapBlkCnt() {
-        return Util.readIntBE(pmMapBlkCnt);
+    public long getPmMapBlkCnt() {
+        return Util.unsign(getPmMapBlkCntRaw());
     }
 
     /** first physical block of partition */
-    public int getPmPyPartStart() {
-        return Util.readIntBE(pmPyPartStart);
+    public long getPmPyPartStart() {
+        return Util.unsign(getPmPyPartStartRaw());
     }
 
     /** number of blocks in partition */
-    public int getPmPartBlkCnt() {
-        return Util.readIntBE(pmPartBlkCnt);
+    public long getPmPartBlkCnt() {
+        return Util.unsign(getPmPartBlkCntRaw());
     }
 
     /** partition name */
@@ -263,13 +263,13 @@ public class APMPartition implements Partition {
     }
 
     /** first logical block of data area */
-    public int getPmLgDataStart() {
-        return Util.readIntBE(pmLgDataStart);
+    public long getPmLgDataStart() {
+        return Util.unsign(getPmLgDataStartRaw());
     }
 
     /** number of blocks in data area */
-    public int getPmDataCnt() {
-        return Util.readIntBE(pmDataCnt);
+    public long getPmDataCnt() {
+        return Util.unsign(getPmDataCntRaw());
     }
 
     /** partition status information */
@@ -278,33 +278,33 @@ public class APMPartition implements Partition {
     }
 
     /** first logical block of boot code */
-    public int getPmLgBootStart() {
-        return Util.readIntBE(pmLgBootStart);
+    public long getPmLgBootStart() {
+        return Util.unsign(getPmLgBootStartRaw());
     }
 
     /** size of boot code, in bytes */
-    public int getPmBootSize() {
-        return Util.readIntBE(pmBootSize);
+    public long getPmBootSize() {
+        return Util.unsign(getPmBootSizeRaw());
     }
 
     /** boot code load address */
-    public int getPmBootAddr() {
-        return Util.readIntBE(pmBootAddr);
+    public long getPmBootAddr() {
+        return Util.unsign(getPmBootAddrRaw());
     }
 
     /** reserved */
-    public int getPmBootAddr2() {
-        return Util.readIntBE(pmBootAddr2);
+    public long getPmBootAddr2() {
+        return Util.unsign(getPmBootAddr2Raw());
     }
 
     /** boot code entry point */
-    public int getPmBootEntry() {
-        return Util.readIntBE(pmBootEntry);
+    public long getPmBootEntry() {
+        return Util.unsign(getPmBootEntryRaw());
     }
 
     /** reserved */
-    public int getPmBootEntry2() {
-        return Util.readIntBE(pmBootEntry2);
+    public long getPmBootEntry2() {
+        return Util.unsign(getPmBootEntry2Raw());
     }
 
     /** boot code checksum */
@@ -320,6 +320,61 @@ public class APMPartition implements Partition {
     /** reserved */
     public short[] getPmPad() {
         return Util.readShortArrayBE(pmPad);
+    }
+
+    /** number of blocks in partition map (raw 32-bit value) */
+    public int getPmMapBlkCntRaw() {
+        return Util.readIntBE(pmMapBlkCnt);
+    }
+
+    /** first physical block of partition (raw 32-bit value) */
+    public int getPmPyPartStartRaw() {
+        return Util.readIntBE(pmPyPartStart);
+    }
+
+    /** number of blocks in partition (raw 32-bit value) */
+    public int getPmPartBlkCntRaw() {
+        return Util.readIntBE(pmPartBlkCnt);
+    }
+
+    /** first logical block of data area (raw 32-bit value) */
+    public int getPmLgDataStartRaw() {
+        return Util.readIntBE(pmLgDataStart);
+    }
+
+    /** number of blocks in data area (raw 32-bit value) */
+    public int getPmDataCntRaw() {
+        return Util.readIntBE(pmDataCnt);
+    }
+
+    /** first logical block of boot code (raw 32-bit value) */
+    public int getPmLgBootStartRaw() {
+        return Util.readIntBE(pmLgBootStart);
+    }
+
+    /** size of boot code, in bytes (raw 32-bit value) */
+    public int getPmBootSizeRaw() {
+        return Util.readIntBE(pmBootSize);
+    }
+
+    /** boot code load address (raw 32-bit value) */
+    public int getPmBootAddrRaw() {
+        return Util.readIntBE(pmBootAddr);
+    }
+
+    /** reserved (raw 32-bit value) */
+    public int getPmBootAddr2Raw() {
+        return Util.readIntBE(pmBootAddr2);
+    }
+
+    /** boot code entry point (raw 32-bit value) */
+    public int getPmBootEntryRaw() {
+        return Util.readIntBE(pmBootEntry);
+    }
+
+    /** reserved (raw 32-bit value) */
+    public int getPmBootEntry2Raw() {
+        return Util.readIntBE(pmBootEntry2);
     }
 
     private static boolean getBit(byte[] array, int bit) {
@@ -471,7 +526,7 @@ public class APMPartition implements Partition {
     }
 
     public byte[] getData() {
-        byte[] result = new byte[structSize()];
+        byte[] result = new byte[size()];
         int offset = 0;
         System.arraycopy(pmSig, 0, result, offset, pmSig.length);
         offset += pmSig.length;

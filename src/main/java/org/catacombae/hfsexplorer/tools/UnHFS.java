@@ -28,6 +28,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 
 import org.catacombae.dmg.encrypted.ReadableCEncryptedEncodingStream;
 import org.catacombae.dmg.sparsebundle.ReadableSparseBundleStream;
@@ -66,8 +67,13 @@ import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
 import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.PartitionType;
+import org.catacombae.util.ObjectContainer;
+import org.catacombae.util.Util.Pair;
 
 import static java.lang.System.getLogger;
+import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.AppleSingleVersion.VERSION_2_0;
+import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileSystem.MACOS_X;
+import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileType.APPLEDOUBLE;
 
 
 /**
@@ -572,6 +578,20 @@ outer:
         if (wasEmpty) {
             setFileTimes(targetDir, folder, "folder");
         }
+
+        if (extractResourceForks) {
+            File resFile = new File(targetDir.getParentFile(), "._" + scrub(targetDir.getName()));
+            ObjectContainer<Boolean> created = new ObjectContainer<>(false);
+            if (!extractAdditionalForksToAppleDoubleFile(folder, resFile, created)) {
+                logger.log(Level.DEBUG, "Failed to extract resource fork to " + resFile.getPath());
+            } else if (created.o) {
+                if (verbose) {
+                    logger.log(Level.DEBUG, resFile.getPath());
+                }
+
+                setFileTimes(resFile, folder, "resource fork AppleDouble file");
+            }
+        }
     }
 
     private static void extractFile(FSFile file, File targetDir, boolean extractResourceForks, boolean verbose)
@@ -588,19 +608,16 @@ outer:
         }
 
         if (extractResourceForks) {
-            FSFork resourceFork = file.getForkByType(FSForkType.MACOS_RESOURCE);
-
-            if (resourceFork != null) {
-                File resFile = new File(targetDir, "._" + scrub(file.getName()));
-                if (!extractResourceForkToAppleDoubleFile(resourceFork, resFile)) {
-                    logger.log(Level.DEBUG, "Failed to extract resource fork to " + resFile.getPath());
-                } else {
-                    if (verbose) {
-                        System.out.println(resFile.getPath());
-                    }
-
-                    setFileTimes(resFile, file, "resource fork AppleDouble file");
+            File resFile = new File(targetDir, "._" + scrub(file.getName()));
+            ObjectContainer<Boolean> created = new ObjectContainer<>(false);
+            if (!extractAdditionalForksToAppleDoubleFile(file, resFile, created)) {
+                logger.log(Level.DEBUG, "Failed to extract resource fork to " + resFile.getPath());
+            } else if (created.o) {
+                if (verbose) {
+                    logger.log(Level.DEBUG, resFile.getPath());
                 }
+
+                setFileTimes(resFile, file, "resource fork AppleDouble file");
             }
         }
     }
@@ -609,7 +626,7 @@ outer:
         File folderFile = new File(targetDir, scrub(folder.getName()));
         if (folderFile.isDirectory() || folderFile.mkdir()) {
             if (verbose)
-                System.out.println(folderFile.getPath());
+                logger.log(Level.DEBUG, folderFile.getPath());
         } else {
             logger.log(Level.DEBUG, "Failed to create directory " + folderFile.getPath());
             folderFile = null;
@@ -647,26 +664,52 @@ outer:
         }
     }
 
-    private static boolean extractResourceForkToAppleDoubleFile(FSFork resourceFork, File targetFile) {
+    private static boolean extractAdditionalForksToAppleDoubleFile(
+            FSEntry entry, File targetFile, ObjectContainer<Boolean> created) {
+
         FileOutputStream os = null;
         ReadableRandomAccessStream in = null;
         try {
-            AppleSingleBuilder builder = new AppleSingleBuilder(FileType.APPLEDOUBLE,
-                    AppleSingleVersion.VERSION_2_0, FileSystem.MACOS_X);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            LinkedList<Pair<String, byte[]>> attributeList = new LinkedList<>();
+            byte[] finderInfoData = null;
+            byte[] resourceForkData = null;
 
-            in = resourceFork.getReadableRandomAccessStream();
-            long extractedBytes = IOUtil.streamCopy(in, baos, 128 * 1024);
-            if (extractedBytes != resourceFork.getLength()) {
-                logger.log(Level.DEBUG, "WARNING: Did not extract intended number of bytes to \"" +
-                        targetFile.getPath() + "\"! Intended: " + resourceFork.getLength() +
-                        " Extracted: " + extractedBytes);
+            AppleSingleBuilder builder = new AppleSingleBuilder(APPLEDOUBLE, VERSION_2_0, MACOS_X);
+            long extractedBytes = 0;
+
+            for (FSFork f : entry.getAllForks()) {
+                FSForkType forkType = f.getType();
+                if (forkType == FSForkType.MACOS_RESOURCE) {
+                    resourceForkData = IOUtil.readFully(f.getReadableRandomAccessStream());
+                    extractedBytes += resourceForkData.length;
+                } else if (forkType == FSForkType.MACOS_FINDERINFO) {
+                    finderInfoData = IOUtil.readFully(f.getReadableRandomAccessStream());
+                    extractedBytes += finderInfoData.length;
+                } else if (f.hasXattrName()) {
+                    final byte[] attributeData = IOUtil.readFully(f.getReadableRandomAccessStream());
+                    attributeList.add(new Pair<>(f.getXattrName(), attributeData));
+                    extractedBytes += attributeData.length;
+                }
             }
 
-            builder.addResourceFork(baos.toByteArray());
+            if (finderInfoData != null || attributeList.size() > 0) {
+                builder.addFinderInfo(finderInfoData, attributeList);
+            }
 
-            os = new FileOutputStream(targetFile);
-            os.write(builder.getResult());
+            if (resourceForkData != null) {
+                builder.addResourceFork(resourceForkData);
+            } else {
+                builder.addEmptyResourceFork();
+            }
+
+            if (extractedBytes > 0) {
+                os = new FileOutputStream(targetFile);
+                os.write(builder.getResult());
+                created.o = true;
+            } else {
+                created.o = false;
+            }
+
             return true;
         } catch (FileNotFoundException fnfe) {
             return false;
@@ -679,12 +722,7 @@ outer:
                 try {
                     os.close();
                 } catch (Exception e) {
-                }
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
+                    logger.log(Level.ERROR, e.getMessage(), e);
                 }
             }
         }
