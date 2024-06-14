@@ -3,7 +3,7 @@
 
   <groupId>catacombae</groupId>
   <artifactId>hfsexplorer</artifactId>
-  <version>0.23.4-SNAPSHOT</version>
+  <version>0.23.4</version>
 
   <build>
     <plugins>
