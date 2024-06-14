@@ -17,9 +17,6 @@
 
 package org.catacombae.storage.ps.gpt.types;
 
-import org.catacombae.csjc.structelements.Dictionary;
-import org.catacombae.util.Util;
-
 import java.io.PrintStream;
 import java.util.zip.CRC32;
 
@@ -27,7 +24,12 @@ import org.catacombae.csjc.DynamicStruct;
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
 import org.catacombae.csjc.structelements.ByteArrayField;
+import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.csjc.structelements.IntegerField;
+import org.catacombae.util.Util;
+
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 
 /**

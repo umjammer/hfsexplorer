@@ -23,6 +23,8 @@ import org.catacombae.csjc.structelements.ASCIIStringField;
 import org.catacombae.csjc.structelements.Dictionary;
 import org.catacombae.util.Util;
 
+import static java.nio.ByteOrder.BIG_ENDIAN;
+
 
 /**
  * A file thread record in the HFS file system model.

@@ -19,9 +19,9 @@ package org.catacombae.hfs.types.hfsplus;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.nio.ByteOrder;
 
 import org.catacombae.csjc.PrintableStruct;
-import org.catacombae.csjc.structelements.Endianness;
 import org.catacombae.csjc.structelements.IntegerField;
 import org.catacombae.csjc.structelements.IntegerFieldBits;
 import org.catacombae.csjc.structelements.IntegerFieldRepresentation;
@@ -204,7 +204,7 @@ public class HFSCatalogNodeID implements PrintableStruct {
         try {
             return new IntegerField(this, getPrivateField("hfsCatalogNodeID"),
                     0, IntegerFieldBits.BITS_32, Signedness.UNSIGNED,
-                    Endianness.BIG_ENDIAN, IntegerFieldRepresentation.DECIMAL,
+                    ByteOrder.BIG_ENDIAN, IntegerFieldRepresentation.DECIMAL,
                     null);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
