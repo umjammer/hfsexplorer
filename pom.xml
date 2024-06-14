@@ -51,9 +51,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>catacombae</groupId> <!-- catacombae / com.github.umjammer -->
-      <artifactId>hfsx_dmglib</artifactId> <!-- hfsx_dmglib / dmgextractor -->
-      <version>0.70.3-SNAPSHOT</version>
+      <groupId>com.github.umjammer</groupId> <!-- catacombae / com.github.umjammer -->
+      <artifactId>dmgextractor</artifactId> <!-- hfsx_dmglib / dmgextractor -->
+      <version>0.70.3</version>
     </dependency>
 
     <dependency>
