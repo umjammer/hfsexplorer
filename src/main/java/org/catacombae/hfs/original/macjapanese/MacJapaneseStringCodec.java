@@ -226,7 +226,7 @@ public class MacJapaneseStringCodec implements StringCodec {
                             "from fallback codec: " + (data != null ? data.length : 0));
                 }
 
-                replacement = (short) (data[0] & 0xFF);
+                replacement = (short) (data[0] & 0xff);
             }
 
             if (replacement == null) {
@@ -234,11 +234,11 @@ public class MacJapaneseStringCodec implements StringCodec {
                         "character " + i + ": 0x" + Util.toHexStringBE(firstChar));
             }
 
-            if ((replacement & 0xFFFF) > 0xFF) {
-                os.write((replacement >>> 8) & 0xFF);
+            if ((replacement & 0xffff) > 0xff) {
+                os.write((replacement >>> 8) & 0xff);
             }
 
-            os.write(replacement & 0xFF);
+            os.write(replacement & 0xff);
         }
 
         return os.toByteArray();
@@ -308,18 +308,18 @@ public class MacJapaneseStringCodec implements StringCodec {
                 logger.log(Level.DEBUG, "0x");
                 if (contiguous > 1) {
                     for (int j = 0; j < prevEncoded.length - 1; ++j) {
-                        logger.log(Level.DEBUG, String.format("%02X", prevEncoded[j] & 0xFF));
+                        logger.log(Level.DEBUG, "%02X".formatted(prevEncoded[j] & 0xFF));
                     }
-                    logger.log(Level.DEBUG, String.format("%02X-0x", prevEncoded[prevEncoded.length - 1] & 0xFF));
+                    logger.log(Level.DEBUG, "%02X-0x".formatted(prevEncoded[prevEncoded.length - 1] & 0xFF));
                 }
                 for (int j = 0; j < prevEncoded.length - 1; ++j) {
-                    logger.log(Level.DEBUG, String.format("%02X", prevEncoded[j] & 0xFF));
+                    logger.log(Level.DEBUG, "%02X".formatted(prevEncoded[j] & 0xFF));
                 }
-                logger.log(Level.DEBUG, String.format("%02X -> ", (prevEncoded[prevEncoded.length - 1] & 0xFF) + (contiguous - 1)));
+                logger.log(Level.DEBUG, "%02X -> ".formatted((prevEncoded[prevEncoded.length - 1] & 0xFF) + (contiguous - 1)));
                 if (contiguous > 1) {
-                    logger.log(Level.DEBUG, String.format("0x%04X-", i - contiguous));
+                    logger.log(Level.DEBUG, "0x%04X-".formatted(i - contiguous));
                 }
-                logger.log(Level.DEBUG, String.format("0x%04X", i - 1));
+                logger.log(Level.DEBUG, "0x%04X".formatted(i - 1));
                 logger.log(Level.DEBUG, "\n");
 
                 contiguous = 1;
