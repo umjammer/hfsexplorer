@@ -1083,94 +1083,6 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         }
     }
 
-    private static long extractForkToStream(FSFork theFork, OutputStream os, ProgressMonitor pm) throws IOException {
-        ReadableRandomAccessStream forkFilter = theFork.getReadableRandomAccessStream();
-//        System.out.println("extractForkToStream working with a " + forkFilter.getClass());
-        long originalLength = theFork.getLength();
-        long bytesToRead = originalLength;
-        byte[] buffer = new byte[1 * 1024 * 1024];
-        while (bytesToRead > 0) {
-            if (pm.cancelSignaled()) {
-                break;
-//                System.out.print("forkFilter.read([].length=" + buffer.length + ", 0, " + (bytesToRead < buffer.length ? (int)bytesToRead : buffer.length) + "...");
-            }
-            int bytesRead = forkFilter.read(buffer, 0, (bytesToRead < buffer.length ? (int) bytesToRead : buffer.length));
-//            System.out.println("done. bytesRead = " + bytesRead);
-            if (bytesRead < 0) {
-                break;
-            } else {
-//                System.out.println("Read the following from the forkfilter (" + bytesRead + " bytes): ");
-//                System.out.println(Util.byteArrayToHexString(buffer, 0, bytesRead));
-                pm.addDataProgress(bytesRead);
-                os.write(buffer, 0, bytesRead);
-                bytesToRead -= bytesRead;
-            }
-        }
-        return originalLength - bytesToRead;
-    }
-
-    private static long extractAdditionalForksToAppleDoubleStream(
-            FSEntry entry, OutputStream os, ProgressMonitor pm) throws IOException {
-        ByteArrayOutputStream baos = null;
-        ReadableRandomAccessStream in = null;
-        try {
-            LinkedList<Pair<String, byte[]>> attributeList = new LinkedList<>();
-            byte[] finderInfoData = null;
-            byte[] resourceForkData = null;
-
-            AppleSingleBuilder builder =
-                    new AppleSingleBuilder(FileType.APPLEDOUBLE,
-                            AppleSingleVersion.VERSION_2_0, FileSystem.MACOS_X);
-            long extractedBytes = 0;
-
-            for (FSFork f : entry.getAllForks()) {
-                FSForkType forkType = f.getType();
-                if (forkType == FSForkType.MACOS_RESOURCE) {
-                    resourceForkData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    extractedBytes += resourceForkData.length;
-                } else if (forkType == FSForkType.MACOS_FINDERINFO) {
-                    finderInfoData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    extractedBytes += finderInfoData.length;
-                } else if (f.hasXattrName()) {
-                    byte[] attributeData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    attributeList.add(new Pair<>(f.getXattrName(), attributeData));
-                    extractedBytes += attributeData.length;
-                }
-            }
-
-            if (finderInfoData != null || !attributeList.isEmpty()) {
-                builder.addFinderInfo(finderInfoData, attributeList);
-            }
-
-            if (resourceForkData != null) {
-                builder.addResourceFork(resourceForkData);
-            } else {
-                builder.addEmptyResourceFork();
-            }
-
-            if (extractedBytes > 0) {
-                os.write(builder.getResult());
-                pm.addDataProgress(extractedBytes);
-            }
-
-            return extractedBytes;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                }
-            }
-
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (Exception e) {
-                }
-            }
-        }
-    }
-
     private void populateFilesystemGUI(FSFolder rootFolder) {
         FileSystemBrowser.Record<FSEntry> rootRecord =
                 new FileSystemBrowser.Record<>(
@@ -1194,7 +1106,21 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
             alOpen = ae -> {
                 File tempDir = new File(System.getProperty("java.io.tmpdir"));
                 LinkedList<String> errorMessages = new LinkedList<>();
-                extract(parentPath, rec, tempDir, new SimpleGUIProgressMonitor(fopFrame), errorMessages, true);
+                Extractor.extract(
+                        /* FileSystemHandler fsHandler */
+                        fsHandler,
+                        /* String[] parentPath */
+                        parentPath,
+                        /* FSEntry rec */
+                        rec,
+                        /* File outDir */
+                        tempDir,
+                        /* ExtractProgressMonitor progressMonitor */
+                        new SimpleGUIProgressMonitor(fopFrame),
+                        /* LinkedList<String> errorMessages */
+                        errorMessages,
+                        /* boolean followSymbolicLinks */
+                        true);
                 if (errorMessages.isEmpty()) {
                     tempFiles.add(new File(tempDir, rec.getName()));
                     try {
@@ -1224,10 +1150,24 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         } else if (Java6Util.isJava6OrHigher() && Java6Util.canOpen()) {
 //            logger.log(Level.DEBUG, "Java 1.6 detected.");
             alOpen = ae -> {
-        File tempDir = new File(System.getProperty("java.io.tmpdir"));
-        LinkedList<String> errorMessages = new LinkedList<>();
-        extract(parentPath, rec, tempDir, new SimpleGUIProgressMonitor(fopFrame), errorMessages, true);
-        if (errorMessages.isEmpty()) {
+                File tempDir = new File(System.getProperty("java.io.tmpdir"));
+                LinkedList<String> errorMessages = new LinkedList<>();
+                Extractor.extract(
+                        /* FileSystemHandler fsHandler */
+                        fsHandler,
+                        /* String[] parentPath */
+                        parentPath,
+                        /* FSEntry rec */
+                        rec,
+                        /* File outDir */
+                        tempDir,
+                        /* ExtractProgressMonitor progressMonitor */
+                        new SimpleGUIProgressMonitor(fopFrame),
+                        /* LinkedList<String> errorMessages */
+                        errorMessages,
+                        /* boolean followSymbolicLinks */
+                        true);
+                if (errorMessages.isEmpty()) {
             File extractedFile = new File(tempDir, rec.getName());
             tempFiles.add(new File(tempDir, rec.getName()));
             try {
@@ -1260,7 +1200,21 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
             alOpen = ae -> {
                 File tempDir = new File(System.getProperty("java.io.tmpdir"));
                 LinkedList<String> errorMessages = new LinkedList<>();
-                extract(parentPath, rec, tempDir, new SimpleGUIProgressMonitor(fopFrame), errorMessages, true);
+                Extractor.extract(
+                        /* FileSystemHandler fsHandler */
+                        fsHandler,
+                        /* String[] parentPath */
+                        parentPath,
+                        /* FSEntry rec */
+                        rec,
+                        /* File outDir */
+                        tempDir,
+                        /* ExtractProgressMonitor progressMonitor */
+                        new SimpleGUIProgressMonitor(fopFrame),
+                        /* LinkedList<String> errorMessages */
+                        errorMessages,
+                        /* boolean followSymbolicLinks */
+                        true);
                 if (errorMessages.isEmpty()) {
                     tempFiles.add(new File(tempDir, rec.getName()));
                     try {
@@ -1467,8 +1421,20 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
 //                                if (true)
 //                                    return;
 
-                            long dataSize = calculateForkSizeRecursive(parentPath, selection,
-                                    progress, dataFork, additionalForks,
+                            long dataSize = Extractor.calculateForkSizeRecursive(
+                                    /* FileSystemHandler fsHandler */
+                                    fsHandler,
+                                    /* String[] parentPath */
+                                    parentPath,
+                                    /* List<FSEntry> selection */
+                                    selection,
+                                    /* ExtractProgressMonitor progress */
+                                    progress,
+                                    /* boolean calculateDataForkSize */
+                                    dataFork,
+                                    /* boolean calculateAdditionalForksSize */
+                                    additionalForks,
+                                    /* boolean followSymlinks */
                                     followSymlinks);
                             if (false) {
                                 if (progress.cancelSignaled())
@@ -1486,8 +1452,24 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
                                 progress.setDataSize(dataSize);
 
                                 LinkedList<String> errorMessages = new LinkedList<>();
-                                extract(parentPath, selection, outDir, progress, errorMessages,
-                                        followSymlinks, dataFork,
+                                Extractor.extract(
+                                        /* FileSystemHandler fsHandler */
+                                        fsHandler,
+                                        /* String[] parentPath */
+                                        parentPath,
+                                        /* List<FSEntry> recs */
+                                        selection,
+                                        /* File outDir */
+                                        outDir,
+                                        /* ExtractProgressMonitor progressMonitor */
+                                        progress,
+                                        /* LinkedList<String> errorMessages */
+                                        errorMessages,
+                                        /* boolean followSymbolicLinks */
+                                        followSymlinks,
+                                        /* boolean extractMainFork */
+                                        dataFork,
+                                        /* boolean extractAdditionalForks */
                                         additionalForks);
                                 if (progress.cancelSignaled())
                                     errorMessages.addLast("User aborted extraction.");
@@ -1567,148 +1549,6 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         }
     }
 
-    /**
-     * Calculates the combined size of the forks of types <code>forkTypes</code> for the selection,
-     * including for all files in subdirectories, recursively. If <code>forkTypes</code> is empty,
-     * all forks are included in the calculation.
-     *
-     * @param parentPath                   the parent path of the entries in <code>selection</code>.
-     * @param selection                    the source entries for the calculation.
-     * @param progress                     the progress monitor that recieves updates about our current state and
-     *                                     decides whether or not to abort.
-     * @param calculateDataForkSize        whether the size of the data forks should be included.
-     * @param calculateAdditionalForksSize whether the size of the non-data data forks should be included.
-     * @param followSymlinks               whether or not symbolic links should be followed in the tree traversal.
-     * @return the combined size of the forks of types <code>forkTypes</code> for the selection,
-     * including for all files in subdirectories, recursively.
-     */
-    private long calculateForkSizeRecursive(String[] parentPath, List<FSEntry> selection,
-                                            ExtractProgressMonitor progress, boolean calculateDataForkSize,
-                                            boolean calculateAdditionalForksSize, boolean followSymlinks) {
-        CalculateTreeSizeVisitor sizeVisitor = new CalculateTreeSizeVisitor(progress, calculateDataForkSize,
-                calculateAdditionalForksSize);
-        traverseTree(parentPath, selection, sizeVisitor, followSymlinks);
-        return sizeVisitor.getSize();
-    }
-
-    private void traverseTree(
-            String[] parentPath, List<FSEntry> entries, TreeVisitor visitor, boolean followSymbolicLinks) {
-        LinkedList<String[]> absPathsStack = new LinkedList<>();
-        LinkedList<String> pathStack = new LinkedList<>();
-
-        if (parentPath != null) {
-            absPathsStack.addLast(parentPath);
-            for (String pathComponent : parentPath)
-                pathStack.addLast(pathComponent);
-        }
-
-        FSEntry[] children = entries.toArray(FSEntry[]::new);
-
-        traverseTreeRecursive(children, pathStack, absPathsStack, visitor, followSymbolicLinks);
-    }
-
-    private void traverseTreeRecursive(FSEntry[] selection, LinkedList<String> pathStack,
-                                       LinkedList<String[]> absPathsStack, TreeVisitor visitor,
-                                       boolean followSymbolicLinks) {
-
-        if (visitor.cancelTraversal()) {
-            return;
-        }
-
-//        logger.log(Level.DEBUG, "calculateForkSizeRecursive")
-        String[] pathStackArray = pathStack.toArray(String[]::new);
-        String pathStackString = Util.concatenateStrings(pathStack, "/");
-
-//        logger.log(Level.DEBUG, "Directory: \"");
-//        logger.log(Level.DEBUG, pathStackString);
-//        logger.log(Level.DEBUG, "\"...");
-
-        for (FSEntry curEntry : selection) {
-            if (visitor.cancelTraversal()) {
-                break;
-            }
-
-            String curEntryString = (!pathStackString.isEmpty() ? pathStackString + "/" : "") + curEntry.getName();
-//            logger.log(Level.DEBUG, "Processing \"" + curEntryString + "\"...");
-
-            String[] linkTargetPath = null;
-            if (followSymbolicLinks && curEntry instanceof FSLink curLink) {
-
-//                logger.log(Level.DEBUG, "  Getting link target for \"" + curEntryString + "\"...");
-                String[] targetPath = fsHandler.getTargetPath(curLink, pathStackArray);
-                if (targetPath != null) {
-                    if (Util.contains(absPathsStack, targetPath)) {
-                        String msg = "Circular symlink detected: \"" + curEntryString + "\" -> \"" +
-                                curLink.getLinkTargetString() + "\"";
-                        logger.log(Level.DEBUG, "traverseTreeRecursive: " + msg);
-                        visitor.traversalError(msg);
-                        continue;
-                    }
-
-                    FSEntry linkTarget = fsHandler.getEntry(targetPath);
-                    if (linkTarget != null) {
-//                        logger.log(Level.DEBUG, "  Happily resolved link \"" + curLink.getLinkTargetString() + "\" to an FSEntry by the name \"" + linkTarget.getName() + "\"");
-                        curEntry = linkTarget;
-                        linkTargetPath = targetPath;
-                    } else {
-                        String msg = "Could not get link target entry \"" + curLink.getLinkTargetString() + "\"";
-                        logger.log(Level.DEBUG, "WARNING: " + msg);
-                        visitor.traversalError(msg);
-                    }
-                } else {
-                    String msg = "Could not resolve link \"" + curEntryString + "\" -> \"" +
-                            curLink.getLinkTargetString() + "\"";
-                    logger.log(Level.DEBUG, "WARNING: " + msg);
-                    visitor.traversalError(msg);
-                }
-            }
-
-            String[] absolutePath;
-            if (linkTargetPath != null)
-                absolutePath = linkTargetPath;
-            else {
-                if (!absPathsStack.isEmpty())
-                    absolutePath = Util.concatenate(absPathsStack.getLast(), curEntry.getName());
-                else
-                    absolutePath = new String[0];
-            }
-
-            if (curEntry instanceof FSFile) {
-                visitor.file((FSFile) curEntry);
-            } else if (curEntry instanceof FSFolder curFolder) {
-                if (!absPathsStack.isEmpty())
-                    pathStack.addLast(curFolder.getName());
-
-                absPathsStack.addLast(absolutePath);
-
-                try {
-                    if (visitor.startDirectory(pathStackArray, curFolder)) {
-
-                        traverseTreeRecursive(curFolder.listEntries(), pathStack, absPathsStack,
-                                visitor, followSymbolicLinks);
-
-                        visitor.endDirectory(pathStackArray, curFolder);
-                    }
-                } finally {
-                    absPathsStack.removeLast();
-                    if (!absPathsStack.isEmpty())
-                        pathStack.removeLast();
-                }
-            } else if (curEntry instanceof FSLink curLink) {
-                if (followSymbolicLinks) {
-                    String msg = "Unresolved link \"" + curEntryString + "\" -> \"" +
-                            curLink.getLinkTargetString() + "\"";
-                    logger.log(Level.DEBUG, msg);
-//                    visitor.traversalError(msg);
-                }
-
-                visitor.link((FSLink) curEntry);
-            } else {
-                throw new RuntimeException("Unexpected FSEntry subclass: " + curEntry.getClass());
-            }
-        }
-    }
-
     private void actionShowAboutDialog() {
         StringBuilder message = new StringBuilder();
         message.append("HFSExplorer " + HFSExplorer.VERSION + "\n");
@@ -1722,7 +1562,6 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
         message.append("\nVirtual machine: ").append(System.getProperty("java.vm.vendor")).append(" ").append(System.getProperty("java.vm.name")).append(" ").append(System.getProperty("java.vm.version"));
 
         JOptionPane.showMessageDialog(this, message.toString(), "About", JOptionPane.INFORMATION_MESSAGE);
-
     }
 
     private void actionGetInfo(String[] parentPath, List<FSEntry> entries) {
@@ -1741,974 +1580,6 @@ public class FileSystemBrowserWindow extends HFSExplorerJFrame {
             JOptionPane.showMessageDialog(this, "[actionGetInfo()] Record data has unexpected type (" +
                             entry.getClass() + ").\nReport bug to developer.",
                     "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /** <code>progressDialog</code> may NOT be null. */
-    protected void extract(String[] parentPath, FSEntry rec, File outDir,
-                           ExtractProgressMonitor progressDialog, LinkedList<String> errorMessages,
-                           boolean followSymbolicLinks) {
-        extract(parentPath, Collections.singletonList(rec), outDir, progressDialog, errorMessages,
-                followSymbolicLinks, true, false);
-    }
-
-//    /** <code>progressDialog</code> may NOT be null. */
-//    protected void extract(String[] parentPath, FSEntry rec, File outDir,
-//                           ExtractProgressMonitor progressDialog, LinkedList<String> errorMessages,
-//                           boolean dataFork, boolean resourceFork) {
-//        extract(parentPath, Arrays.asList(rec), outDir, progressDialog, errorMessages, dataFork, resourceFork);
-//    }
-
-//    /** <code>progressDialog</code> may NOT be null. */
-//    protected void extract(String[] parentPath, FSEntry[] recs, File outDir,
-//                           ExtractProgressMonitor progressDialog, LinkedList<String> errorMessages) {
-//        extract(parentPath, Arrays.asList(recs), outDir, progressDialog, errorMessages, true, false);
-//    }
-
-//    /** <code>progressDialog</code> may NOT be null. */
-//    protected void extract(String[] parentPath, FSEntry[] recs, File outDir,
-//                           ExtractProgressMonitor progressDialog, LinkedList<String> errorMessages,
-//                           boolean dataFork, boolean resourceFork) {
-//        extract(parentPath, Arrays.asList(recs), outDir, progressDialog, errorMessages, dataFork, resourceFork);
-//    }
-
-//    /** <code>progressDialog</code> may NOT be null. */
-//    protected void extract(String[] parentPath, List<FSEntry> recs, File outDir,
-//                           ExtractProgressMonitor progressDialog, LinkedList<String> errorMessages) {
-//        extract(parentPath, recs, outDir, progressDialog, errorMessages, true, false);
-//    }
-
-    /**
-     * Utility method that checks for the existence of a file. This method tries
-     * to overcome some limitations of Java. For instance, the File.exists()
-     * method trims spaces in filenames automatically in Windows, which is
-     * undesirable.
-     */
-    private static boolean deepExists(File f) {
-        if (!f.exists())
-            return false; // We trust that Java never returns false negatives.
-
-        File parentDir = f.getParentFile();
-        if (parentDir == null) {
-            // There is no parent, so this must be one of the file system
-            // roots (which definitely exists).
-            return true;
-        }
-
-        for (File child : parentDir.listFiles()) {
-            if (child.getName().equals(f.getName()))
-                return true;
-        }
-
-        return false;
-    }
-
-    protected void extract(String[] parentPath, List<FSEntry> recs, File outDir,
-                           ExtractProgressMonitor progressDialog,
-                           LinkedList<String> errorMessages, boolean followSymbolicLinks,
-                           boolean extractMainFork, boolean extractAdditionalForks) {
-        if (!deepExists(outDir)) {
-            String[] options = new String[] {"Create directory", "Cancel"};
-            int reply = JOptionPane.showOptionDialog(this, "Target " +
-                            "directory:\n    \"" + outDir.getAbsolutePath() + "\"\n" +
-                            "does not exist. Do you want to create this directory?",
-                    "Warning", JOptionPane.YES_NO_CANCEL_OPTION,
-                    JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-            if (reply != 0) {
-//                ++errorCount;
-                errorMessages.addLast("Skipping all files in " +
-                        outDir.getAbsolutePath() + " as user chose not to create directory.");
-                progressDialog.signalCancel();
-                return;
-            } else {
-                if (!outDir.mkdirs() || !deepExists(outDir)) {
-                    JOptionPane.showMessageDialog(this, "Could not create " +
-                            "directory:\n    \"" + outDir.getAbsolutePath() +
-                            "\"\n", "Error", JOptionPane.ERROR_MESSAGE);
-                    errorMessages.addLast("Could not create directory \"" + outDir.getAbsolutePath() + "\".");
-                    progressDialog.signalCancel();
-                    return;
-                }
-            }
-        } else if (!outDir.isDirectory()) {
-            JOptionPane.showMessageDialog(this, "Target directory is a file:" +
-                            "\n    \"" + outDir.getAbsolutePath() + "\"",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            errorMessages.addLast("Could not create directory \"" +
-                    outDir.getAbsolutePath() + "\", since a file was in the way.");
-            progressDialog.signalCancel();
-            return;
-        }
-
-        ExtractVisitor ev = new ExtractVisitor(progressDialog, errorMessages,
-                outDir, extractMainFork, extractAdditionalForks);
-        traverseTree(parentPath, recs, ev, followSymbolicLinks);
-    }
-
-//    private void extractRecursive(FSEntry rec, LinkedList<String> pathStack,
-//                                  LinkedList<String[]> absPathsStack, File outDir, ExtractProgressMonitor progressDialog,
-//                                  LinkedList<String> errorMessages, ObjectContainer<Boolean> overwriteAll,
-//                                  boolean dataFork, boolean resourceFork) {
-//
-//        if (!dataFork && !resourceFork) {
-//            throw new IllegalArgumentException("Neither data fork nor resource fork were selected for extraction. Won't do nothing...");
-//        }
-//        if (progressDialog.cancelSignaled()) {
-//            //progressDialog.confirmCancel(); // Done by caller.
-//            return;
-//        }
-//
-////        int errorCount = 0;
-//
-//        String[] absolutePath = null;
-//        if (rec instanceof FSLink) {
-//            FSLink curLink = (FSLink) rec;
-//            String[] pathStackArray = pathStack.toArray(String[]::new);
-//
-//            String[] targetPath = fsHandler.getTargetPath(curLink, pathStackArray);
-//            if (targetPath != null) {
-//                if (Util.contains(absPathsStack, targetPath)) {
-//                    logger.log(Level.DEBUG, );
-//                    logger.log(Level.DEBUG, "extractRecursive: CIRCULAR SYMLINK DETECTED!");
-//                    logger.log(Level.DEBUG, );
-//                    errorMessages.addLast("Detected circular soft link \"" + curLink.getName() +
-//                            "\" in directory \"" + Util.concatenateStrings(pathStackArray, "/") +
-//                            "\"... skipping this entry.");
-//                    return;
-//                }
-//
-//                FSEntry linkTarget = fsHandler.getEntry(targetPath);
-//                if (linkTarget != null) {
-//                    rec = linkTarget;
-//                    absolutePath = targetPath;
-//                } else {
-//                    errorMessages.addLast("Could not get entry for link target \"" +
-//                            Util.concatenateStrings(targetPath, "/") + "\"... skipping this entry.");
-//                    return;
-//                }
-//            } else {
-//                errorMessages.addLast("Could not resolve soft link \"" + curLink.getLinkTargetString() +
-//                        "\" from directory \"" + Util.concatenateStrings(pathStackArray, "/") +
-//                        "\"... skipping this entry.");
-//                return;
-//            }
-////            FSEntry linkTarget = curLink.getLinkTarget(pathStackArray);
-//        }
-//
-//        if (rec instanceof FSFile) {
-//            if (dataFork) {
-//                extractFile((FSFile) rec, outDir, progressDialog, errorMessages, overwriteAll, FSForkType.DATA);
-//            }
-//            if (resourceFork) {
-//                extractFile((FSFile) rec, outDir, progressDialog, errorMessages, overwriteAll, FSForkType.MACOS_RESOURCE);
-//            }
-//        } else if (rec instanceof FSFolder) {
-//            String curDirName = rec.getName();
-//            progressDialog.updateCurrentDir(curDirName);
-//
-//            FSEntry[] contents = ((FSFolder) rec).listEntries();
-////            System.out.println("folder: \"" + curDirName + "\" valence: " + contents.length + " range: " + fractionLowLimit + "-" + fractionHighLimit);
-//            // We now have the contents of the requested directory
-//            File thisDir = new File(outDir, curDirName);
-//            if (!overwriteAll.o && thisDir.exists()) {
-//                String[] options = new String[] {"Continue", "Cancel"};
-//                int reply = JOptionPane.showOptionDialog(this, "Warning! Directory:\n    \"" + thisDir.getAbsolutePath() + "\"\n" +
-//                                "already exists. Do you want to continue extracting to this directory?",
-//                        "Warning", JOptionPane.YES_NO_CANCEL_OPTION,
-//                        JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-//                if (reply != 0) {
-//                    //++errorCount;
-//                    errorMessages.addLast("Skipping all files in \"" + thisDir.getAbsolutePath() +
-//                            "\" due to user interaction.");
-//                    progressDialog.signalCancel();
-//                    return;
-//                }
-//            }
-//
-//            if (thisDir.mkdir() || thisDir.exists()) {
-//                pathStack.addLast(rec.getName());
-//                if (absolutePath != null)
-//                    absPathsStack.addLast(absolutePath);
-//                try {
-//                    logger.log(Level.DEBUG, "extractRecursive: pathStack=" + Util.concatenateStrings(pathStack, "/"));
-//                    logger.log(Level.DEBUG, "extractRecursive: absPathsStack:");
-//                    for (String[] cur : absPathsStack) {
-//                        logger.log(Level.DEBUG, "                     " + Util.concatenateStrings(cur, "/"));
-//                    }
-//
-//                    for (FSEntry outRec : contents) {
-//                        extractRecursive(outRec, pathStack, absPathsStack, thisDir, progressDialog,
-//                                errorMessages, overwriteAll, dataFork, resourceFork);
-//                    }
-//                } finally {
-//                    if (absolutePath != null)
-//                        absPathsStack.removeLast();
-//                    pathStack.removeLast();
-//                }
-//            } else {
-//                int reply = JOptionPane.showConfirmDialog(this, "Could not create directory:\n  " +
-//                                thisDir.getAbsolutePath() + "\nDo you want to " +
-//                                "continue? (All files under this directory will be " +
-//                                "skipped)", "Error", JOptionPane.YES_NO_OPTION,
-//                        JOptionPane.ERROR_MESSAGE);
-//                if (reply == JOptionPane.NO_OPTION) {
-//                    progressDialog.signalCancel();
-//                } else
-//                    errorMessages.addLast("Could not create directory \"" + thisDir.getAbsolutePath() +
-//                            "\". All files under this directory will be skipped.");
-//                return;
-//            }
-//        }
-//// 	    else
-//// 	        System.out.println("thread with range: " + fractionLowLimit + "-" + fractionHighLimit);
-//    }
-
-    private static void setExtractedEntryAttributes(File outNode, FSEntry entry, LinkedList<String> errorMessages) {
-        if (entry.getAttributes().hasPOSIXFileAttributes() && Java7Util.isJava7OrHigher()) {
-            POSIXFileAttributes attrs = entry.getAttributes().getPOSIXFileAttributes();
-            try {
-                Java7Util.setPosixPermissions(outNode.getPath(),
-                        attrs.canUserRead(),
-                        attrs.canUserWrite(),
-                        attrs.canUserExecute(),
-                        attrs.canGroupRead(),
-                        attrs.canGroupWrite(),
-                        attrs.canGroupExecute(),
-                        attrs.canOthersRead(),
-                        attrs.canOthersWrite(),
-                        attrs.canOthersExecute());
-            } catch (Exception e) {
-                logger.log(Level.DEBUG, "Got " + e.getClass().getName() + " when " +
-                        "attempting to set Java 7 POSIX permissions for " +
-                        "\"" + outNode.getPath() + "\":");
-                logger.log(Level.ERROR, e.getMessage(), e);
-
-                errorMessages.addLast("Got " + e.getClass().getName() + " " +
-                        "when attempting to set Java 7 POSIX permissions for " +
-                        "\"" + outNode.getPath() + "\" (see stack trace for " +
-                        "more info).");
-                logger.log(Level.ERROR, e.getMessage(), e);
-            }
-
-            try {
-                Java7Util.setPosixOwners(outNode.getPath(),
-                        (int) attrs.getUserID(),
-                        (int) attrs.getGroupID());
-            } catch (Exception e) {
-                String message =
-                        "Got " + e.getClass().getName() + " when attempting " +
-                                "to set Java 7 POSIX ownership for " +
-                                "\"" + outNode.getPath() + "\"";
-                logger.log(Level.DEBUG, message + ":");
-                logger.log(Level.ERROR, e.getMessage(), e);
-
-                errorMessages.addLast(message + " (see stack trace for more info).");
-            }
-        }
-
-        Long createTime = null;
-        Long lastAccessTime = null;
-        Long lastModifiedTime = null;
-
-        if (entry.getAttributes().hasCreateDate()) {
-            createTime = entry.getAttributes().getCreateDate().getTime();
-        }
-
-        if (entry.getAttributes().hasAccessDate()) {
-            lastAccessTime = entry.getAttributes().getAccessDate().getTime();
-        }
-
-        if (entry.getAttributes().hasModifyDate()) {
-            lastModifiedTime = entry.getAttributes().getModifyDate().getTime();
-        }
-
-        boolean fileTimesSet = false;
-        if (Java7Util.isJava7OrHigher()) {
-            try {
-                Java7Util.setFileTimes(outNode.getPath(),
-                        createTime != null ? new Date(createTime) : null,
-                        lastAccessTime != null ? new Date(lastAccessTime) : null,
-                        lastModifiedTime != null ? new Date(lastModifiedTime) : null);
-                fileTimesSet = true;
-            } catch (Exception e) {
-                logger.log(Level.DEBUG, "Got " + e.getClass().getName() + " when " +
-                        "attempting to set Java 7 file times for " +
-                        "\"" + outNode.getPath() + "\":");
-                logger.log(Level.ERROR, e.getMessage(), e);
-
-                errorMessages.addLast("Got " + e.getClass().getName() + " " +
-                        "when attempting to set Java 7 file times for " +
-                        "\"" + outNode.getPath() + "\" (see stack trace for " +
-                        "more info).");
-            }
-        }
-
-        if (!fileTimesSet && lastModifiedTime != null) {
-            boolean setLastModifiedResult;
-
-            if (lastModifiedTime < 0) {
-                errorMessages.addLast("Cannot to set last modified time for " +
-                        "\"" + outNode.getPath() + "\" to pre-1970 date. " +
-                        "Adjusting last modified time from " +
-                        new Date(lastModifiedTime) + " to " + new Date(0) +
-                        ".");
-
-                lastModifiedTime = (long) 0;
-            }
-
-            setLastModifiedResult =
-                    outNode.setLastModified(lastModifiedTime);
-
-            if (!setLastModifiedResult) {
-                errorMessages.addLast("Failed to set last modified time for " +
-                        "\"" + outNode.getPath() + "\" to " +
-                        new Date(lastModifiedTime) + " (raw: " +
-                        lastModifiedTime + ").");
-            }
-        }
-    }
-
-    private void extractEntry(FSEntry rec, File outDir,
-                              ExtractProgressMonitor progressDialog,
-                              LinkedList<String> errorMessages, ExtractProperties extractProperties,
-                              ObjectContainer<Boolean> skipDirectory,
-                              boolean extractAdditionalForks) {
-//        int errorCount = 0;
-        String originalFileName;
-
-        if (!extractAdditionalForks) {
-            originalFileName = rec.getName();
-        } else {
-            originalFileName = "._" + rec.getName(); // Special syntax for resource forks in foreign file systems
-        }
-
-        CreateFileFailedAction defaultCreateFileFailedAction = extractProperties.getCreateFileFailedAction();
-        FileExistsAction defaultFileExistsAction = extractProperties.getFileExistsAction();
-        UnhandledExceptionAction defaultUnhandledExceptionAction = extractProperties.getUnhandledExceptionAction();
-
-        String fileName = originalFileName;
-
-        while (fileName != null) {
-            String curFileName = fileName;
-            fileName = null;
-
-//            System.out.println("file: \"" + filename + "\" range: " + fractionLowLimit + "-" + fractionHighLimit);
-            long totalForkSize;
-            if (extractAdditionalForks) {
-                totalForkSize = 0;
-
-                for (FSFork f : rec.getAllForks()) {
-                    if (f.getType() == FSForkType.DATA) {
-                        continue;
-                    }
-
-                    totalForkSize += f.getLength();
-                }
-
-                if (totalForkSize == 0) {
-                    // Don't create empty AppleDouble files.
-                    return;
-                }
-            } else if (rec instanceof FSFile) {
-                totalForkSize = ((FSFile) rec).getMainFork().getLength();
-            } else if (rec instanceof FSLink) {
-                totalForkSize = 0;
-            } else {
-                // Nothing to extract.
-                return;
-            }
-
-            progressDialog.updateCurrentFile(curFileName, totalForkSize);
-
-            File outFile = new File(outDir, curFileName);
-//            progressDialog.updateTotalProgress(fractionLowLimit);
-
-            // Note: We may want to use deepExists here like in the directory
-            // case, but it's less urgent here so I'll pass for now.
-            if (defaultFileExistsAction != FileExistsAction.OVERWRITE && outFile.exists()) {
-                FileExistsAction a;
-                if (defaultFileExistsAction == FileExistsAction.PROMPT_USER)
-                    a = progressDialog.fileExists(outFile);
-                else {
-                    a = defaultFileExistsAction;
-                    defaultFileExistsAction = FileExistsAction.PROMPT_USER;
-                }
-
-                if (a == FileExistsAction.OVERWRITE) {
-                    if (!outFile.delete()) {
-                        continue;
-                    }
-                } else if (a == FileExistsAction.OVERWRITE_ALL) {
-                    if (!outFile.delete()) {
-                        continue;
-                    }
-
-                    extractProperties.setFileExistsAction(FileExistsAction.OVERWRITE);
-                    defaultFileExistsAction = FileExistsAction.OVERWRITE;
-                } else if (a == FileExistsAction.SKIP_FILE) {
-                    errorMessages.addLast("Skipped extracting file \"" + outFile.getAbsolutePath() +
-                            "\" due to user interaction.");
-                    break;
-                } else if (a == FileExistsAction.SKIP_DIRECTORY) {
-                    errorMessages.addLast("Skipping entire directory \"" + outDir.getAbsolutePath() +
-                            "\" due to user interaction.");
-                    skipDirectory.o = true;
-                    break;
-                } else if (a == FileExistsAction.RENAME) {
-                    fileName = progressDialog.displayRenamePrompt(curFileName, outDir);
-
-                    if (fileName == null)
-                        fileName = curFileName;
-                    continue;
-                } else if (a == FileExistsAction.AUTO_RENAME) {
-                    fileName = FileNameTools.autoRenameIllegalFilename(curFileName, outDir, false);
-
-                    if (fileName == null)
-                        fileName = curFileName;
-                    continue;
-                } else if (a == FileExistsAction.CANCEL) {
-                    progressDialog.signalCancel();
-                    break;
-                } else {
-                    throw new RuntimeException("Internal error! Did not expect a: " + a);
-                }
-            }
-
-            FileOutputStream fos = null;
-            boolean extracted = false;
-            try {
-//                try {
-//                    PrintStream p = System.out;
-//                    File f = outFile;
-//                    p.println("Printing some information about the output file: ");
-//                    p.println("f.getParent(): \"" + f.getParent() + "\"");
-//                    p.println("f.getName(): \"" + f.getName() + "\"");
-//                    p.println("f.getAbsolutePath(): \"" + f.getAbsolutePath() + "\"");
-//                    p.println("f.exists(): \"" + f.exists() + "\"");
-//                    p.println("f.getCanonicalPath(): \"" + f.getCanonicalPath() + "\"");
-//                    //p.println("f.getParent(): \"" + f.getParent() + "\"");
-//                } catch (Exception e) {
-//                    logger.log(Level.ERROR, e.getMessage(), e);
-//                }
-
-                // Test that outFile is valid.
-                try {
-                    outFile.getCanonicalPath();
-                } catch (Exception e) {
-                    throw new FileNotFoundException();
-                }
-
-                if (!outFile.getParentFile().equals(outDir) || !outFile.getName().equals(curFileName)) {
-                    throw new FileNotFoundException();
-                }
-
-                if (extractAdditionalForks) {
-                    fos = new FileOutputStream(outFile);
-                    extractAdditionalForksToAppleDoubleStream(rec, fos,
-                            progressDialog);
-                } else if (rec instanceof FSFile) {
-                    fos = new FileOutputStream(outFile);
-                    extractForkToStream(((FSFile) rec).getMainFork(), fos,
-                            progressDialog);
-                } else if (rec instanceof FSLink) {
-                    if (Java7Util.isJava7OrHigher()) {
-                        Java7Util.createSymbolicLink(outFile.getPath(),
-                                ((FSLink) rec).getLinkTargetString());
-                    } else {
-                        // Create the link in OS-specific way? Need native code
-                        // for that... unless we create a new 'ln -s' process,
-                        // but it will be slow... UNLESS we thread it out, and
-                        // don't wait for it to finish. OK, flooding the OS with
-                        // ln processes isn't good either...
-                    }
-                }
-
-                extracted = true;
-
-                if (fos != null) {
-                    fos.close();
-                    fos = null;
-                }
-
-                if (curFileName != originalFileName && !curFileName.equals(originalFileName))
-                    errorMessages.addLast("File \"" + originalFileName +
-                            "\" was renamed to \"" + curFileName + "\" in parent folder \"" +
-                            outDir.getAbsolutePath() + "\".");
-            } catch (FileNotFoundException fnfe) {
-                // <Debug messages>
-                System.out.println("Could not create file \"" + outFile + "\". The following exception was thrown:");
-                logger.log(Level.ERROR, fnfe.getMessage(), fnfe);
-                char[] filenameChars = curFileName.toCharArray();
-                System.out.println("Filename in hex (" + filenameChars.length + " UTF-16BE units):");
-                System.out.print("  0x");
-                for (char c : filenameChars) {
-                    System.out.print(" " + Util.toHexStringBE(c));
-                }
-                System.out.println();
-                // </Debug messages>
-
-                // <Prompt user for action, if needed>
-                CreateFileFailedAction a;
-                if (defaultCreateFileFailedAction == CreateFileFailedAction.PROMPT_USER)
-                    a = progressDialog.createFileFailed(curFileName, outDir);
-                else {
-                    a = defaultCreateFileFailedAction;
-                    defaultCreateFileFailedAction = CreateFileFailedAction.PROMPT_USER;
-                }
-
-                if (a == CreateFileFailedAction.SKIP_FILE) {
-                    errorMessages.addLast("Skipped extracting file \"" + outFile.getAbsolutePath() +
-                            "\" due to user interaction.");
-                    break;
-                } else if (a == CreateFileFailedAction.SKIP_DIRECTORY) {
-                    errorMessages.addLast("Skipping entire directory \"" + outDir.getAbsolutePath() +
-                            "\" due to user interaction.");
-                    skipDirectory.o = true;
-                    break;
-                } else if (a == CreateFileFailedAction.RENAME) {
-                    fileName = progressDialog.displayRenamePrompt(curFileName, outDir);
-
-                    if (fileName == null)
-                        fileName = curFileName;
-                    continue;
-                } else if (a == CreateFileFailedAction.AUTO_RENAME) {
-                    fileName = FileNameTools.autoRenameIllegalFilename(curFileName, outDir, false);
-
-                    if (fileName == null)
-                        fileName = curFileName;
-                    continue;
-                } else if (a == CreateFileFailedAction.CANCEL) {
-                    progressDialog.signalCancel();
-                    break;
-                } else {
-                    throw new RuntimeException("Internal error! Did not expect a: " + a);
-                }
-                // </Prompt user for action, if needed>
-            } catch (IOException ioe) {
-                String message =
-                        "Encountered an I/O exception while " +
-                                "trying to write to file " +
-                                "\"" + outFile.getPath() + "\"";
-                logger.log(Level.DEBUG, message + ":");
-                logger.log(Level.ERROR, ioe.getMessage(), ioe);
-
-                errorMessages.addLast(message + ". See debug console for " +
-                        "more info.");
-                String exceptionMessage = ioe.getMessage();
-                int reply = JOptionPane.showConfirmDialog(this, "Encountered " +
-                                "an I/O exception while attempting to write to file " +
-                                "\"" + curFileName + "\" in folder:\n  " +
-                                outDir.getAbsolutePath() +
-                                (exceptionMessage != null ? "\nSystem message: " +
-                                        "\"" + exceptionMessage + "\"" : "") +
-                                "\nDo you want to continue?",
-                        "I/O Error", JOptionPane.YES_NO_OPTION,
-                        JOptionPane.ERROR_MESSAGE);
-                if (reply == JOptionPane.NO_OPTION) {
-                    progressDialog.signalCancel();
-                }
-            } catch (Throwable e) {
-                String message =
-                        "An unhandled exception occurred when " +
-                                "extracting to file \"" + outFile.getPath() + "\"";
-                logger.log(Level.DEBUG, message + ":");
-                logger.log(Level.ERROR, e.getMessage(), e);
-
-                errorMessages.addLast(message + ". See debug console for " +
-                        "more info.");
-
-                UnhandledExceptionAction a;
-                if (defaultUnhandledExceptionAction ==
-                        UnhandledExceptionAction.PROMPT_USER) {
-                    a = progressDialog.unhandledException(curFileName, e);
-                } else {
-                    a = defaultUnhandledExceptionAction;
-                }
-
-                if (a == UnhandledExceptionAction.ABORT) {
-                    progressDialog.signalCancel();
-                } else if (a == UnhandledExceptionAction.CONTINUE ||
-                        a == UnhandledExceptionAction.ALWAYS_CONTINUE) {
-                    if (a == UnhandledExceptionAction.ALWAYS_CONTINUE) {
-                        extractProperties.setUnhandledExceptionAction(
-                                UnhandledExceptionAction.CONTINUE);
-                        defaultUnhandledExceptionAction =
-                                UnhandledExceptionAction.CONTINUE;
-                    }
-                } else {
-                    throw new RuntimeException("Internal error! Did not " +
-                            "expect a " + a + " here.");
-                }
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close();
-                    } catch (IOException ex) {
-                        logger.log(Level.ERROR, ex.getMessage(), ex);
-                    }
-
-                    fos = null;
-                }
-
-                if (extracted) {
-                    setExtractedEntryAttributes(outFile, rec, errorMessages);
-                }
-            }
-
-            break;
-        }
-
-//        return errorCount;
-    }
-
-    /**
-     * An interface for visitors that can be used in the traverseTree method.
-     */
-    public interface TreeVisitor {
-
-        /**
-         * @param parentPath
-         * @param folder
-         * @return whether tree traversal should enter this directory or not. If the visitor returns
-         * false for a directory, it will not get an endDirectory event for that directory.
-         */
-        boolean startDirectory(String[] parentPath, FSFolder folder);
-
-        void endDirectory(String[] parentPath, FSFolder folder);
-
-        void file(FSFile fsf);
-
-        void link(FSLink fsl);
-
-        /**
-         * This method is called when the traversal engine encounters a non-critical error.
-         *
-         * @param message
-         */
-        void traversalError(String message);
-
-        /**
-         * Implement this to return true when the traversal process is to be aborted.
-         *
-         * @return true if the visitor requests that the tree traversal be aborted.
-         */
-        boolean cancelTraversal();
-    }
-
-    public static class NullTreeVisitor implements TreeVisitor {
-
-        @Override
-        public boolean startDirectory(String[] parentPath, FSFolder folder) {
-            return true;
-        }
-
-        @Override
-        public void endDirectory(String[] parentPath, FSFolder folder) {
-        }
-
-        @Override
-        public void file(FSFile fsf) {
-        }
-
-        @Override
-        public void link(FSLink fsl) {
-        }
-
-        @Override
-        public void traversalError(String message) {
-        }
-
-        @Override
-        public boolean cancelTraversal() {
-            return false;
-        }
-    }
-
-    public static class CalculateTreeSizeVisitor extends NullTreeVisitor {
-
-        private final ExtractProgressMonitor pm;
-        private final boolean includeMainFork;
-        private final boolean includeAdditionalForks;
-
-        private final StringBuilder sb = new StringBuilder();
-        private long size = 0;
-//        private LinkedList<String> errorMessages = new LinkedList<String>();
-
-        public CalculateTreeSizeVisitor(ExtractProgressMonitor pm,
-                                        boolean includeMainFork, boolean includeAdditionalForks) {
-            this.pm = pm;
-            this.includeMainFork = includeMainFork;
-            this.includeAdditionalForks = includeAdditionalForks;
-
-            if (this.pm == null)
-                throw new IllegalArgumentException("pm == null");
-
-            if (!includeMainFork && !includeAdditionalForks) {
-                throw new IllegalArgumentException("No fork types to extract.");
-            }
-        }
-
-        public long getSize() {
-            return size;
-        }
-
-        @Override
-        public boolean startDirectory(String[] parentPath, FSFolder folder) {
-            sb.setLength(0);
-            for (String s : parentPath)
-                sb.append(s).append("/");
-            sb.append(folder.getName());
-            pm.updateCalculateDir(sb.toString());
-            return true;
-        }
-
-        @Override
-        public void file(FSFile file) {
-            for (FSFork fork : file.getAllForks()) {
-                boolean isMainFork = fork.getType() == FSForkType.DATA;
-                if ((isMainFork && includeMainFork) ||
-                        (!isMainFork && includeAdditionalForks)) {
-                    size += fork.getLength();
-                }
-            }
-        }
-
-        @Override
-        public boolean cancelTraversal() {
-            return pm.cancelSignaled();
-        }
-    }
-
-    private class ExtractVisitor extends NullTreeVisitor {
-
-        private final ExtractProgressMonitor pm;
-        private final LinkedList<String> errorMessages;
-        private final File outRootDir;
-//        private final ObjectContainer<Boolean> overwriteAll = new ObjectContainer<Boolean>(false);
-        private final ObjectContainer<Boolean> skipDirectory = new ObjectContainer<>(false);
-        private final ExtractProperties extractProperties;
-        private final boolean extractMainFork;
-        private final boolean extractAdditionalForks;
-        private final LinkedList<File> outDirStack = new LinkedList<>();
-
-        public ExtractVisitor(ExtractProgressMonitor pm, LinkedList<String> errorMessages, File outDir,
-                              boolean extractMainFork, boolean extractAdditionalForks) {
-            this.pm = pm;
-            this.errorMessages = errorMessages;
-            this.outRootDir = outDir;
-            this.extractMainFork = extractMainFork;
-            this.extractAdditionalForks = extractAdditionalForks;
-            this.extractProperties = this.pm.getExtractProperties();
-
-            if (this.pm == null)
-                throw new IllegalArgumentException("pm == null");
-            if (this.errorMessages == null)
-                throw new IllegalArgumentException("errorMessages == null");
-            if (this.outRootDir == null)
-                throw new IllegalArgumentException("outDir == null");
-
-            if (!extractMainFork && !extractAdditionalForks) {
-                throw new IllegalArgumentException("No fork types to extract.");
-            }
-
-            outDirStack.addLast(outDir);
-        }
-
-        @Override
-        public boolean startDirectory(String[] parentPath, FSFolder folder) {
-//            logger.log(Level.DEBUG, "startDirectory(" + Util.concatenateStrings(parentPath, "/") + ", " + folder.getName());
-//            if (skipDirectory.o) {
-//                logger.log(Level.DEBUG, "  skipping...");
-//                return false;
-//            }
-
-//            logger.log(Level.DEBUG, "outDirStack.getLast()=" + outDirStack.getLast());
-            File outDir = outDirStack.getLast();
-
-            CreateDirectoryFailedAction originalCreateDirectoryFailedAction =
-                    extractProperties.getCreateDirectoryFailedAction();
-            DirectoryExistsAction originalDirectoryExistsAction =
-                    extractProperties.getDirectoryExistsAction();
-
-            CreateDirectoryFailedAction defaultCreateDirectoryFailedAction =
-                    originalCreateDirectoryFailedAction;
-            DirectoryExistsAction defaultDirectoryExistsAction =
-                    originalDirectoryExistsAction;
-
-            String originalDirName = folder.getName();
-            String dirName = originalDirName;
-            while (dirName != null) {
-                String curDirName = dirName;
-                dirName = null;
-
-                pm.updateCurrentDir(curDirName);
-                File thisDir = new File(outDir, curDirName);
-
-                if (defaultDirectoryExistsAction != DirectoryExistsAction.CONTINUE && deepExists(thisDir)) {
-                    DirectoryExistsAction a;
-                    if (defaultDirectoryExistsAction == DirectoryExistsAction.PROMPT_USER)
-                        a = pm.directoryExists(thisDir);
-                    else
-                        a = defaultDirectoryExistsAction;
-
-                    boolean resetLoop = false;
-                    switch (a) {
-                        case CONTINUE:
-                            break;
-                        case ALWAYS_CONTINUE:
-                            extractProperties.setDirectoryExistsAction(
-                                    DirectoryExistsAction.CONTINUE);
-                            break;
-                        case RENAME:
-                            dirName = pm.displayRenamePrompt(curDirName, outDir);
-                            if (dirName == null)
-                                dirName = curDirName;
-                            resetLoop = true;
-                            break;
-                        case AUTO_RENAME:
-                            dirName = FileNameTools.autoRenameIllegalFilename(curDirName, outDir, true);
-                            if (dirName == null)
-                                dirName = curDirName;
-                            resetLoop = true;
-                            break;
-                        case SKIP_DIRECTORY:
-                            resetLoop = true;
-                            break;
-                        case CANCEL:
-                            resetLoop = true;
-                            pm.signalCancel();
-                            break;
-                        default:
-                            throw new RuntimeException("Internal error! Did not expect a: " + a);
-                    }
-                    if (resetLoop)
-                        continue;
-                }
-
-                // If the directory already exists, then fine. If not, we create
-                // it and double check that it exists afterwards (to avoid
-                // unexpected side effects, like in Windows).
-                if (deepExists(thisDir) || (thisDir.mkdir() && deepExists(thisDir))) {
-                    if (curDirName != originalDirName && !curDirName.equals(originalDirName))
-                        errorMessages.addLast("Directory \"" + originalDirName +
-                                "\" was renamed to \"" + curDirName + "\" in parent folder \"" +
-                                outDir.getAbsolutePath() + "\".");
-
-                    // Set attributes for directory right after creation, even
-                    // though the directory is likely to have its attributes
-                    // modified before we are done with it. This is done so that
-                    // any created files will have a sane ownership in case
-                    // setting ownership manually fails.
-                    setExtractedEntryAttributes(thisDir, folder, errorMessages);
-
-                    outDirStack.addLast(thisDir);
-                    return true;
-                } else {
-                    CreateDirectoryFailedAction a;
-                    if (defaultCreateDirectoryFailedAction == CreateDirectoryFailedAction.PROMPT_USER)
-                        a = pm.createDirectoryFailed(curDirName, outDir);
-                    else {
-                        a = defaultCreateDirectoryFailedAction;
-                        // Only perform the default action once... or else we would have an endless loop
-                        defaultCreateDirectoryFailedAction = CreateDirectoryFailedAction.PROMPT_USER;
-                    }
-
-                    switch (a) {
-                        case SKIP_DIRECTORY:
-                            errorMessages.addLast("Could not create directory \"" + thisDir.getAbsolutePath() +
-                                    "\". All files under this directory will be skipped.");
-                            break;
-                        case RENAME:
-                            dirName = pm.displayRenamePrompt(curDirName, outDir);
-                            if (dirName == null)
-                                dirName = curDirName;
-                            break;
-                        case AUTO_RENAME:
-                            dirName = FileNameTools.autoRenameIllegalFilename(curDirName, outDir, true);
-                            if (dirName == null) {
-                                dirName = curDirName;
-//                                if (originalCreateDirectoryFailedAction == CreateDirectoryFailedAction.AUTO_RENAME) {
-//                                    // If we got here by the default action, we don't want to bother the user...
-//                                    errorMessages.addLast("Auto-rename failed for dir name \"" +
-//                                            curDirName + "\" in parent directory \"" +
-//                                            outDir.getAbsolutePath() +
-//                                            "\". All files under this directory will be skipped.");
-//                                    defaultCreateDirectoryFailedAction = CreateDirectoryFailedAction.SKIP_DIRECTORY;
-//                                }
-                            }
-                            break;
-                        case CANCEL:
-                            pm.signalCancel();
-                            break;
-                        default:
-                            throw new RuntimeException("Internal error! Did not expect a: " + a);
-                    }
-
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public void endDirectory(String[] parentPath, FSFolder folder) {
-            File outDir = outDirStack.removeLast();
-
-            // Extract any extended attributes into an AppleDouble file in
-            // outDir's parent.
-            if (extractAdditionalForks) {
-                extractEntry(folder, outDirStack.getLast(), pm, errorMessages,
-                        extractProperties, skipDirectory, true);
-            }
-
-            // Finally reset the attributes of the directory to the attributes
-            // of the FSFolder to make sure that times, mode, ownership, etc.
-            // matches what we have in the file system (provided that there is
-            // support for these attributes in the target file system).
-            setExtractedEntryAttributes(outDir, folder, errorMessages);
-
-            skipDirectory.o = false;
-        }
-
-        @Override
-        public void file(FSFile fsf) {
-            if (skipDirectory.o)
-                return;
-
-            File outDir = outDirStack.getLast();
-
-            if (extractMainFork) {
-                extractEntry(fsf, outDir, pm, errorMessages, extractProperties,
-                        skipDirectory, false);
-            }
-
-            if (extractAdditionalForks) {
-                extractEntry(fsf, outDir, pm, errorMessages, extractProperties,
-                        skipDirectory, true);
-            }
-        }
-
-        @Override
-        public void link(FSLink fsl) {
-            File outDir = outDirStack.getLast();
-
-            extractEntry(fsl, outDir, pm, errorMessages, extractProperties,
-                    skipDirectory, false);
-
-            // Extract any extended attributes belonging to the link itself.
-            if (extractAdditionalForks) {
-                extractEntry(fsl, outDir, pm, errorMessages, extractProperties,
-                        skipDirectory, true);
-            }
-        }
-
-        @Override
-        public void traversalError(String message) {
-            errorMessages.addLast(message);
-        }
-
-        @Override
-        public boolean cancelTraversal() {
-            return pm.cancelSignaled();
         }
     }
 

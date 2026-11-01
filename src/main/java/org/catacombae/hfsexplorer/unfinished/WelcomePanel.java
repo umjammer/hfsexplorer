@@ -65,7 +65,7 @@ public class WelcomePanel extends javax.swing.JPanel {
         jButton1.setText("Load");
 
         jList1.setModel(new AbstractListModel<>() {
-            final String[] strings = {"Macintosh HD (\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition2)", "Leopard HD (\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition3)", "Snow Leopard HD (GPT:5@\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition0)", "Time Machine-s�kerhetskopior (EBR:2@MBR:4@\\\\?\\GLOBALROOT\\Device\\Harddisk1\\Partition0)", "Mac OS X Install DVD (\\\\?\\GLOBALROOT\\Device\\CdRom0\\Partition0)", " ", "eller:", " ", "Macintosh HD (/dev/hda2)", "Leopard HD (/dev/hda3)", "Snow Leopard HD (GPT:5@/dev/hda)", "etc.", " "};
+            final String[] strings = {"Macintosh HD (\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition2)", "Leopard HD (\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition3)", "Snow Leopard HD (GPT:5@\\\\?\\GLOBALROOT\\Device\\Harddisk0\\Partition0)", "Time Machine-säkerhetskopior (EBR:2@MBR:4@\\\\?\\GLOBALROOT\\Device\\Harddisk1\\Partition0)", "Mac OS X Install DVD (\\\\?\\GLOBALROOT\\Device\\CdRom0\\Partition0)", " ", "eller:", " ", "Macintosh HD (/dev/hda2)", "Leopard HD (/dev/hda3)", "Snow Leopard HD (GPT:5@/dev/hda)", "etc.", " "};
 
             @Override
             public int getSize() {

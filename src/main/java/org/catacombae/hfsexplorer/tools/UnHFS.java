@@ -17,18 +17,16 @@
 
 package org.catacombae.hfsexplorer.tools;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.catacombae.dmg.encrypted.ReadableCEncryptedEncodingStream;
 import org.catacombae.dmg.sparsebundle.ReadableSparseBundleStream;
@@ -36,44 +34,38 @@ import org.catacombae.dmg.sparseimage.ReadableSparseImageStream;
 import org.catacombae.dmg.sparseimage.SparseImageRecognizer;
 import org.catacombae.dmg.udif.UDIFDetector;
 import org.catacombae.dmg.udif.UDIFRandomAccessStream;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.CreateDirectoryFailedAction;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.CreateFileFailedAction;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.DirectoryExistsAction;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.ExtractProperties;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.FileExistsAction;
+import org.catacombae.hfsexplorer.ExtractProgressMonitor.UnhandledExceptionAction;
+import org.catacombae.hfsexplorer.Extractor;
 import org.catacombae.hfsexplorer.HFSExplorer;
-import org.catacombae.hfsexplorer.IOUtil;
-import org.catacombae.hfsexplorer.Java7Util;
-import org.catacombae.hfsexplorer.fs.AppleSingleBuilder;
-import org.catacombae.hfsexplorer.fs.AppleSingleBuilder.AppleSingleVersion;
-import org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileSystem;
-import org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileType;
-import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.io.ReadableFileStream;
 import org.catacombae.io.ReadableRandomAccessStream;
 import org.catacombae.io.RuntimeIOException;
-import org.catacombae.storage.io.DataLocator;
-import org.catacombae.storage.io.ReadableStreamDataLocator;
-import org.catacombae.storage.io.SubDataLocator;
 import org.catacombae.storage.fs.FSEntry;
-import org.catacombae.storage.fs.FSFile;
 import org.catacombae.storage.fs.FSFolder;
-import org.catacombae.storage.fs.FSFork;
-import org.catacombae.storage.fs.FSForkType;
-import org.catacombae.storage.fs.FSLink;
 import org.catacombae.storage.fs.FileSystemDetector;
 import org.catacombae.storage.fs.FileSystemHandler;
 import org.catacombae.storage.fs.FileSystemHandlerFactory;
 import org.catacombae.storage.fs.FileSystemHandlerFactory.CustomAttribute;
 import org.catacombae.storage.fs.FileSystemMajorType;
+import org.catacombae.storage.io.DataLocator;
+import org.catacombae.storage.io.ReadableStreamDataLocator;
+import org.catacombae.storage.io.SubDataLocator;
+import org.catacombae.storage.io.win32.ReadableWin32FileStream;
 import org.catacombae.storage.ps.Partition;
 import org.catacombae.storage.ps.PartitionSystemDetector;
 import org.catacombae.storage.ps.PartitionSystemHandler;
 import org.catacombae.storage.ps.PartitionSystemHandlerFactory;
 import org.catacombae.storage.ps.PartitionSystemType;
 import org.catacombae.storage.ps.PartitionType;
-import org.catacombae.util.ObjectContainer;
-import org.catacombae.util.Util.Pair;
+import org.catacombae.util.Util;
 
 import static java.lang.System.getLogger;
-import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.AppleSingleVersion.VERSION_2_0;
-import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileSystem.MACOS_X;
-import static org.catacombae.hfsexplorer.fs.AppleSingleBuilder.FileType.APPLEDOUBLE;
 
 
 /**
@@ -95,6 +87,9 @@ public class UnHFS {
      * @param ps the PrintStream to print usage instruction to.
      */
     private static void printUsage(PrintStream ps) {
+        final char SHORT_ARG_PREFIX = '-';
+        final String LONG_ARG_PREFIX = "-";
+
         //     80 <-------------------------------------------------------------------------------->
         ps.println("unhfs " + HFSExplorer.VERSION);
         ps.println(HFSExplorer.COPYRIGHT.replaceAll("©", "(C)"));
@@ -105,44 +100,50 @@ public class UnHFS {
         ps.println("usage: unhfs [options...] <input file>");
         ps.println("  Input file can be in raw, UDIF (.dmg) and/or encrypted format.");
         ps.println("  Options:");
-        ps.println("    -o <output dir>");
+        ps.println("    " + SHORT_ARG_PREFIX + "o <output dir>");
         ps.println("      The target directory in the local file system where all extracted files");
         ps.println("      should go.");
         ps.println("      When this option is omitted, all files go to the currect working");
         ps.println("      directory.");
-        ps.println("    -fsroot <path to extract>");
+        ps.println("    " + LONG_ARG_PREFIX + "fsroot <path to extract>");
         ps.println("      A POSIX path in the HFS file system that should be extracted.");
         ps.println("      Example which extracts all the contents of joe's user dir from a backup");
         ps.println("      disk image to the current directory:");
         ps.println("        unhfs -o . -fsroot /Users/joe FullBackup.dmg");
         ps.println("      When this option is omitted, all the contents of the file system is");
         ps.println("      extracted.");
-        ps.println("    -create");
+        ps.println("    " + LONG_ARG_PREFIX + "create");
         ps.println("      If the -fsroot path refers to a folder, create that folder inside");
         ps.println("      the output directory, rather than extracting into the output directory");
         ps.println("      itself.");
-        ps.println("    -resforks NONE|APPLEDOUBLE");
+        ps.println("    " + LONG_ARG_PREFIX + "resforks NONE|APPLEDOUBLE");
         ps.println("      Determines whether resource forks should be extracted, and in what");
         ps.println("      format. Currently only the APPLEDOUBLE format, which puts each resource");
         ps.println("      fork in its own file with the '._' prefix, is supported.");
         ps.println("      When this option is omitted, no resource forks are extracted.");
-        ps.println("    -partition <partition number>");
+        ps.println("    " + LONG_ARG_PREFIX + "partition <partition number>");
         ps.println("      If the input file is partitioned, extracts files from the specified HFS");
         ps.println("      partition. Partitions are numbered from 0 and up.");
         ps.println("      When this options is omitted, the application chooses the first");
         ps.println("      available HFS partition.");
-        ps.println("    -password <password>");
+        ps.println("    " + LONG_ARG_PREFIX + "password <password>");
         ps.println("      Specifies the password for an encrypted image. The special marker \"-\" ");
         ps.println("      causes the password to be read from stdin.");
-        ps.println("    -sfm-substitutions");
+        ps.println("    " + LONG_ARG_PREFIX + "sfm-substitutions");
         ps.println("      Translates the filenames to a format that is more compatible with Windows");
-        ps.println("      filesystems, using the translation scheme that was used by the now defunct");
-        ps.println("      Services for Mac component in Windows Server.");
-        ps.println("    -v");
+        ps.println("      filesystems, using the translation scheme that was used by the now");
+        ps.println("      defunct Services for Mac component in Windows Server.");
+        ps.println("    " + LONG_ARG_PREFIX + "auto-rename");
+        ps.println("      Auto-rename files with names that cannot be represented in the target");
+        ps.println("      filesystem.");
+        ps.println("      Combine this with '-sfm-substitutions' when extracting to a Windows");
+        ps.println("      filesystem (e.g. FAT, exFAT, NTFS, ReFS, ...) to preserve as much filename");
+        ps.println("      information as possible while extracting as many files as possible.");
+        ps.println("    " + SHORT_ARG_PREFIX + "v");
         ps.println("      Verbose mode. Prints the POSIX path of every extracted file to stdout.");
         ps.println("    --");
         ps.println("      Signals that there are no more option arguments. Useful for accessing");
-        ps.println("      input files with names identical to an option signature.");
+        ps.println("      files that have a name similar to an option string.");
     }
 
     /**
@@ -159,6 +160,7 @@ public class UnHFS {
         boolean extractResourceForks = false;
         boolean verbose = false;
         boolean sfmSubstitutions = false;
+        boolean autoRename = false;
         int partitionNumber = -1; // -1 means search for first supported partition
         char[] password = null;
 
@@ -166,9 +168,39 @@ public class UnHFS {
 label:
         for (i = 0; i < args.length; ++i) {
             String curArg = args[i];
+            char firstChar = !curArg.isEmpty() ? curArg.charAt(0) : '\0';
+            char secondChar = curArg.length() > 1 ? curArg.charAt(1) : '\0';
+            String argString;
 
-            switch (curArg) {
-                case "-o":
+            if (curArg.equals("--")) {
+                ++i;
+                break;
+            }
+
+            if ((firstChar == '-' || firstChar == '/') && curArg.length() > 1 &&
+                    secondChar != '-') {
+                argString = curArg.substring(1);
+            } else if (curArg.length() > 3 && secondChar == '-') {
+                argString = curArg.substring(2);
+            } else {
+                /* Not an option argument. Supported ways of specifying options
+                 * are:
+                 * - The Java way, prefixed with a single '-' regardless of
+                 *   whether it's long or short.
+                 * - The Windows way, prefixed with a '/' regardless of whether
+                 *   it's long or short.
+                 * - The Unix way, with short (single character) arguments
+                 *   prefixed by '-' and long (more than one character)
+                 *   arguments prefixed by '--'.
+                 *
+                 * The special token '--' ends argument parsing and allows
+                 * opening a file that has the same name or format as an option
+                 * argument. E.g. to open a file named '--', specify '-- --'. */
+                break;
+            }
+
+            switch (argString) {
+                case "o":
                     if (i + 1 < args.length)
                         outputDirname = args[++i];
                     else {
@@ -176,7 +208,7 @@ label:
                         System.exit(1);
                     }
                     break;
-                case "-fsroot":
+                case "fsroot":
                     if (i + 1 < args.length)
                         fsRoot = args[++i];
                     else {
@@ -184,10 +216,10 @@ label:
                         System.exit(1);
                     }
                     break;
-                case "-create":
+                case "create":
                     extractFolderDirectly = false;
                     break;
-                case "-resforks":
+                case "resforks":
                     if (i + 1 < args.length) {
                         String value = args[++i];
                         if (value.equalsIgnoreCase("NONE")) {
@@ -205,7 +237,7 @@ label:
                         System.exit(1);
                     }
                     break;
-                case "-partition":
+                case "partition":
                     if (i + 1 < args.length) {
                         try {
                             partitionNumber = Integer.parseInt(args[++i]);
@@ -220,7 +252,7 @@ label:
                         System.exit(1);
                     }
                     break;
-                case "-password":
+                case "password":
                     if (i + 1 < args.length) {
                         password = args[++i].toCharArray();
 
@@ -271,15 +303,15 @@ label:
                         System.exit(1);
                     }
                     break;
-                case "-sfm-substitutions":
+                case "sfm-substitutions":
                     sfmSubstitutions = true;
                     break;
-                case "-v":
+                case "auto-rename":
+                    autoRename = true;
+                    break;
+                case "v":
                     verbose = true;
                     break;
-                case "--":
-                    ++i;
-                    break label;
                 default:
                     break label;
             }
@@ -314,9 +346,29 @@ label:
             inputStream = new ReadableFileStream(inputFilename);
 
         try {
-            unhfs(System.out, inputStream, outputDir, fsRoot, password,
-                    extractFolderDirectly, extractResourceForks,
-                    partitionNumber, verbose, sfmSubstitutions);
+            unhfs(
+                    /* PrintStream outputStream */
+                    System.out,
+                    /* ReadableRandomAccessStream inFileStream */
+                    inputStream,
+                    /* File outputDir */
+                    outputDir,
+                    /* String fsRoot */
+                    fsRoot,
+                    /* char[] password */
+                    password,
+                    /* boolean extractFolderDirectly */
+                    extractFolderDirectly,
+                    /* boolean extractResourceForks */
+                    extractResourceForks,
+                    /* int partitionNumber */
+                    partitionNumber,
+                    /* boolean verbose */
+                    verbose,
+                    /* boolean sfmSubstitutions */
+                    sfmSubstitutions,
+                    /* boolean autoRename */
+                    autoRename);
             System.exit(0);
         } catch (RuntimeIOException e) {
             logger.log(Level.DEBUG, "Exception while executing main routine:");
@@ -325,38 +377,206 @@ label:
         }
     }
 
+    private static class ProgressMonitor implements ExtractProgressMonitor {
+
+        private final ExtractProperties extractProperties = new ExtractProperties();
+        private final File targetDir;
+        private final boolean verbose;
+        private final boolean autoRename;
+
+        private String currentDir = null;
+
+        public ProgressMonitor(File targetDir, boolean verbose, boolean autoRename) {
+            this.targetDir = targetDir;
+            this.verbose = verbose;
+            this.autoRename = autoRename;
+        }
+
+        @Override
+        public void updateCalculateDir(final String dirname) {
+        }
+
+        @Override
+        public void updateTotalProgress(final double fraction, final String message) {
+        }
+
+        @Override
+        public void updateCurrentDir(final String dirname) {
+            if (verbose) {
+                currentDir = dirname;
+                System.out.println(targetDir.getPath() + "/" +
+                        (currentDir != null ? currentDir + "/" : "") + dirname);
+            }
+        }
+
+        @Override
+        public void updateCurrentFile(final String filename, final long fileSize) {
+            if (verbose) {
+                System.out.println(targetDir.getPath() + "/" +
+                        (currentDir != null ? currentDir + "/" : "") +
+                        filename);
+            }
+        }
+
+        @Override
+        public void setDataSize(final long totalSize) {
+        }
+
+        @Override
+        public boolean confirmCreateDirectory(final File dir) {
+            return true;
+        }
+
+        @Override
+        public CreateDirectoryFailedAction createDirectoryFailed(
+                final String dirname, final File parentDirectory) {
+            System.err.println("Failed to create directory " +
+                    parentDirectory.getPath() + "/" + dirname + ".");
+            return autoRename ? CreateDirectoryFailedAction.AUTO_RENAME :
+                    CreateDirectoryFailedAction.SKIP_DIRECTORY;
+        }
+
+        @Override
+        public CreateFileFailedAction createFileFailed(
+                final String filename, final File parentDirectory) {
+            System.err.println("Failed to create directory " +
+                    parentDirectory.getPath() + "/" + filename + ".");
+            return autoRename ? CreateFileFailedAction.AUTO_RENAME :
+                    CreateFileFailedAction.SKIP_FILE;
+        }
+
+        @Override
+        public DirectoryExistsAction directoryExists(final File directory) {
+            logger.log(Level.DEBUG, "Directory \"" + directory.getPath() + "\" already exists. Continuing anyway...");
+            return autoRename ? DirectoryExistsAction.AUTO_RENAME :
+                    DirectoryExistsAction.CONTINUE;
+        }
+
+        @Override
+        public FileExistsAction fileExists(final File file) {
+            logger.log(Level.DEBUG, "File \"" + file.getPath() + "\" already exists. Overwriting...");
+            return autoRename ? FileExistsAction.AUTO_RENAME :
+                    FileExistsAction.OVERWRITE;
+        }
+
+        @Override
+        public UnhandledExceptionAction unhandledException(
+                final String filename, final Throwable t, final String actionDescription) {
+            Throwable cause = null;
+            Throwable realThrowable =
+                    (t instanceof InvocationTargetException &&
+                            (cause = t.getCause()) != null) ? cause : t;
+
+            System.err.println("Error while " + actionDescription + ": " + realThrowable.toString());
+            return UnhandledExceptionAction.HANDLED;
+        }
+
+        @Override
+        public void errorMessage(final String message) {
+            System.err.println("Error: " + message);
+        }
+
+        @Override
+        public String displayRenamePrompt(final String currentName, final File outDir) {
+            /* unhfs operates based on command line switches only. */
+            return null;
+        }
+
+        @Override
+        public boolean displayIoErrorPrompt(
+                final String fileName, final File outDir, final IOException ioe) {
+            System.err.println("Got I/O error when extracting file \"" + fileName +
+                    "\" to directory \"" + outDir.getPath() + "\": " + ioe.getMessage());
+            return true;
+        }
+
+        @Override
+        public ExtractProperties getExtractProperties() {
+            return extractProperties;
+        }
+
+        @Override
+        public void signalCancel() {
+        }
+
+        @Override
+        public boolean cancelSignaled() {
+            return false;
+        }
+
+        @Override
+        public void confirmCancel() {
+        }
+
+        @Override
+        public void addDataProgress(final long dataSize) {
+            /* There's no progress bar in UnHFS at this point. */
+        }
+    }
+
     /**
      * The main routine in the program, which gets invoked after arguments
      * parsing is complete. The routine expects all arguments to be fully parsed
      * and valid.
      *
-     * @param outputStream          the PrintStream where all the messages will go
-     *                              (should normally be System.out).
-     * @param inFileStream          the stream containing the file system data.
+     * @param outputStream
+     *      the PrintStream where all the messages will go (should normally be
+     *      {@link System#out}).
+     * @param inFileStream
+     *      the random access stream that the file system data will be read
+     *      from.
      * @param outputDir
+     *      the directory where the specified files and directories will be
+     *      extracted to.
      * @param fsRoot
-     * @param password              the password used to unlock an encrypted image.
-     * @param extractFolderDirectly if fsRoot is a folder, extract directly into outputDir?
+     *      the file or directory tree to extract, specified as a POSIX path.
+     * @param password
+     *      the password used to unlock an encrypted image, if any (may be
+     *      <code>NULL</code>).
+     * @param extractFolderDirectly
+     *      if fsRoot is a folder, don't create the folder but extract its
+     *      contents to <code>outputDir</code>.
      * @param extractResourceForks
+     *      extract resource forks and other extended attributes to the target
+     *      filesystem.
      * @param partitionNumber
+     *      the number of the partition to load from <code>inFileStream</code>
+     *      (0 means use the whole device).
      * @param verbose
+     *      print the name of every extracted file and directory.
+     * @param sfmSubstitutions
+     *      map characters incompatible with Windows filesystems to the Unicode
+     *      private range used by Services for Mac.
+     * @param autoRename
+     *      automatically rename files and directories that cannot be created on
+     *      the target filesystem.
      * @throws org.catacombae.io.RuntimeIOException
      */
-    public static void unhfs(PrintStream outputStream,
-                             ReadableRandomAccessStream inFileStream, File outputDir,
-                             String fsRoot, char[] password, boolean extractFolderDirectly,
-                             boolean extractResourceForks, int partitionNumber, boolean verbose,
-                             boolean sfmSubstitutions)
-            throws RuntimeIOException {
+    public static void unhfs(
+            final PrintStream outputStream,
+            final ReadableRandomAccessStream inFileStream,
+            final File outputDir,
+            final String fsRoot,
+            final char[] password,
+            final boolean extractFolderDirectly,
+            final boolean extractResourceForks,
+            final int partitionNumber,
+            final boolean verbose,
+            final boolean sfmSubstitutions,
+            final boolean autoRename) throws RuntimeIOException {
+
+        ReadableRandomAccessStream stream = inFileStream;
 
         // First detect any outer layers of UDIF and/or encryption.
         logDebug("Trying to detect encrypted structure...");
-        if (ReadableCEncryptedEncodingStream.isCEncryptedEncoding(inFileStream)) {
+        if (ReadableCEncryptedEncodingStream.isCEncryptedEncoding(stream)) {
             if (password != null) {
                 try {
-                    ReadableCEncryptedEncodingStream stream =
-                            new ReadableCEncryptedEncodingStream(inFileStream, password);
-                    inFileStream = stream;
+                    stream = new ReadableCEncryptedEncodingStream(
+                            /* ReadableRandomAccessStream backingStream */
+                            stream,
+                            /* char[] password */
+                            password);
                 } catch (Exception e) {
                     // TODO: Differentiate between exceptions...
                     logger.log(Level.DEBUG, "Incorrect password for encrypted image.");
@@ -369,10 +589,11 @@ label:
         }
 
         logDebug("Trying to detect sparseimage structure...");
-        if (SparseImageRecognizer.isSparseImage(inFileStream)) {
+        if (SparseImageRecognizer.isSparseImage(stream)) {
             try {
-                ReadableSparseImageStream stream = new ReadableSparseImageStream(inFileStream);
-                inFileStream = stream;
+                stream = new ReadableSparseImageStream(
+                        /* ReadableRandomAccessStream backingStream */
+                        stream);
             } catch (Exception e) {
                 logger.log(Level.DEBUG, "Exception while creating readable sparseimage stream:");
                 logger.log(Level.ERROR, e.getMessage(), e);
@@ -381,11 +602,13 @@ label:
         }
 
         logDebug("Trying to detect UDIF structure...");
-        if (UDIFDetector.isUDIFEncoded(inFileStream)) {
-            UDIFRandomAccessStream stream = null;
+        if (UDIFDetector.isUDIFEncoded(stream)) {
+            UDIFRandomAccessStream udifStream = null;
             try {
-                stream = new UDIFRandomAccessStream(inFileStream);
-                inFileStream = stream;
+                udifStream = new UDIFRandomAccessStream(
+                        /* ReadableRandomAccessStream stream */
+                        stream);
+                stream = udifStream;
             } catch (Exception e) {
                 logger.log(Level.ERROR, e.getMessage(), e);
                 logger.log(Level.DEBUG, "Unhandled exception while trying to load UDIF wrapper.");
@@ -393,7 +616,7 @@ label:
             }
         }
 
-        DataLocator inputDataLocator = new ReadableStreamDataLocator(inFileStream);
+        DataLocator inputDataLocator = new ReadableStreamDataLocator(stream);
 
         PartitionSystemType[] psTypes =
                 PartitionSystemDetector.detectPartitionSystem(inputDataLocator, false);
@@ -493,256 +716,36 @@ outer:
 
         logDebug("Getting entry by posix path: \"" + fsRoot + "\"");
         FSEntry entry = fsHandler.getEntryByPosixPath(fsRoot);
-        if (entry instanceof FSFolder folder) {
-            File dirForFolder;
-            String folderName = folder.getName();
-            if (extractFolderDirectly || folderName.equals("/") || folderName.isEmpty()) {
-                dirForFolder = outputDir;
-            } else {
-                dirForFolder = getFileForFolder(outputDir, folder, verbose);
-            }
-            if (dirForFolder != null) {
-                extractFolder(folder, dirForFolder, extractResourceForks, verbose);
-            }
-        } else if (entry instanceof FSFile file) {
-            extractFile(file, outputDir, extractResourceForks, verbose);
+
+        String[] path = fsHandler.getTruePathFromPosixPath(fsRoot);
+        List<FSEntry> entries;
+        if (path == null || path.length == 0 || extractFolderDirectly) {
+            entries = Arrays.asList(fsHandler.getRoot().listEntries());
         } else {
-            logger.log(Level.DEBUG, "Requested path is not a folder or a file!");
-            System.exit(1);
-        }
-    }
-
-    private static void setFileTimes(File file, FSEntry entry, String fileType) {
-        Long createdTime = null;
-        Long lastAccessedTime = null;
-        Long lastModifiedTime = null;
-
-        if (entry.getAttributes().hasCreateDate()) {
-            createdTime = entry.getAttributes().getCreateDate().getTime();
+            entries = Arrays.asList(entry);
         }
 
-        if (entry.getAttributes().hasAccessDate()) {
-            lastAccessedTime = entry.getAttributes().getAccessDate().getTime();
-        }
-
-        if (entry.getAttributes().hasModifyDate()) {
-            lastModifiedTime = entry.getAttributes().getModifyDate().getTime();
-        }
-
-        boolean fileTimesSet = false;
-        if (Java7Util.isJava7OrHigher()) {
-            try {
-                Java7Util.setFileTimes(file.getPath(),
-                        createdTime != null ? new Date(createdTime) : null,
-                        lastAccessedTime != null ? new Date(lastAccessedTime) : null,
-                        lastModifiedTime != null ? new Date(lastModifiedTime) : null);
-                fileTimesSet = true;
-            } catch (Exception e) {
-                logger.log(Level.ERROR, e.getMessage(), e);
-            }
-        }
-
-        if (!fileTimesSet && lastModifiedTime != null) {
-            boolean setLastModifiedResult;
-
-            if (lastModifiedTime < 0) {
-                logger.log(Level.DEBUG, "Warning: Can not set " + fileType + "'s " +
-                        "last modified timestamp to pre-1970 date " + new Date(lastModifiedTime) + " (raw: " +
-                        lastModifiedTime + "). Setting to earliest possible timestamp (" + new Date(0) + ").");
-
-                lastModifiedTime = (long) 0;
-            }
-
-            setLastModifiedResult = file.setLastModified(lastModifiedTime);
-            if (!setLastModifiedResult) {
-                logger.log(Level.DEBUG, "Warning: Failed to set last modified timestamp (" + lastModifiedTime + ") for " +
-                        fileType + " \"" + file.getPath() + "\" after extraction.");
-            }
-        }
-    }
-
-    private static void extractFolder(FSFolder folder, File targetDir, boolean extractResourceForks, boolean verbose) {
-        boolean wasEmpty = targetDir.list().length == 0;
-        for (FSEntry e : folder.listEntries()) {
-            if (e instanceof FSFile file) {
-                extractFile(file, targetDir, extractResourceForks, verbose);
-            } else if (e instanceof FSFolder subFolder) {
-                File subFolderFile = getFileForFolder(targetDir, subFolder, verbose);
-                if (subFolderFile != null) {
-                    extractFolder(subFolder, subFolderFile, extractResourceForks, verbose);
-                }
-            } else if (e instanceof FSLink) {
-                // We don't currently handle links.
-            }
-        }
-        if (wasEmpty) {
-            setFileTimes(targetDir, folder, "folder");
-        }
-
-        if (extractResourceForks) {
-            File resFile = new File(targetDir.getParentFile(), "._" + scrub(targetDir.getName()));
-            ObjectContainer<Boolean> created = new ObjectContainer<>(false);
-            if (!extractAdditionalForksToAppleDoubleFile(folder, resFile, created)) {
-                logger.log(Level.DEBUG, "Failed to extract resource fork to " + resFile.getPath());
-            } else if (created.o) {
-                if (verbose) {
-                    logger.log(Level.DEBUG, resFile.getPath());
-                }
-
-                setFileTimes(resFile, folder, "resource fork AppleDouble file");
-            }
-        }
-    }
-
-    private static void extractFile(FSFile file, File targetDir, boolean extractResourceForks, boolean verbose)
-            throws RuntimeIOException {
-        File dataFile = new File(targetDir, scrub(file.getName()));
-        if (!extractRawForkToFile(file.getMainFork(), dataFile)) {
-            logger.log(Level.DEBUG, "Failed to extract data fork to " + dataFile.getPath());
-        } else {
-            if (verbose) {
-                System.out.println(dataFile.getPath());
-            }
-
-            setFileTimes(dataFile, file, "data file");
-        }
-
-        if (extractResourceForks) {
-            File resFile = new File(targetDir, "._" + scrub(file.getName()));
-            ObjectContainer<Boolean> created = new ObjectContainer<>(false);
-            if (!extractAdditionalForksToAppleDoubleFile(file, resFile, created)) {
-                logger.log(Level.DEBUG, "Failed to extract resource fork to " + resFile.getPath());
-            } else if (created.o) {
-                if (verbose) {
-                    logger.log(Level.DEBUG, resFile.getPath());
-                }
-
-                setFileTimes(resFile, file, "resource fork AppleDouble file");
-            }
-        }
-    }
-
-    private static File getFileForFolder(File targetDir, FSFolder folder, boolean verbose) {
-        File folderFile = new File(targetDir, scrub(folder.getName()));
-        if (folderFile.isDirectory() || folderFile.mkdir()) {
-            if (verbose)
-                logger.log(Level.DEBUG, folderFile.getPath());
-        } else {
-            logger.log(Level.DEBUG, "Failed to create directory " + folderFile.getPath());
-            folderFile = null;
-        }
-        return folderFile;
-    }
-
-    private static boolean extractRawForkToFile(FSFork fork, File targetFile) throws RuntimeIOException {
-
-        ReadableRandomAccessStream in = null;
-        try (FileOutputStream os = new FileOutputStream(targetFile)) {
-
-            in = fork.getReadableRandomAccessStream();
-
-            long extractedBytes = IOUtil.streamCopy(in, os, 128 * 1024);
-            if (extractedBytes != fork.getLength()) {
-                logger.log(Level.DEBUG, "WARNING: Did not extract intended number of bytes to \"" +
-                        targetFile.getPath() + "\"! Intended: " + fork.getLength() + " Extracted: " + extractedBytes);
-            }
-
-            return true;
-        } catch (FileNotFoundException fnfe) {
-            return false;
-        } catch (Exception ioe) {
-            logger.log(Level.ERROR, ioe.getMessage(), ioe);
-            return false;
-//            throw new RuntimeIOException(ioe);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                }
-            }
-        }
-    }
-
-    private static boolean extractAdditionalForksToAppleDoubleFile(
-            FSEntry entry, File targetFile, ObjectContainer<Boolean> created) {
-
-        FileOutputStream os = null;
-        ReadableRandomAccessStream in = null;
-        try {
-            LinkedList<Pair<String, byte[]>> attributeList = new LinkedList<>();
-            byte[] finderInfoData = null;
-            byte[] resourceForkData = null;
-
-            AppleSingleBuilder builder = new AppleSingleBuilder(APPLEDOUBLE, VERSION_2_0, MACOS_X);
-            long extractedBytes = 0;
-
-            for (FSFork f : entry.getAllForks()) {
-                FSForkType forkType = f.getType();
-                if (forkType == FSForkType.MACOS_RESOURCE) {
-                    resourceForkData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    extractedBytes += resourceForkData.length;
-                } else if (forkType == FSForkType.MACOS_FINDERINFO) {
-                    finderInfoData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    extractedBytes += finderInfoData.length;
-                } else if (f.hasXattrName()) {
-                    final byte[] attributeData = IOUtil.readFully(f.getReadableRandomAccessStream());
-                    attributeList.add(new Pair<>(f.getXattrName(), attributeData));
-                    extractedBytes += attributeData.length;
-                }
-            }
-
-            if (finderInfoData != null || attributeList.size() > 0) {
-                builder.addFinderInfo(finderInfoData, attributeList);
-            }
-
-            if (resourceForkData != null) {
-                builder.addResourceFork(resourceForkData);
-            } else {
-                builder.addEmptyResourceFork();
-            }
-
-            if (extractedBytes > 0) {
-                os = new FileOutputStream(targetFile);
-                os.write(builder.getResult());
-                created.o = true;
-            } else {
-                created.o = false;
-            }
-
-            return true;
-        } catch (FileNotFoundException fnfe) {
-            return false;
-        } catch (Exception ioe) {
-            logger.log(Level.ERROR, ioe.getMessage(), ioe);
-            return false;
-//            throw new RuntimeIOException(ioe);
-        } finally {
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (Exception e) {
-                    logger.log(Level.ERROR, e.getMessage(), e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Scrubs away all control characters from a string and replaces them with '_'.
-     *
-     * @param s the string to be processed.
-     * @return a scrubbed string.
-     */
-    private static String scrub(String s) {
-        char[] cdata = s.toCharArray();
-        for (int i = 0; i < cdata.length; ++i) {
-            if ((cdata[i] >= 0 && cdata[i] <= 31) ||
-                    (cdata[i] == 127)) {
-                cdata[i] = '_';
-            }
-        }
-        return new String(cdata);
+        Extractor.extract(
+                /* FileSystemHandler fsHandler */
+                fsHandler,
+                /* String[] parentPath */
+                (path.length > 0) ?
+                        Util.arrayCopy(path, 0, new String[path.length - 1], 0,
+                                path.length - 1) : path,
+                /* List<FSEntry> rec */
+                entries,
+                /* File outDir */
+                outputDir,
+                /* ExtractProgressMonitor progressMonitor */
+                new ProgressMonitor(outputDir, verbose, autoRename),
+                /* LinkedList<String> errorMessages */
+                new LinkedList<>(),
+                /* boolean followSymbolicLinks */
+                false,
+                /* boolean extractMainFork */
+                true,
+                /* boolean extractAdditionalForks */
+                extractResourceForks);
     }
 
     private static void logDebug(String s) {

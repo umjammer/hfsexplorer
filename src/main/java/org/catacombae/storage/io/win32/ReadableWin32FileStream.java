@@ -140,7 +140,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
         }
         boolean verbose = false;
         fileHandle = open(filename);
-//        System.out.println("fileHandle: 0x" + Util.byteArrayToHexString(fileHandle));
+//logger.log(Level.TRACE, "fileHandle: 0x" + Util.byteArrayToHexString(fileHandle));
         int tmpSectorSize = getSectorSize(fileHandle);
         if (tmpSectorSize > 0) {
             if (verbose)
@@ -156,7 +156,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
     @Override
     public void seek(long pos) {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.seek(" + pos + ");");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.seek(" + pos + ");");
 
         if (fileHandle != null) {
             // We seek to the beginning of the sector containing pos
@@ -168,7 +168,7 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
     @Override
     public int read() {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read();");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.read();");
         byte[] oneByte = new byte[1];
         if (read(oneByte) == 1)
             return oneByte[0] & 0xFF;
@@ -178,13 +178,13 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
     @Override
     public int read(byte[] data) {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read(byte[" + data.length + "]);");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.read(byte[" + data.length + "]);");
         return read(data, 0, data.length);
     }
 
     @Override
     public int read(byte[] data, int pos, int len) {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.read(byte[" + data.length + "], " + pos + ", " + len + ");");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.read(byte[" + data.length + "], " + pos + ", " + len + ");");
         if (fileHandle != null) {
             //
             // First make sure that we are at the beginning of the sector containing
@@ -206,14 +206,14 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
             // Add the bytes that we will have to skip to the total read length.
             int alignedLen = (int) fpDiff + len;
 
-//            logger.log(Level.DEBUG, "Before crash:");
-//            logger.log(Level.DEBUG, "  trueFp=" + trueFp);
-//            logger.log(Level.DEBUG, "  fpDiff=" + fpDiff);
-//            logger.log(Level.DEBUG, "  alignedLen=" + alignedLen);
-//            logger.log(Level.DEBUG, "  sectorSize=" + sectorSize);
-//            logger.log(Level.DEBUG, "  alignedLen/sectorSize=" + (alignedLen / sectorSize));
-//            logger.log(Level.DEBUG, "  alignedLen%sectorSize=" + (alignedLen % sectorSize));
-//            logger.log(Level.DEBUG, "  (alignedLen%sectorSize!=0?1:0))*sectorSize=" + ((alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize);
+//logger.log(Level.TRACE, "Before crash:");
+//logger.log(Level.TRACE, "  trueFp=" + trueFp);
+//logger.log(Level.TRACE, "  fpDiff=" + fpDiff);
+//logger.log(Level.TRACE, "  alignedLen=" + alignedLen);
+//logger.log(Level.TRACE, "  sectorSize=" + sectorSize);
+//logger.log(Level.TRACE, "  alignedLen/sectorSize=" + (alignedLen / sectorSize));
+//logger.log(Level.TRACE, "  alignedLen%sectorSize=" + (alignedLen % sectorSize));
+//logger.log(Level.TRACE, "  (alignedLen%sectorSize!=0?1:0))*sectorSize=" + ((alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize);
 
             // Allocate a sufficiently large temp buffer aligned to the sector size.
             byte[] tmp = new byte[(alignedLen / sectorSize + (alignedLen % sectorSize != 0 ? 1 : 0)) * sectorSize];
@@ -263,10 +263,10 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
     @Override
     public long length() {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.length();");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.length();");
         if (fileHandle != null) {
 //            throw new RuntimeException("Could not get file size.");
-//            logger.log(Level.DEBUG, "  returning " + length(fileHandle));
+//logger.log(Level.TRACE, "  returning " + length(fileHandle));
             return length(fileHandle);
         } else
             throw new RuntimeException("File closed!");
@@ -274,9 +274,9 @@ public class ReadableWin32FileStream implements ReadableRandomAccessStream, Abst
 
     @Override
     public long getFilePointer() {
-//        logger.log(Level.DEBUG, "WindowsLowLevelIO.getFilePointer();");
+//logger.log(Level.TRACE, "WindowsLowLevelIO.getFilePointer();");
         if (fileHandle != null) {
-//            logger.log(Level.DEBUG, "  returning " + filePointer);
+//logger.log(Level.TRACE, "  returning " + filePointer);
             return filePointer;//getFilePointer(fileHandle);
         } else
             throw new RuntimeException("File closed!");
