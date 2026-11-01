@@ -62,6 +62,7 @@ import static org.jdesktop.layout.GroupLayout.TRAILING;
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
+@SuppressWarnings("unchecked")
 public class ResourceForkViewPanel extends javax.swing.JPanel {
 
     private static final Logger logger = getLogger(ResourceForkViewPanel.class.getName());

@@ -50,6 +50,7 @@ import static org.jdesktop.layout.LayoutStyle.RELATED;
 /**
  * @author <a href="https://catacombae.org" target="_top">Erik Larsson</a>
  */
+@SuppressWarnings("unchecked")
 public class FilesystemBrowserPanel extends javax.swing.JPanel {
 
     private static final Logger logger = getLogger(FilesystemBrowserPanel.class.getName());

@@ -18,6 +18,7 @@
 package org.catacombae.hfs.types.finder;
 
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 
 import org.catacombae.csjc.PrintableStruct;
 import org.catacombae.csjc.StructElements;
@@ -35,29 +36,29 @@ import org.catacombae.util.Util;
 public class DInfo implements PrintableStruct, StructElements {
     /*
      * struct DInfo
-     * size: 2 bytes
+     * size: 16 bytes
      * description:
      *
      * BP  Size  Type    Identifier  Description
      * ------------------------------------------------------------------------------------------------------------------------------------------------
      * 0   8     Rect    frRect      The rectangle for the window that the Finder displays when the user opens the folder.
-     * -1  2     UInt16  frFlags     Reserved.
-     * 1   4     Point   frLocation  Location of the folder in the parent window.
-     * 0   2     SInt16  frView      The manner in which folders are displayed; this is set by the user with commands from the View menu of the Finder.
+     * 8   2     UInt16  frFlags     Reserved.
+     * 10  4     Point   frLocation  Location of the folder in the parent window.
+     * 14  2     SInt16  frView      The manner in which folders are displayed; this is set by the user with commands from the View menu of the Finder.
      */
 
-    public static final int STRUCTSIZE = 2;
+    public static final int STRUCTSIZE = 16;
 
     private final Rect frRect;
-    private final byte[] frFlags = new byte[2];
+    private short frFlags;
     private final Point frLocation;
-    private final byte[] frView = new byte[2];
+    private short frView;
 
     public DInfo(byte[] data, int offset) {
         frRect = new Rect(data, offset + 0);
-        System.arraycopy(data, offset + -1, frFlags, 0, 2);
-        frLocation = new Point(data, offset + 1);
-        System.arraycopy(data, offset + 0, frView, 0, 2);
+        frFlags = Util.readShortBE(data, offset + 8);
+        frLocation = new Point(data, offset + 10);
+        frView = Util.readShortBE(data, offset + 14);
     }
 
     public static int length() {
@@ -65,23 +66,31 @@ public class DInfo implements PrintableStruct, StructElements {
     }
 
     /** The rectangle for the window that the Finder displays when the user opens the folder. */
-    public Rect getFrRect() {
+    public final Rect getFrRect() {
         return frRect;
     }
 
     /** Reserved. */
-    public short getFrFlags() {
-        return Util.readShortBE(frFlags);
+    public final int getFrFlags() {
+        return Util.unsign(getRawFrFlags());
     }
 
     /** Location of the folder in the parent window. */
-    public Point getFrLocation() {
+    public final Point getFrLocation() {
         return frLocation;
     }
 
     /** The manner in which folders are displayed; this is set by the user with commands from the View menu of the Finder. */
-    public short getFrView() {
-        return Util.readShortBE(frView);
+    public final short getFrView() {
+        return frView;
+    }
+
+    /**
+     * <b>Note that the return value from this function should be interpreted as
+     * an unsigned integer, for instance using Util.unsign(...).</b>
+     */
+    public final short getRawFrFlags() {
+        return frFlags;
     }
 
     @Override
@@ -101,29 +110,45 @@ public class DInfo implements PrintableStruct, StructElements {
     }
 
     public byte[] getBytes() {
-        byte[] result = new byte[STRUCTSIZE];
-        byte[] tempData;
-        int offset = 0;
-        tempData = frRect.getBytes();
+        byte[] result = new byte[length()];
+        getBytes(result, 0);
+        return result;
+    }
+
+    public int getBytes(byte[] result, int offset) {
+        int startOffset = offset;
+
+        byte[] tempData = frRect.getBytes();
         System.arraycopy(tempData, 0, result, offset, tempData.length);
         offset += tempData.length;
-        System.arraycopy(frFlags, 0, result, offset, frFlags.length);
-        offset += frFlags.length;
+        Util.arrayPutBE(result, offset, frFlags);
+        offset += 2;
         tempData = frLocation.getBytes();
         System.arraycopy(tempData, 0, result, offset, tempData.length);
         offset += tempData.length;
-        System.arraycopy(frView, 0, result, offset, frView.length);
-        offset += frView.length;
-        return result;
+        Util.arrayPutBE(result, offset, frView);
+        offset += 2;
+
+        return offset - startOffset;
+    }
+
+    private Field getPrivateField(String name) throws NoSuchFieldException {
+        Field f = getClass().getDeclaredField(name);
+        f.setAccessible(true);
+        return f;
     }
 
     @Override
     public Dictionary getStructElements() {
         DictionaryBuilder db = new DictionaryBuilder(DInfo.class.getSimpleName());
         db.add("frRect", frRect.getStructElements());
-        db.addUIntBE("frFlags", frFlags);
-        db.add("frLocation", frLocation.getStructElements());
-        db.addUIntBE("frView", frView);
+        try {
+            db.addUIntBE("frFlags", getPrivateField("frFlags"), this);
+            db.add("frLocation", frLocation.getStructElements());
+            db.addUIntBE("frView", getPrivateField("frView"), this);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
 
         return db.getResult();
     }

@@ -18,6 +18,7 @@
 package org.catacombae.hfsexplorer;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.LinkedList;
@@ -42,6 +43,8 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
 
     void setDataSize(long totalSize);
 
+    boolean confirmCreateDirectory(File dir);
+
 //    public boolean confirmOverwriteDirectory(File dir);
 
 //    public boolean confirmSkipDirectory(String... messageLines);
@@ -54,10 +57,13 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
 
     FileExistsAction fileExists(File file);
 
-    UnhandledExceptionAction unhandledException(String filename,
-                                                Throwable t);
+    UnhandledExceptionAction unhandledException(String filename, Throwable t, String actionDescription);
+
+    void errorMessage(String message);
 
     String displayRenamePrompt(String currentName, File outDir);
+
+    boolean displayIoErrorPrompt(String fileName, File outDir, IOException ioe);
 
     ExtractProperties getExtractProperties();
 
@@ -155,6 +161,7 @@ public interface ExtractProgressMonitor extends ProgressMonitor {
 
     enum UnhandledExceptionAction {
         PROMPT_USER,
+        HANDLED,
         CONTINUE,
         ALWAYS_CONTINUE,
         ABORT,
